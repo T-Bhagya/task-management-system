@@ -4,6 +4,7 @@ import DashboardPage from './pages/DashboardPage'
 import TaskBoardPage from './pages/TaskBoardPage'
 import CreateTaskPage from './pages/CreateTaskPage'
 import ProfilePage from './pages/ProfilePage'
+import UsersPage from './pages/UsersPage'
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
         <Route path="/taskboard" element={<TaskBoardPage />} />
         <Route path="/create-task" element={<CreateTaskPage />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/users" element={<UsersPage />} />
       </Routes>
     </BrowserRouter>
   )
