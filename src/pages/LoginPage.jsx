@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Box, Button, TextField,
   Typography, Paper, Alert
@@ -8,13 +9,14 @@ function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const navigate = useNavigate()
 
   const handleLogin = () => {
     if (!email || !password) {
       setError('Please enter email and password')
       return
     }
-    alert('Login successful!')
+    navigate('/dashboard')
   }
 
   return (
