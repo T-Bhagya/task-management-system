@@ -9,6 +9,7 @@ const PORT = process.env.PORT || 5000;
 app.get('/api/test', (req, res) => {
     res.status(200).json({ message: "Backend is running beautifully!" });
 });
+app.use('/api/auth', require('./routes/authRoutes'));
 
 app.use((err, req, res, next) => {
     console.error(err.stack);
