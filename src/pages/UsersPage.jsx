@@ -1,14 +1,17 @@
+import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { Box, Typography, Paper, Avatar, Chip } from '@mui/material'
 
 const users = [
-  { name: 'Nadeesha', role: 'Frontend Developer', status: 'Active', tasks: 5, avatar: 'N', color: '#7c3aed' },
-  { name: 'John', role: 'Backend Developer', status: 'Active', tasks: 3, avatar: 'J', color: '#3b82f6' },
-  { name: 'Sara', role: 'UI/UX Designer', status: 'Active', tasks: 4, avatar: 'S', color: '#34d399' },
-  { name: 'Mike', role: 'Project Manager', status: 'Away', tasks: 2, avatar: 'M', color: '#fbbf24' },
+  { name: 'Nadeesha', role: 'Frontend Developer', status: 'Active', tasks: 5, avatar: 'N', color: '#7c3aed', path: '/profile' },
+  { name: 'John', role: 'Backend Developer', status: 'Active', tasks: 3, avatar: 'J', color: '#3b82f6', path: '/profile' },
+  { name: 'Sara', role: 'UI/UX Designer', status: 'Active', tasks: 4, avatar: 'S', color: '#34d399', path: '/profile' },
+  { name: 'Mike', role: 'Project Manager', status: 'Away', tasks: 2, avatar: 'M', color: '#fbbf24', path: '/profile' },
 ]
 
 function UsersPage() {
+  const navigate = useNavigate()
+
   return (
     <Layout>
       <Box sx={{ p: 4, backgroundColor: '#0f1117', minHeight: '100vh' }}>
@@ -24,10 +27,11 @@ function UsersPage() {
 
         <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 3 }}>
           {users.map((user) => (
-            <Paper key={user.name} elevation={0} sx={{
+            <Paper key={user.name} elevation={0} onClick={() => navigate(user.path)} sx={{
               p: 3, borderRadius: 3,
               background: 'linear-gradient(145deg, #1e2235, #1a1d2e)',
               border: '1px solid rgba(255,255,255,0.08)',
+              cursor: 'pointer',
               transition: 'all 0.2s',
               '&:hover': {
                 border: `1px solid ${user.color}50`,
