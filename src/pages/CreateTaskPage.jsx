@@ -1,145 +1,139 @@
-import Navbar from '../components/Navbar'
 import { useState } from 'react'
-import {
-  Box, Button, TextField, Typography,
-  Paper, MenuItem, Alert
-} from '@mui/material'
+import Layout from '../components/Layout'
+import { Box, Typography, Paper, TextField, Button, MenuItem } from '@mui/material'
+import SendIcon from '@mui/icons-material/Send'
+
+const fieldStyle = {
+  mb: 3,
+  '& .MuiOutlinedInput-root': {
+    borderRadius: 2,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    color: 'white',
+    '& fieldset': { borderColor: 'rgba(255,255,255,0.12)' },
+    '&:hover fieldset': { borderColor: 'rgba(124,58,237,0.5)' },
+    '&.Mui-focused fieldset': { borderColor: '#7c3aed' },
+  },
+  '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.5)' },
+  '& .MuiInputLabel-root.Mui-focused': { color: '#a78bfa' },
+  '& input': { color: 'white' },
+  '& textarea': { color: 'white' },
+  '& .MuiSelect-select': { color: 'white' },
+}
 
 function CreateTaskPage() {
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
-  const [priority, setPriority] = useState('')
-  const [dueDate, setDueDate] = useState('')
-  const [assignee, setAssignee] = useState('')
-  const [success, setSuccess] = useState(false)
-  const [error, setError] = useState('')
+  const [form, setForm] = useState({
+    title: '', description: '', priority: '', assignee: '', dueDate: '', status: ''
+  })
+  const [submitted, setSubmitted] = useState(false)
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value })
+  }
 
   const handleSubmit = () => {
-    if (!title || !priority || !dueDate) {
-      setError('Please fill Title, Priority and Due Date')
-      setSuccess(false)
-      return
-    }
-    setError('')
-    setSuccess(true)
+    if (!form.title || !form.priority || !form.status) return
+    setSubmitted(true)
+    setTimeout(() => {
+      setSubmitted(false)
+      setForm({ title: '', description: '', priority: '', assignee: '', dueDate: '', status: '' })
+    }, 2000)
   }
 
   return (
-    <Box sx={{
-      p: 4, backgroundColor: '#f0f2f5', minHeight: '100vh'
-    }}>
-        <Navbar />
-      <Typography variant="h4" sx={{
-        mb: 4, fontWeight: 'bold', color: '#1976d2'
-      }}>
-        Create New Task
-      </Typography>
+    <Layout>
+      <Box sx={{ p: 4, backgroundColor: '#0f1117', minHeight: '100vh' }}>
 
-      <Paper elevation={3} sx={{ p: 4, borderRadius: 3, maxWidth: 600 }}>
+        <Box sx={{ mb: 4 }}>
+          <Typography variant="h4" fontWeight="bold" sx={{ color: '#f1f5f9' }}>
+            Create Task
+          </Typography>
+          <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.5)', mt: 0.5 }}>
+            Add a new task to the board
+          </Typography>
+        </Box>
 
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-        {success && <Alert severity="success" sx={{ mb: 2 }}>Task created successfully!</Alert>}
+        <Paper elevation={0} sx={{
+          p: 4, borderRadius: 3, maxWidth: 600,
+          background: 'linear-gradient(145deg, #1e2235, #1a1d2e)',
+          border: '1px solid rgba(255,255,255,0.08)'
+        }}>
 
-        <TextField
-          fullWidth
-          label="Task Title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          sx={{ mb: 3 }}
-          required
-        />
+          {submitted && (
+            <Box sx={{
+              mb: 3, p: 2, borderRadius: 2,
+              background: 'rgba(52,211,153,0.12)',
+              border: '1px solid rgba(52,211,153,0.3)',
+            }}>
+              <Typography sx={{ color: '#34d399', fontWeight: 600 }}>
+                ✅ Task created successfully!
+              </Typography>
+            </Box>
+          )}
 
-        <TextField
-          fullWidth
-          label="Description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          multiline
-          rows={3}
-          sx={{ mb: 3 }}
-        />
+          <TextField
+            fullWidth label="Task Title" name="title"
+            value={form.title} onChange={handleChange}
+            sx={fieldStyle}
+          />
 
-        <TextField
-          fullWidth
-          select
-          label="Priority"
-          value={priority}
-          onChange={(e) => setPriority(e.target.value)}
-          sx={{ mb: 3 }}
-          required
-        >
-          <MenuItem value="High">High</MenuItem>
-          <MenuItem value="Medium">Medium</MenuItem>
-          <MenuItem value="Low">Low</MenuItem>
-        </TextField>
+          <TextField
+            fullWidth label="Description" name="description"
+            value={form.description} onChange={handleChange}
+            multiline rows={3} sx={fieldStyle}
+          />
 
-        <TextField
-          fullWidth
-          select
-          label="Assign To"
-          value={assignee}
-          onChange={(e) => setAssignee(e.target.value)}
-          sx={{ mb: 3 }}
-        >
-          <MenuItem value="Nadeesha">Nadeesha</MenuItem>
-          <MenuItem value="John">John</MenuItem>
-          <MenuItem value="Sara">Sara</MenuItem>
-          <MenuItem value="Mike">Mike</MenuItem>
-        </TextField>
+          <TextField
+            fullWidth select label="Priority" name="priority"
+            value={form.priority} onChange={handleChange}
+            sx={fieldStyle}
+            SelectProps={{ MenuProps: { PaperProps: { sx: { backgroundColor: '#1e2235', color: 'white' } } } }}
+          >
+            {['High', 'Medium', 'Low'].map((p) => (
+              <MenuItem key={p} value={p}>{p}</MenuItem>
+            ))}
+          </TextField>
 
-        <TextField
-          fullWidth
-          label="Due Date"
-          type="date"
-          value={dueDate}
-          onChange={(e) => setDueDate(e.target.value)}
-          InputLabelProps={{ shrink: true }}
-          sx={{ mb: 3 }}
-          required
-        />
+          <TextField
+            fullWidth select label="Status" name="status"
+            value={form.status} onChange={handleChange}
+            sx={fieldStyle}
+            SelectProps={{ MenuProps: { PaperProps: { sx: { backgroundColor: '#1e2235', color: 'white' } } } }}
+          >
+            {['To Do', 'In Progress', 'Completed'].map((s) => (
+              <MenuItem key={s} value={s}>{s}</MenuItem>
+            ))}
+          </TextField>
 
-        <TextField
-          fullWidth
-          select
-          label="Status"
-          defaultValue="To Do"
-          sx={{ mb: 3 }}
-        >
-          <MenuItem value="To Do">To Do</MenuItem>
-          <MenuItem value="In Progress">In Progress</MenuItem>
-          <MenuItem value="Completed">Completed</MenuItem>
-        </TextField>
+          <TextField
+            fullWidth label="Assignee" name="assignee"
+            value={form.assignee} onChange={handleChange}
+            sx={fieldStyle}
+          />
 
-        <Box sx={{ display: 'flex', gap: 2 }}>
+          <TextField
+            fullWidth label="Due Date" name="dueDate"
+            type="date" value={form.dueDate} onChange={handleChange}
+            InputLabelProps={{ shrink: true }}
+            sx={fieldStyle}
+          />
+
           <Button
-            fullWidth
-            variant="contained"
-            size="large"
+            fullWidth variant="contained"
+            endIcon={<SendIcon />}
             onClick={handleSubmit}
-            sx={{ backgroundColor: '#1976d2', py: 1.5 }}
+            sx={{
+              py: 1.5, fontWeight: 'bold', fontSize: 15,
+              borderRadius: 2, textTransform: 'none',
+              background: 'linear-gradient(135deg, #7c3aed, #3b82f6)',
+              '&:hover': { background: 'linear-gradient(135deg, #6d28d9, #2563eb)' }
+            }}
           >
             Create Task
           </Button>
-          <Button
-            fullWidth
-            variant="outlined"
-            size="large"
-            onClick={() => {
-              setTitle('')
-              setDescription('')
-              setPriority('')
-              setDueDate('')
-              setAssignee('')
-              setSuccess(false)
-              setError('')
-            }}
-          >
-            Clear
-          </Button>
-        </Box>
 
-      </Paper>
-    </Box>
+        </Paper>
+      </Box>
+    </Layout>
   )
 }
 
