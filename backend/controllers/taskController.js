@@ -28,7 +28,7 @@ async function createTask(req, res) {
         assigned_to: assigned_to ? parseInt(assigned_to) : null,
         due_date: due_date ? new Date(due_date) : null,
         priority: priority || 'MEDIUM',
-        created_by: req.user.userId
+        created_by: 1
       }
     })
     res.status(201).json(task)
