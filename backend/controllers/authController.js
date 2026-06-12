@@ -1,17 +1,11 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const db = require('../config/db');
 
 // 1. Fixed Mock Database
 // Why: Using hashSync ensures Node automatically generates a mathematically perfect 
 // bcrypt hash for "Password123" when the server starts up. No more hardcoded typos!
-const mockUsers = [
-    {
-        id: 1,
-        email: "student@kln.ac.lk",
-        passwordHash: bcrypt.hashSync("Password123", 10), 
-        role: "Admin"
-    }
-];
+
 
 exports.login = async (req, res, next) => {
     try {
@@ -26,7 +20,10 @@ exports.login = async (req, res, next) => {
         }
 
         // Find the user
-        const user = mockUsers.find(u => u.email === email);
+        const result = await db.query('SELECT * FROM users WHERE email = $1', [email]);
+        const user = result.rows[0];
+
+        console.log("Database returned this user:", user);
 
         // Security Check: Use bcrypt to safely compare the plain text input with the stored hash
         if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
