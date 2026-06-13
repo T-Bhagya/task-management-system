@@ -21,7 +21,7 @@ const prisma = new PrismaClient({ adapter });
 
 exports.login = async (req, res, next) => {
     try {
-        const { email, password } = req.body;
+        const {email, password } = req.body;
 
         // Validation Check
         if (!email || !password) {
@@ -39,7 +39,7 @@ exports.login = async (req, res, next) => {
         console.log("Prisma returned this user:", user);
 
         // Security Check: Use bcrypt to safely compare the plain text input with the stored hash
-        if (!user || !(await bcrypt.compare(password, user.password))) {
+        if (!user || !(await bcrypt.compare(password, user.password_hash))) {
             return res.status(401).json({
                 errorCode: "AUTH_FAILED",
                 message: "Invalid email or password"
@@ -67,5 +67,51 @@ exports.login = async (req, res, next) => {
 
     } catch (error) {
         next(error); // Sends any crash to your global error handler
+    }
+};
+
+exports.register = async (req, res, next) => {
+    try {
+        const { name, email, password } = req.body;
+
+        if (!name || !email || !password) {
+            return res.status(400).json({ message: "Name, email, and password are required" });
+        }
+
+        // 1. Check if a user with this email already exists in the Neon DB
+        const existingUser = await prisma.user.findUnique({
+            where: { email: email }
+        });
+
+        if (existingUser) {
+            return res.status(409).json({ message: "Email is already in use" });
+        }
+
+        // 2. Hash the password BEFORE saving it (Crucial for security!)
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        // 3. Create the new user in the Neon database
+        const newUser = await prisma.user.create({
+            data: {
+                name: name,
+                email: email,
+                password_hash: hashedPassword,
+                role: 'USER' // Default role for new signups
+            }
+        });
+
+        // 4. Send success response (but don't send the password back!)
+        return res.status(201).json({
+            message: "User registered successfully!",
+            user: {
+                id: newUser.id,
+                email: newUser.email,
+                role: newUser.role
+            }
+        });
+
+    } catch (error) {
+        next(error);
     }
 };
