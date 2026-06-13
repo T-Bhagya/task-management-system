@@ -1,7 +1,19 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const db = require('../config/db');
 
+// --- NEW PRISMA 7 SETUP ---
+const { PrismaClient } = require('@prisma/client');
+const { PrismaPg } = require('@prisma/adapter-pg');
+const { Pool } = require('pg');
+
+// 1. Create a connection pool using the Neon URL
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+
+// 2. Wrap it in the Prisma Adapter
+const adapter = new PrismaPg(pool);
+
+// 3. Pass the adapter to the Prisma Client
+const prisma = new PrismaClient({ adapter });
 // 1. Fixed Mock Database
 // Why: Using hashSync ensures Node automatically generates a mathematically perfect 
 // bcrypt hash for "Password123" when the server starts up. No more hardcoded typos!
@@ -20,13 +32,14 @@ exports.login = async (req, res, next) => {
         }
 
         // Find the user
-        const result = await db.query('SELECT * FROM users WHERE email = $1', [email]);
-        const user = result.rows[0];
+        const user = await prisma.user.findUnique({
+            where: { email: email }
+        });
 
-        console.log("Database returned this user:", user);
+        console.log("Prisma returned this user:", user);
 
         // Security Check: Use bcrypt to safely compare the plain text input with the stored hash
-        if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
+        if (!user || !(await bcrypt.compare(password, user.password))) {
             return res.status(401).json({
                 errorCode: "AUTH_FAILED",
                 message: "Invalid email or password"
