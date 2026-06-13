@@ -2,19 +2,23 @@ const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 
 const express = require('express');
-const app = express();
 const cors = require('cors');
+const { PrismaClient } = require('@prisma/client'); // Person 3's Database client instance
+
+const app = express();
+const prisma = new PrismaClient(); // Initializing the database connector
 
 // 1. Global Middleware
 app.use(cors());
 app.use(express.json());
-<<<<<<< HEAD
+
+// Attach prisma instance to the request object so your controllers can access it seamlessly
+app.use((req, res, next) => {
+    req.prisma = prisma;
+    next();
+});
 
 // 2. API Routes
-=======
-
-const PORT = process.env.PORT || 5000;
-
 const protect = require('./middleware/authMiddleware');
 
 app.get('/api/test', protect, (req, res) => {
@@ -24,7 +28,6 @@ app.get('/api/test', protect, (req, res) => {
     });
 });
 
->>>>>>> origin/person3/database
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/tasks', require('./routes/taskRoutes'));
@@ -41,6 +44,12 @@ app.use((err, req, res, next) => {
 
 // 4. Start the Server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
     console.log(`Server is running on port ${PORT}`);
+    try {
+        await prisma.$connect();
+        console.log('Database connected successfully via Prisma!');
+    } catch (dbError) {
+        console.error('Prisma failed to connect to the database:', dbError);
+    }
 });
