@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
-const protect = require('../middleware/authMiddleware'); // Your bouncer!
+const { verifyToken } = require('../middleware/authMiddleware'); // Import your bouncer
 
-// Why: We put 'protect' right here in the middle. 
-// Before Express lets anyone reach userController.getAllUsers, they MUST pass the JWT check.
-router.get('/', protect, userController.getAllUsers);
+// Secure routes that require a valid JWT token
+router.get('/', verifyToken, userController.getAllUsers);
+router.get('/profile', verifyToken, userController.getProfile);
 
 module.exports = router;
