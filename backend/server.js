@@ -8,8 +8,23 @@ const cors = require('cors');
 // 1. Global Middleware
 app.use(cors());
 app.use(express.json());
+<<<<<<< HEAD
 
 // 2. API Routes
+=======
+
+const PORT = process.env.PORT || 5000;
+
+const protect = require('./middleware/authMiddleware');
+
+app.get('/api/test', protect, (req, res) => {
+    res.status(200).json({ 
+        message: "Backend is running beautifully!", 
+        authenticatedUser: req.user
+    });
+});
+
+>>>>>>> origin/person3/database
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/tasks', require('./routes/taskRoutes'));
@@ -17,7 +32,6 @@ app.use('/api/tasks', require('./routes/taskRoutes'));
 // 3. Global Error Handler
 app.use((err, req, res, next) => {
     console.error(err.stack);
-    
     res.status(err.status || 500).json({
         errorCode: err.name || 'ServerError',
         message: err.message || 'Something went wrong on the server',
