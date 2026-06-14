@@ -9,6 +9,7 @@ import LockIcon from '@mui/icons-material/Lock'
 import PersonIcon from '@mui/icons-material/Person'
 import VisibilityIcon from '@mui/icons-material/Visibility'
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff'
+import { api } from '../services/api'
 
 function SignupPage() {
   const [name, setName] = useState('')
@@ -22,7 +23,7 @@ function SignupPage() {
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
 
-  const handleSignup = () => {
+  const handleSignup = async () => {
     if (!name || !email || !password || !confirmPassword || !role) {
       setError('Please fill in all fields')
       return
@@ -41,11 +42,33 @@ function SignupPage() {
     }
     setError('')
     setLoading(true)
-    setTimeout(() => {
-      setLoading(false)
-      navigate('/')
-    }, 1500)
+    try {
+      await api.signup(name, email, password, role);
+      navigate('/');
+    } catch (err) {
+      setError(err.message || 'Registration failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   }
+
+  // Reusable dark input style with autofill fix
+  const darkInput = (mb = 2.5) => ({
+    mb,
+    '& .MuiOutlinedInput-root': {
+      borderRadius: 2,
+      backgroundColor: 'rgba(255,255,255,0.05)',
+      '& fieldset': { borderColor: 'rgba(255,255,255,0.12)' },
+      '&:hover fieldset': { borderColor: 'rgba(124,58,237,0.5)' },
+      '&.Mui-focused fieldset': { borderColor: '#7c3aed' },
+    },
+    '& input:-webkit-autofill': {
+      WebkitBoxShadow: '0 0 0 1000px #1a1d2e inset',
+      WebkitTextFillColor: 'white',
+    },
+    '& input': { color: 'white' },
+    '& input::placeholder': { color: 'rgba(255,255,255,0.25)' }
+  })
 
   return (
     <Box sx={{
@@ -71,7 +94,6 @@ function SignupPage() {
           background: 'radial-gradient(circle, rgba(124,58,237,0.15) 0%, transparent 70%)',
         }} />
 
-        {/* Logo */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 8 }}>
           <Box sx={{
             width: 44, height: 44, borderRadius: 2,
@@ -102,29 +124,23 @@ function SignupPage() {
           Create your account and start collaborating with your team right away.
         </Typography>
 
-        {/* Steps */}
         {[
           ['01', 'Create your account'],
           ['02', 'Verify your email'],
           ['03', 'Start managing tasks'],
         ].map(([num, text]) => (
-          <Box key={num} sx={{
-            display: 'flex', alignItems: 'center',
-            gap: 3, mb: 3
-          }}>
+          <Box key={num} sx={{ display: 'flex', alignItems: 'center', gap: 3, mb: 3 }}>
             <Box sx={{
               width: 36, height: 36, borderRadius: '50%',
               border: '2px solid rgba(124,58,237,0.5)',
               display: 'flex', alignItems: 'center',
               justifyContent: 'center', flexShrink: 0
             }}>
-              <Typography variant="caption"
-                sx={{ color: '#7c3aed', fontWeight: 'bold' }}>
+              <Typography variant="caption" sx={{ color: '#7c3aed', fontWeight: 'bold' }}>
                 {num}
               </Typography>
             </Box>
-            <Typography variant="body2"
-              sx={{ color: 'rgba(255,255,255,0.6)' }}>
+            <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.6)' }}>
               {text}
             </Typography>
           </Box>
@@ -133,22 +149,16 @@ function SignupPage() {
 
       {/* Right side — form */}
       <Box sx={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
-        p: { xs: 3, md: 6 },
-        backgroundColor: '#0f1117',
-        overflowY: 'auto'
+        flex: 1, display: 'flex', flexDirection: 'column',
+        justifyContent: 'center', alignItems: 'center',
+        p: { xs: 3, md: 6 }, backgroundColor: '#0f1117', overflowY: 'auto'
       }}>
         <Box sx={{ width: '100%', maxWidth: 400 }}>
 
           <Typography variant="h4" fontWeight="bold" color="white" mb={0.8}>
             Create account
           </Typography>
-          <Typography variant="body2"
-            sx={{ color: 'rgba(255,255,255,0.45)', mb: 4 }}>
+          <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.45)', mb: 4 }}>
             Fill in your details to get started
           </Typography>
 
@@ -162,24 +172,12 @@ function SignupPage() {
           )}
 
           {/* Name */}
-          <Typography variant="body2" fontWeight={500}
-            sx={{ color: 'rgba(255,255,255,0.7)', mb: 1 }}>
+          <Typography variant="body2" fontWeight={500} sx={{ color: 'rgba(255,255,255,0.7)', mb: 1 }}>
             Full name
           </Typography>
           <TextField fullWidth placeholder="John Smith"
             value={name} onChange={(e) => setName(e.target.value)}
-            sx={{
-              mb: 2.5,
-              '& .MuiOutlinedInput-root': {
-                borderRadius: 2,
-                backgroundColor: 'rgba(255,255,255,0.05)',
-                '& fieldset': { borderColor: 'rgba(255,255,255,0.12)' },
-                '&:hover fieldset': { borderColor: 'rgba(124,58,237,0.5)' },
-                '&.Mui-focused fieldset': { borderColor: '#7c3aed' },
-              },
-              '& input': { color: 'white' },
-              '& input::placeholder': { color: 'rgba(255,255,255,0.25)' }
-            }}
+            sx={darkInput()}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -190,25 +188,13 @@ function SignupPage() {
           />
 
           {/* Email */}
-          <Typography variant="body2" fontWeight={500}
-            sx={{ color: 'rgba(255,255,255,0.7)', mb: 1 }}>
+          <Typography variant="body2" fontWeight={500} sx={{ color: 'rgba(255,255,255,0.7)', mb: 1 }}>
             Email address
           </Typography>
           <TextField fullWidth placeholder="you@example.com"
             type="email" value={email}
             onChange={(e) => setEmail(e.target.value)}
-            sx={{
-              mb: 2.5,
-              '& .MuiOutlinedInput-root': {
-                borderRadius: 2,
-                backgroundColor: 'rgba(255,255,255,0.05)',
-                '& fieldset': { borderColor: 'rgba(255,255,255,0.12)' },
-                '&:hover fieldset': { borderColor: 'rgba(124,58,237,0.5)' },
-                '&.Mui-focused fieldset': { borderColor: '#7c3aed' },
-              },
-              '& input': { color: 'white' },
-              '& input::placeholder': { color: 'rgba(255,255,255,0.25)' }
-            }}
+            sx={darkInput()}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -219,8 +205,7 @@ function SignupPage() {
           />
 
           {/* Role */}
-          <Typography variant="body2" fontWeight={500}
-            sx={{ color: 'rgba(255,255,255,0.7)', mb: 1 }}>
+          <Typography variant="body2" fontWeight={500} sx={{ color: 'rgba(255,255,255,0.7)', mb: 1 }}>
             Role
           </Typography>
           <TextField fullWidth select value={role}
@@ -258,25 +243,13 @@ function SignupPage() {
           </TextField>
 
           {/* Password */}
-          <Typography variant="body2" fontWeight={500}
-            sx={{ color: 'rgba(255,255,255,0.7)', mb: 1 }}>
+          <Typography variant="body2" fontWeight={500} sx={{ color: 'rgba(255,255,255,0.7)', mb: 1 }}>
             Password
           </Typography>
           <TextField fullWidth placeholder="Min. 6 characters"
             type={showPassword ? 'text' : 'password'}
             value={password} onChange={(e) => setPassword(e.target.value)}
-            sx={{
-              mb: 2.5,
-              '& .MuiOutlinedInput-root': {
-                borderRadius: 2,
-                backgroundColor: 'rgba(255,255,255,0.05)',
-                '& fieldset': { borderColor: 'rgba(255,255,255,0.12)' },
-                '&:hover fieldset': { borderColor: 'rgba(124,58,237,0.5)' },
-                '&.Mui-focused fieldset': { borderColor: '#7c3aed' },
-              },
-              '& input': { color: 'white' },
-              '& input::placeholder': { color: 'rgba(255,255,255,0.25)' }
-            }}
+            sx={darkInput()}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -296,26 +269,14 @@ function SignupPage() {
           />
 
           {/* Confirm Password */}
-          <Typography variant="body2" fontWeight={500}
-            sx={{ color: 'rgba(255,255,255,0.7)', mb: 1 }}>
+          <Typography variant="body2" fontWeight={500} sx={{ color: 'rgba(255,255,255,0.7)', mb: 1 }}>
             Confirm password
           </Typography>
           <TextField fullWidth placeholder="Re-enter password"
             type={showConfirm ? 'text' : 'password'}
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            sx={{
-              mb: 3,
-              '& .MuiOutlinedInput-root': {
-                borderRadius: 2,
-                backgroundColor: 'rgba(255,255,255,0.05)',
-                '& fieldset': { borderColor: 'rgba(255,255,255,0.12)' },
-                '&:hover fieldset': { borderColor: 'rgba(124,58,237,0.5)' },
-                '&.Mui-focused fieldset': { borderColor: '#7c3aed' },
-              },
-              '& input': { color: 'white' },
-              '& input::placeholder': { color: 'rgba(255,255,255,0.25)' }
-            }}
+            sx={darkInput(3)}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -353,13 +314,9 @@ function SignupPage() {
           </Button>
 
           <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="body2"
-              sx={{ color: 'rgba(255,255,255,0.45)' }}>
+            <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.45)' }}>
               Already have an account?{' '}
-              <Link to="/" style={{
-                color: '#7c3aed', fontWeight: 600,
-                textDecoration: 'none'
-              }}>
+              <Link to="/" style={{ color: '#7c3aed', fontWeight: 600, textDecoration: 'none' }}>
                 Sign in
               </Link>
             </Typography>

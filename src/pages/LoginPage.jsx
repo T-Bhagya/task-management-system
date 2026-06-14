@@ -10,6 +10,7 @@ import LockIcon from '@mui/icons-material/Lock'
 import VisibilityIcon from '@mui/icons-material/Visibility'
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
+import { api } from '../services/api'
 
 function LoginPage() {
   const [email, setEmail] = useState('')
@@ -20,7 +21,7 @@ function LoginPage() {
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!email || !password) {
       setError('Please enter both email and password')
       return
@@ -35,12 +36,36 @@ function LoginPage() {
     }
     setError('')
     setLoading(true)
-    setTimeout(() => {
-  setLoading(false)
-  localStorage.setItem('token', 'demo-token')  // ← add this line only
-  navigate('/dashboard')
-}, 1500)
+    try {
+      const res = await api.login(email, password)
+      localStorage.setItem('token', res.token)
+      localStorage.setItem('user', JSON.stringify(res.user))
+      navigate('/dashboard')
+    } catch (err) {
+      setError(err.message || 'Login failed. Please check your credentials.')
+    } finally {
+      setLoading(false)
+    }
   }
+
+  // Reusable dark input style with autofill fix
+  const darkInput = (mb = 3) => ({
+    mb,
+    '& .MuiOutlinedInput-root': {
+      borderRadius: 2,
+      backgroundColor: 'rgba(255,255,255,0.05)',
+      color: 'white',
+      '& fieldset': { borderColor: 'rgba(255,255,255,0.12)' },
+      '&:hover fieldset': { borderColor: 'rgba(124,58,237,0.5)' },
+      '&.Mui-focused fieldset': { borderColor: '#7c3aed' },
+    },
+    '& input:-webkit-autofill': {
+      WebkitBoxShadow: '0 0 0 1000px #1a1d2e inset',
+      WebkitTextFillColor: 'white',
+    },
+    '& input::placeholder': { color: 'rgba(255,255,255,0.25)' },
+    '& input': { color: 'white' }
+  })
 
   return (
     <Box sx={{
@@ -60,7 +85,6 @@ function LoginPage() {
         background: 'linear-gradient(145deg, #1a1d2e 0%, #0f1117 100%)',
         borderRight: '1px solid rgba(124,58,237,0.2)'
       }}>
-        {/* Decorative blobs */}
         <Box sx={{
           position: 'absolute', top: '10%', left: '60%',
           width: 300, height: 300, borderRadius: '50%',
@@ -74,18 +98,14 @@ function LoginPage() {
           pointerEvents: 'none'
         }} />
 
-        {/* Logo */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 8 }}>
           <Box sx={{
-            width: 44, height: 44,
-            borderRadius: 2,
+            width: 44, height: 44, borderRadius: 2,
             background: 'linear-gradient(135deg, #7c3aed, #3b82f6)',
             display: 'flex', alignItems: 'center',
             justifyContent: 'center',
             fontWeight: 'bold', fontSize: 22, color: 'white'
-          }}>
-            T
-          </Box>
+          }}>T</Box>
           <Typography variant="h5" fontWeight="bold" color="white">
             TaskFlow
           </Typography>
@@ -126,7 +146,6 @@ function LoginPage() {
           ))}
         </Box>
 
-        {/* Stats row */}
         <Box sx={{
           display: 'flex', gap: 4, mt: 8,
           pt: 4, borderTop: '1px solid rgba(255,255,255,0.08)'
@@ -142,17 +161,12 @@ function LoginPage() {
 
       {/* Right side — form */}
       <Box sx={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
-        p: { xs: 3, md: 6 },
-        backgroundColor: '#0f1117'
+        flex: 1, display: 'flex', flexDirection: 'column',
+        justifyContent: 'center', alignItems: 'center',
+        p: { xs: 3, md: 6 }, backgroundColor: '#0f1117'
       }}>
         <Box sx={{ width: '100%', maxWidth: 400 }}>
 
-          {/* Mobile logo */}
           <Box sx={{
             display: { xs: 'flex', md: 'none' },
             alignItems: 'center', gap: 1.5, mb: 4
@@ -182,7 +196,6 @@ function LoginPage() {
             }}>{error}</Alert>
           )}
 
-          {/* Email */}
           <Typography variant="body2" fontWeight={500}
             sx={{ color: 'rgba(255,255,255,0.7)', mb: 1 }}>
             Email address
@@ -194,19 +207,7 @@ function LoginPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
-            sx={{
-              mb: 3,
-              '& .MuiOutlinedInput-root': {
-                borderRadius: 2,
-                backgroundColor: 'rgba(255,255,255,0.05)',
-                color: 'white',
-                '& fieldset': { borderColor: 'rgba(255,255,255,0.12)' },
-                '&:hover fieldset': { borderColor: 'rgba(124,58,237,0.5)' },
-                '&.Mui-focused fieldset': { borderColor: '#7c3aed' },
-              },
-              '& input::placeholder': { color: 'rgba(255,255,255,0.25)' },
-              '& input': { color: 'white' }
-            }}
+            sx={darkInput()}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -216,16 +217,15 @@ function LoginPage() {
             }}
           />
 
-          {/* Password */}
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
             <Typography variant="body2" fontWeight={500}
               sx={{ color: 'rgba(255,255,255,0.7)' }}>
               Password
             </Typography>
-            <Typography variant="body2"
-              sx={{ color: '#7c3aed', cursor: 'pointer',
-                '&:hover': { textDecoration: 'underline' }
-              }}>
+            <Typography variant="body2" sx={{
+              color: '#7c3aed', cursor: 'pointer',
+              '&:hover': { textDecoration: 'underline' }
+            }}>
               Forgot password?
             </Typography>
           </Box>
@@ -236,19 +236,7 @@ function LoginPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
-            sx={{
-              mb: 2,
-              '& .MuiOutlinedInput-root': {
-                borderRadius: 2,
-                backgroundColor: 'rgba(255,255,255,0.05)',
-                color: 'white',
-                '& fieldset': { borderColor: 'rgba(255,255,255,0.12)' },
-                '&:hover fieldset': { borderColor: 'rgba(124,58,237,0.5)' },
-                '&.Mui-focused fieldset': { borderColor: '#7c3aed' },
-              },
-              '& input::placeholder': { color: 'rgba(255,255,255,0.25)' },
-              '& input': { color: 'white' }
-            }}
+            sx={darkInput(2)}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -271,9 +259,7 @@ function LoginPage() {
             control={
               <Checkbox size="small" checked={remember}
                 onChange={(e) => setRemember(e.target.checked)}
-                sx={{ color: 'rgba(255,255,255,0.3)',
-                  '&.Mui-checked': { color: '#7c3aed' }
-                }}
+                sx={{ color: 'rgba(255,255,255,0.3)', '&.Mui-checked': { color: '#7c3aed' } }}
               />
             }
             label={
@@ -308,8 +294,7 @@ function LoginPage() {
             <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.45)' }}>
               Don't have an account?{' '}
               <Link to="/signup" style={{
-                color: '#7c3aed', fontWeight: 600,
-                textDecoration: 'none'
+                color: '#7c3aed', fontWeight: 600, textDecoration: 'none'
               }}>
                 Create account
               </Link>
