@@ -167,3 +167,4 @@ dist-ssr
 *.sln
 *.sw?
 >>>>>>> origin/frontend/nadeesha
+"*.db" 
