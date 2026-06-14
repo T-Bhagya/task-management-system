@@ -1,19 +1,7 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 
-// --- NEW PRISMA 7 SETUP ---
-const { PrismaClient } = require('@prisma/client');
-const { PrismaPg } = require('@prisma/adapter-pg');
-const { Pool } = require('pg');
-
-// 1. Create a connection pool using the Neon URL
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-
-// 2. Wrap it in the Prisma Adapter
-const adapter = new PrismaPg(pool);
-
-// 3. Pass the adapter to the Prisma Client
-const prisma = new PrismaClient({ adapter });
+const prisma = require('../prismaClient');
 // 1. Fixed Mock Database
 // Why: Using hashSync ensures Node automatically generates a mathematically perfect 
 // bcrypt hash for "Password123" when the server starts up. No more hardcoded typos!
@@ -60,6 +48,7 @@ exports.login = async (req, res, next) => {
             token: token, // Person 1 (Frontend) will save this token in the browser
             user: {
                 id: user.id,
+                name: user.name,
                 email: user.email,
                 role: user.role
             }
@@ -72,7 +61,7 @@ exports.login = async (req, res, next) => {
 
 exports.register = async (req, res, next) => {
     try {
-        const { name, email, password } = req.body;
+        const { name, email, password, role } = req.body;
 
         if (!name || !email || !password) {
             return res.status(400).json({ message: "Name, email, and password are required" });
@@ -91,13 +80,26 @@ exports.register = async (req, res, next) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
+        // Map frontend role dropdown values to Prisma enum values
+        let dbRole = 'COLLABORATOR';
+        if (role) {
+            const normalizedRole = role.trim().toLowerCase();
+            if (normalizedRole === 'administrator' || normalizedRole === 'admin') {
+                dbRole = 'ADMIN';
+            } else if (normalizedRole === 'project manager' || normalizedRole === 'project_manager') {
+                dbRole = 'PROJECT_MANAGER';
+            } else if (normalizedRole === 'collaborator') {
+                dbRole = 'COLLABORATOR';
+            }
+        }
+
         // 3. Create the new user in the Neon database
         const newUser = await prisma.user.create({
             data: {
                 name: name,
                 email: email,
                 password_hash: hashedPassword,
-                role: 'USER' // Default role for new signups
+                role: dbRole
             }
         });
 

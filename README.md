@@ -1,20 +1,39 @@
-<<<<<<< HEAD
-# task-management-system
-=======
-# React + Vite
+# TaskFlow - Task Management System
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+TaskFlow is a collaborative task management application built using React + Vite on the frontend and Node.js + Express + Prisma on the backend.
 
-Currently, two official plugins are available:
+## Features
+- **Kanban Board**: Drag and drop tasks across columns (To Do, In Progress, Completed).
+- **Comments System**: Write and view comments on tasks in real-time.
+- **Notifications**: Stay updated with task assignments and comment updates.
+- **Role-Based Views**: Support for Admins, Project Managers, and Collaborators.
+- **Secure Authentication**: JWT-based secure user log in and sign up.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Quick Start
 
-## React Compiler
+### 1. Database Setup
+Ensure PostgreSQL is running, then add a `.env` file inside `backend/` with your connection string:
+```env
+DATABASE_URL="postgresql://username:password@localhost:5432/taskflow_db"
+JWT_SECRET="your-secret-key"
+PORT=5000
+```
+Run Prisma migrations to initialize the database schema:
+```bash
+cd backend
+npx prisma migrate dev --name init
+node seed.js
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 2. Running the Backend
+From the root folder:
+```bash
+npm run backend
+```
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
->>>>>>> origin/frontend/nadeesha
+### 3. Running the Frontend
+From the root folder:
+```bash
+npm run frontend
+```
+The application will be available at `http://localhost:5173`.

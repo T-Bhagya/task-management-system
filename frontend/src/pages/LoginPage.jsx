@@ -10,6 +10,7 @@ import LockIcon from '@mui/icons-material/Lock'
 import VisibilityIcon from '@mui/icons-material/Visibility'
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
+import { api } from '../services/api'
 
 function LoginPage() {
   const [email, setEmail] = useState('')
@@ -20,7 +21,7 @@ function LoginPage() {
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!email || !password) {
       setError('Please enter both email and password')
       return
@@ -35,11 +36,16 @@ function LoginPage() {
     }
     setError('')
     setLoading(true)
-    setTimeout(() => {
-  setLoading(false)
-  localStorage.setItem('token', 'demo-token')  // ← add this line only
-  navigate('/dashboard')
-}, 1500)
+    try {
+      const res = await api.login(email, password);
+      localStorage.setItem('token', res.token);
+      localStorage.setItem('user', JSON.stringify(res.user));
+      navigate('/dashboard');
+    } catch (err) {
+      setError(err.message || 'Login failed. Please check your credentials.');
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
