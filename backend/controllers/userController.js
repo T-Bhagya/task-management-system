@@ -1,10 +1,4 @@
-const { PrismaClient } = require('@prisma/client');
-const { PrismaPg } = require('@prisma/adapter-pg');
-const { Pool } = require('pg');
-
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-const adapter = new PrismaPg(pool);
-const prisma = new PrismaClient({ adapter });
+const prisma = require('../prismaClient');
 
 // Get all users
 exports.getAllUsers = async (req, res, next) => {
@@ -31,6 +25,33 @@ exports.getProfile = async (req, res, next) => {
         }
 
         res.status(200).json(user);
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Get notifications for logged-in user
+exports.getNotifications = async (req, res, next) => {
+    try {
+        const notifications = await prisma.notification.findMany({
+            where: { user_id: req.user.id },
+            orderBy: { created_at: 'desc' }
+        });
+        res.status(200).json(notifications);
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Mark notification as read
+exports.markNotificationAsRead = async (req, res, next) => {
+    try {
+        const notificationId = parseInt(req.params.id);
+        const updated = await prisma.notification.update({
+            where: { id: notificationId },
+            data: { is_read: true }
+        });
+        res.status(200).json(updated);
     } catch (error) {
         next(error);
     }

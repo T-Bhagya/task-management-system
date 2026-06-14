@@ -23,6 +23,12 @@ function Sidebar({ expanded, setExpanded }) {
   const navigate = useNavigate()
   const location = useLocation()
 
+  const userStr = localStorage.getItem('user')
+  const user = userStr ? JSON.parse(userStr) : null
+  const userName = user?.name || 'User'
+  const userRole = user?.role ? (user.role.charAt(0) + user.role.slice(1).toLowerCase()).replace('_', ' ') : 'Collaborator'
+  const initial = userName.charAt(0).toUpperCase()
+
   return (
     <div style={{
       width: expanded ? '240px' : '72px',
@@ -119,13 +125,13 @@ function Sidebar({ expanded, setExpanded }) {
             <Avatar sx={{
               width: 34, height: 34, fontSize: 14, fontWeight: 'bold',
               background: 'linear-gradient(135deg, #7c3aed, #3b82f6)'
-            }}>N</Avatar>
+            }}>{initial}</Avatar>
             <Box>
               <Typography variant="body2" sx={{ color: '#e2e8f0', fontWeight: 600, fontSize: 13 }}>
-                Nadeesha
+                {userName}
               </Typography>
               <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', fontSize: 11 }}>
-                Collaborator
+                {userRole}
               </Typography>
             </Box>
           </Box>

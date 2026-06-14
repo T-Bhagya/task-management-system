@@ -9,6 +9,7 @@ import LockIcon from '@mui/icons-material/Lock'
 import PersonIcon from '@mui/icons-material/Person'
 import VisibilityIcon from '@mui/icons-material/Visibility'
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff'
+import { api } from '../services/api'
 
 function SignupPage() {
   const [name, setName] = useState('')
@@ -22,7 +23,7 @@ function SignupPage() {
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
 
-  const handleSignup = () => {
+  const handleSignup = async () => {
     if (!name || !email || !password || !confirmPassword || !role) {
       setError('Please fill in all fields')
       return
@@ -41,10 +42,14 @@ function SignupPage() {
     }
     setError('')
     setLoading(true)
-    setTimeout(() => {
-      setLoading(false)
-      navigate('/')
-    }, 1500)
+    try {
+      await api.signup(name, email, password, role);
+      navigate('/');
+    } catch (err) {
+      setError(err.message || 'Registration failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (

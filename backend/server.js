@@ -19,9 +19,9 @@ app.use((req, res, next) => {
 });
 
 // 2. API Routes
-const protect = require('./middleware/authMiddleware');
+const { verifyToken } = require('./middleware/authMiddleware');
 
-app.get('/api/test', protect, (req, res) => {
+app.get('/api/test', verifyToken, (req, res) => {
     res.status(200).json({ 
         message: "Backend is running beautifully!", 
         authenticatedUser: req.user
@@ -31,6 +31,17 @@ app.get('/api/test', protect, (req, res) => {
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/tasks', require('./routes/taskRoutes'));
+
+// Serve static assets from frontend/dist in production
+app.use(express.static(path.join(__dirname, '../frontend/dist')));
+
+// SPA Fallback: Serve index.html for any request that doesn't match an API route
+app.get('*any', (req, res, next) => {
+    if (req.path.startsWith('/api')) {
+        return next();
+    }
+    res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
+});
 
 // 3. Global Error Handler
 app.use((err, req, res, next) => {
