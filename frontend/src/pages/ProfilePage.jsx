@@ -8,6 +8,19 @@ import AssignmentIcon from '@mui/icons-material/Assignment'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import PendingIcon from '@mui/icons-material/Pending'
 import { api } from '../services/api'
+import { THEME } from '../theme'
+
+const priorityColors = {
+  High: { color: '#eb5e43', bg: 'rgba(235,94,67,0.12)' },
+  Medium: { color: '#8890d3', bg: 'rgba(136,144,211,0.12)' },
+  Low: { color: '#1b5e55', bg: 'rgba(27,94,85,0.12)' },
+}
+
+const statusColors = {
+  'In Progress': { color: '#8890d3', bg: 'rgba(136,144,211,0.12)' },
+  'To Do': { color: '#627575', bg: 'rgba(98,117,117,0.12)' },
+  'Completed': { color: '#1b5e55', bg: 'rgba(27,94,85,0.12)' },
+}
 
 const mapRoleToUI = (role) => {
   if (role === 'ADMIN') return 'Administrator';
@@ -57,8 +70,8 @@ function ProfilePage() {
   if (loading) {
     return (
       <Layout>
-        <Box sx={{ p: 4, backgroundColor: '#0f1117', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Typography sx={{ color: 'white' }}>Loading profile...</Typography>
+        <Box sx={{ p: 4, backgroundColor: THEME.colors.mainBg, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Typography sx={{ color: THEME.colors.textMain }}>Loading profile...</Typography>
         </Box>
       </Layout>
     );
@@ -67,8 +80,8 @@ function ProfilePage() {
   if (!profile) {
     return (
       <Layout>
-        <Box sx={{ p: 4, backgroundColor: '#0f1117', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Typography sx={{ color: 'white' }}>Profile not found. Please log in again.</Typography>
+        <Box sx={{ p: 4, backgroundColor: THEME.colors.mainBg, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Typography sx={{ color: THEME.colors.textMain }}>Profile not found. Please log in again.</Typography>
         </Box>
       </Layout>
     );
@@ -86,13 +99,13 @@ function ProfilePage() {
 
   return (
     <Layout>
-      <Box sx={{ p: 4, backgroundColor: '#0f1117', minHeight: '100vh' }}>
+      <Box sx={{ p: 4, backgroundColor: THEME.colors.mainBg, minHeight: '100vh' }}>
 
         <Box sx={{ mb: 4 }}>
-          <Typography variant="h4" fontWeight="bold" sx={{ color: '#f1f5f9' }}>
+          <Typography variant="h4" fontWeight="bold" sx={{ color: THEME.colors.textMain }}>
             Profile
           </Typography>
-          <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.5)', mt: 0.5 }}>
+          <Typography variant="body2" sx={{ color: THEME.colors.textMuted, mt: 0.5 }}>
             Your personal information
           </Typography>
         </Box>
@@ -101,30 +114,31 @@ function ProfilePage() {
 
           {/* Left card */}
           <Paper elevation={0} sx={{
-            p: 4, borderRadius: 3, width: 280, flexShrink: 0,
-            background: 'linear-gradient(145deg, #1e2235, #1a1d2e)',
-            border: '1px solid rgba(255,255,255,0.08)',
-            display: 'flex', flexDirection: 'column', alignItems: 'center'
+            p: 4, borderRadius: 3.5, width: 280, flexShrink: 0,
+            backgroundColor: '#ffffff',
+            border: '1px solid rgba(27,94,85,0.08)',
+            display: 'flex', flexDirection: 'column', alignItems: 'center',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.02)'
           }}>
             <Avatar sx={{
               width: 90, height: 90, fontSize: 36, fontWeight: 'bold', mb: 2,
-              background: 'linear-gradient(135deg, #7c3aed, #3b82f6)'
+              background: THEME.colors.sidebarBg, color: 'white'
             }}>{letter}</Avatar>
 
-            <Typography variant="h6" fontWeight="bold" sx={{ color: '#f1f5f9' }}>
+            <Typography variant="h6" fontWeight="bold" sx={{ color: THEME.colors.textMain }}>
               {profile.name}
             </Typography>
-            <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.45)', mb: 2 }}>
+            <Typography variant="body2" sx={{ color: THEME.colors.textMuted, mb: 2 }}>
               {mapRoleToUI(profile.role)}
             </Typography>
 
             <Chip label="Active" size="small" sx={{
-              backgroundColor: 'rgba(52,211,153,0.15)',
-              color: '#34d399', fontWeight: 600,
-              border: '1px solid rgba(52,211,153,0.3)', mb: 3
+              backgroundColor: 'rgba(27,94,85,0.08)',
+              color: THEME.colors.sidebarBg, fontWeight: 700,
+              border: '1px solid rgba(27,94,85,0.15)', mb: 3
             }} />
 
-            <Divider sx={{ borderColor: 'rgba(255,255,255,0.06)', width: '100%', mb: 3 }} />
+            <Divider sx={{ borderColor: 'rgba(27,94,85,0.1)', width: '100%', mb: 3 }} />
 
             {[
               { icon: <EmailIcon sx={{ fontSize: 16 }} />, text: profile.email },
@@ -135,8 +149,8 @@ function ProfilePage() {
                 display: 'flex', alignItems: 'center', gap: 1.5,
                 mb: 1.5, width: '100%'
               }}>
-                <Box sx={{ color: '#a78bfa' }}>{item.icon}</Box>
-                <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.55)', fontSize: 13 }} noWrap title={item.text}>
+                <Box sx={{ color: THEME.colors.sidebarBg }}>{item.icon}</Box>
+                <Typography variant="body2" sx={{ color: THEME.colors.textMain, fontSize: 13 }} noWrap title={item.text}>
                   {item.text}
                 </Typography>
               </Box>
@@ -149,18 +163,19 @@ function ProfilePage() {
             {/* Stats */}
             <Box sx={{ display: 'flex', gap: 3, mb: 3, flexWrap: 'wrap' }}>
               {[
-                { label: 'Total Tasks', value: totalTasks, icon: <AssignmentIcon />, color: '#a78bfa', bg: 'rgba(167,139,250,0.15)' },
-                { label: 'Completed', value: completedTasks, icon: <CheckCircleIcon />, color: '#34d399', bg: 'rgba(52,211,153,0.15)' },
-                { label: 'In Progress', value: inProgressTasks, icon: <PendingIcon />, color: '#fbbf24', bg: 'rgba(251,191,36,0.15)' },
+                { label: 'Total Tasks', value: totalTasks, icon: <AssignmentIcon />, color: THEME.colors.sidebarBg, bg: 'rgba(27,94,85,0.1)' },
+                { label: 'Completed', value: completedTasks, icon: <CheckCircleIcon />, color: THEME.colors.greenAccent, bg: 'rgba(27,94,85,0.1)' },
+                { label: 'In Progress', value: inProgressTasks, icon: <PendingIcon />, color: THEME.colors.purpleAccent, bg: 'rgba(136,144,211,0.1)' },
               ].map((stat) => (
                 <Paper key={stat.label} elevation={0} sx={{
-                  p: 3, borderRadius: 3, flex: 1, minWidth: 140,
-                  background: 'linear-gradient(145deg, #1e2235, #1a1d2e)',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  display: 'flex', alignItems: 'center', gap: 2
+                  p: 3, borderRadius: 3.5, flex: 1, minWidth: 140,
+                  backgroundColor: '#ffffff',
+                  border: '1px solid rgba(27,94,85,0.08)',
+                  display: 'flex', alignItems: 'center', gap: 2,
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.02)'
                 }}>
                   <Box sx={{
-                    width: 46, height: 46, borderRadius: 2,
+                    width: 46, height: 46, borderRadius: 2.5,
                     backgroundColor: stat.bg,
                     display: 'flex', alignItems: 'center',
                     justifyContent: 'center', color: stat.color
@@ -168,10 +183,10 @@ function ProfilePage() {
                     {stat.icon}
                   </Box>
                   <Box>
-                    <Typography variant="h5" fontWeight="bold" sx={{ color: '#f1f5f9' }}>
+                    <Typography variant="h5" fontWeight="bold" sx={{ color: THEME.colors.textMain }}>
                       {stat.value}
                     </Typography>
-                    <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.45)' }}>
+                    <Typography variant="caption" sx={{ color: THEME.colors.textMuted, fontWeight: 500 }}>
                       {stat.label}
                     </Typography>
                   </Box>
@@ -181,16 +196,17 @@ function ProfilePage() {
 
             {/* My Tasks List */}
             <Paper elevation={0} sx={{
-              p: 3, borderRadius: 3,
-              background: 'linear-gradient(145deg, #1e2235, #1a1d2e)',
-              border: '1px solid rgba(255,255,255,0.08)'
+              p: 3, borderRadius: 3.5,
+              backgroundColor: '#ffffff',
+              border: '1px solid rgba(27,94,85,0.08)',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.02)'
             }}>
-              <Typography variant="h6" fontWeight="bold" sx={{ color: '#f1f5f9', mb: 3 }}>
+              <Typography variant="h6" fontWeight="bold" sx={{ color: THEME.colors.textMain, mb: 3 }}>
                 My Assigned Tasks
               </Typography>
 
               {myTasks.length === 0 ? (
-                <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.4)', py: 3, textAlign: 'center' }}>
+                <Typography variant="body2" sx={{ color: THEME.colors.textMuted, py: 3, textAlign: 'center' }}>
                   No tasks assigned to you.
                 </Typography>
               ) : (
@@ -199,27 +215,21 @@ function ProfilePage() {
                     display: 'flex', alignItems: 'center',
                     justifyContent: 'space-between', py: 1.8,
                     borderBottom: i < arr.length - 1
-                      ? '1px solid rgba(255,255,255,0.06)' : 'none'
+                      ? '1px solid rgba(27,94,85,0.08)' : 'none'
                   }}>
-                    <Typography variant="body2" sx={{ color: '#e2e8f0', fontWeight: 500 }}>
+                    <Typography variant="body2" sx={{ color: THEME.colors.textMain, fontWeight: 600 }}>
                       {task.title}
                     </Typography>
                     <Box sx={{ display: 'flex', gap: 1 }}>
                       <Chip label={mapPriorityToUI(task.priority)} size="small" sx={{
-                        height: 22, fontSize: 11, fontWeight: 600,
-                        backgroundColor: task.priority === 'HIGH'
-                          ? 'rgba(248,113,113,0.15)' : task.priority === 'MEDIUM'
-                          ? 'rgba(251,191,36,0.15)' : 'rgba(52,211,153,0.15)',
-                        color: task.priority === 'HIGH' ? '#f87171'
-                          : task.priority === 'MEDIUM' ? '#fbbf24' : '#34d399',
+                        height: 22, fontSize: 11, fontWeight: 700,
+                        backgroundColor: priorityColors[mapPriorityToUI(task.priority)]?.bg || 'rgba(0,0,0,0.05)',
+                        color: priorityColors[mapPriorityToUI(task.priority)]?.color || THEME.colors.textMuted,
                       }} />
                       <Chip label={mapStatusToUI(task.status)} size="small" sx={{
-                        height: 22, fontSize: 11, fontWeight: 600,
-                        backgroundColor: task.status === 'COMPLETED'
-                          ? 'rgba(52,211,153,0.15)' : task.status === 'IN_PROGRESS'
-                          ? 'rgba(251,191,36,0.15)' : 'rgba(96,165,250,0.15)',
-                        color: task.status === 'COMPLETED' ? '#34d399'
-                          : task.status === 'IN_PROGRESS' ? '#fbbf24' : '#60a5fa',
+                        height: 22, fontSize: 11, fontWeight: 700,
+                        backgroundColor: statusColors[mapStatusToUI(task.status)]?.bg || 'rgba(0,0,0,0.05)',
+                        color: statusColors[mapStatusToUI(task.status)]?.color || THEME.colors.textMuted,
                       }} />
                     </Box>
                   </Box>

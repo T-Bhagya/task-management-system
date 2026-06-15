@@ -4,22 +4,23 @@ import Layout from '../components/Layout'
 import { Box, Typography, Paper, TextField, Button, MenuItem } from '@mui/material'
 import SendIcon from '@mui/icons-material/Send'
 import { api } from '../services/api'
+import { THEME } from '../theme'
 
 const fieldStyle = {
   mb: 3,
   '& .MuiOutlinedInput-root': {
-    borderRadius: 2,
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    color: 'white',
-    '& fieldset': { borderColor: 'rgba(255,255,255,0.12)' },
-    '&:hover fieldset': { borderColor: 'rgba(124,58,237,0.5)' },
-    '&.Mui-focused fieldset': { borderColor: '#7c3aed' },
+    borderRadius: 2.5,
+    backgroundColor: 'rgba(27,94,85,0.03)',
+    color: THEME.colors.textMain,
+    '& fieldset': { borderColor: 'rgba(27,94,85,0.1)' },
+    '&:hover fieldset': { borderColor: THEME.colors.sidebarBg },
+    '&.Mui-focused fieldset': { borderColor: THEME.colors.sidebarBg },
   },
-  '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.5)' },
-  '& .MuiInputLabel-root.Mui-focused': { color: '#a78bfa' },
-  '& input': { color: 'white' },
-  '& textarea': { color: 'white' },
-  '& .MuiSelect-select': { color: 'white' },
+  '& .MuiInputLabel-root': { color: THEME.colors.textMuted },
+  '& .MuiInputLabel-root.Mui-focused': { color: THEME.colors.sidebarBg },
+  '& input': { color: THEME.colors.textMain },
+  '& textarea': { color: THEME.colors.textMain },
+  '& .MuiSelect-select': { color: THEME.colors.textMain },
 }
 
 function CreateTaskPage() {
@@ -87,30 +88,31 @@ function CreateTaskPage() {
 
   return (
     <Layout>
-      <Box sx={{ p: 4, backgroundColor: '#0f1117', minHeight: '100vh' }}>
+      <Box sx={{ p: 4, backgroundColor: THEME.colors.mainBg, minHeight: '100vh' }}>
 
         <Box sx={{ mb: 4 }}>
-          <Typography variant="h4" fontWeight="bold" sx={{ color: '#f1f5f9' }}>
+          <Typography variant="h4" fontWeight="bold" sx={{ color: THEME.colors.textMain }}>
             Create Task
           </Typography>
-          <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.5)', mt: 0.5 }}>
+          <Typography variant="body2" sx={{ color: THEME.colors.textMuted, mt: 0.5 }}>
             Add a new task to the board
           </Typography>
         </Box>
 
         <Paper elevation={0} sx={{
-          p: 4, borderRadius: 3, maxWidth: 600,
-          background: 'linear-gradient(145deg, #1e2235, #1a1d2e)',
-          border: '1px solid rgba(255,255,255,0.08)'
+          p: 4, borderRadius: 3.5, maxWidth: 600,
+          backgroundColor: '#ffffff',
+          border: '1px solid rgba(27,94,85,0.08)',
+          boxShadow: '0 4px 25px rgba(27,94,85,0.04)'
         }}>
 
           {submitted && (
             <Box sx={{
-              mb: 3, p: 2, borderRadius: 2,
-              background: 'rgba(52,211,153,0.12)',
-              border: '1px solid rgba(52,211,153,0.3)',
+              mb: 3, p: 2, borderRadius: 2.5,
+              backgroundColor: '#f0fdf4',
+              border: '1px solid #bbf7d0',
             }}>
-              <Typography sx={{ color: '#34d399', fontWeight: 600 }}>
+              <Typography sx={{ color: '#16a34a', fontWeight: 600 }}>
                 ✅ Task created successfully! Redirecting...
               </Typography>
             </Box>
@@ -118,11 +120,11 @@ function CreateTaskPage() {
 
           {error && (
             <Box sx={{
-              mb: 3, p: 2, borderRadius: 2,
-              background: 'rgba(239,68,68,0.12)',
-              border: '1px solid rgba(239,68,68,0.3)',
+              mb: 3, p: 2, borderRadius: 2.5,
+              backgroundColor: '#fef2f2',
+              border: '1px solid #fee2e2',
             }}>
-              <Typography sx={{ color: '#fca5a5', fontWeight: 600 }}>
+              <Typography sx={{ color: '#ef4444', fontWeight: 600 }}>
                 ❌ {error}
               </Typography>
             </Box>
@@ -144,7 +146,20 @@ function CreateTaskPage() {
             fullWidth select label="Priority *" name="priority"
             value={form.priority} onChange={handleChange}
             sx={fieldStyle}
-            SelectProps={{ MenuProps: { PaperProps: { sx: { backgroundColor: '#1e2235', color: 'white' } } } }}
+            SelectProps={{
+              MenuProps: {
+                PaperProps: {
+                  sx: {
+                    backgroundColor: '#ffffff',
+                    border: '1px solid rgba(27,94,85,0.1)',
+                    '& .MuiMenuItem-root': {
+                      color: THEME.colors.textMain,
+                      '&:hover': { backgroundColor: 'rgba(27,94,85,0.05)' }
+                    }
+                  }
+                }
+              }
+            }}
           >
             {['High', 'Medium', 'Low'].map((p) => (
               <MenuItem key={p} value={p}>{p}</MenuItem>
@@ -155,7 +170,20 @@ function CreateTaskPage() {
             fullWidth select label="Status *" name="status"
             value={form.status} onChange={handleChange}
             sx={fieldStyle}
-            SelectProps={{ MenuProps: { PaperProps: { sx: { backgroundColor: '#1e2235', color: 'white' } } } }}
+            SelectProps={{
+              MenuProps: {
+                PaperProps: {
+                  sx: {
+                    backgroundColor: '#ffffff',
+                    border: '1px solid rgba(27,94,85,0.1)',
+                    '& .MuiMenuItem-root': {
+                      color: THEME.colors.textMain,
+                      '&:hover': { backgroundColor: 'rgba(27,94,85,0.05)' }
+                    }
+                  }
+                }
+              }
+            }}
           >
             {['To Do', 'In Progress', 'Completed'].map((s) => (
               <MenuItem key={s} value={s}>{s}</MenuItem>
@@ -166,7 +194,20 @@ function CreateTaskPage() {
             fullWidth select label="Assignee" name="assignee"
             value={form.assignee} onChange={handleChange}
             sx={fieldStyle}
-            SelectProps={{ MenuProps: { PaperProps: { sx: { backgroundColor: '#1e2235', color: 'white' } } } }}
+            SelectProps={{
+              MenuProps: {
+                PaperProps: {
+                  sx: {
+                    backgroundColor: '#ffffff',
+                    border: '1px solid rgba(27,94,85,0.1)',
+                    '& .MuiMenuItem-root': {
+                      color: THEME.colors.textMain,
+                      '&:hover': { backgroundColor: 'rgba(27,94,85,0.05)' }
+                    }
+                  }
+                }
+              }
+            }}
           >
             <MenuItem value="">Unassigned</MenuItem>
             {users.map((u) => (
@@ -187,9 +228,10 @@ function CreateTaskPage() {
             onClick={handleSubmit}
             sx={{
               py: 1.5, fontWeight: 'bold', fontSize: 15,
-              borderRadius: 2, textTransform: 'none',
-              background: 'linear-gradient(135deg, #7c3aed, #3b82f6)',
-              '&:hover': { background: 'linear-gradient(135deg, #6d28d9, #2563eb)' }
+              borderRadius: 2.5, textTransform: 'none',
+              backgroundColor: THEME.colors.sidebarBg,
+              boxShadow: '0 4px 14px rgba(27,94,85,0.15)',
+              '&:hover': { backgroundColor: '#13463f' }
             }}
           >
             Create Task

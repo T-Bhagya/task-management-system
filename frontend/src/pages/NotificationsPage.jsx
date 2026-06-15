@@ -2,21 +2,21 @@ import { useEffect, useState } from 'react'
 import Layout from '../components/Layout'
 import { Box, Typography, Paper, Chip } from '@mui/material'
 import AssignmentIcon from '@mui/icons-material/Assignment'
-import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import PersonIcon from '@mui/icons-material/Person'
 import CommentIcon from '@mui/icons-material/Comment'
 import { api } from '../services/api'
+import { THEME } from '../theme'
 
 const getNotificationIcon = (type) => {
   switch (type) {
     case 'ASSIGNMENT':
-      return { icon: <AssignmentIcon />, color: '#a78bfa', bg: 'rgba(167,139,250,0.15)' };
+      return { icon: <AssignmentIcon />, color: '#1b5e55', bg: 'rgba(27,94,85,0.1)' };
     case 'COMMENT':
-      return { icon: <CommentIcon />, color: '#60a5fa', bg: 'rgba(96,165,250,0.15)' };
+      return { icon: <CommentIcon />, color: '#8890d3', bg: 'rgba(136,144,211,0.1)' };
     case 'SYSTEM':
-      return { icon: <PersonIcon />, color: '#fbbf24', bg: 'rgba(251,191,36,0.15)' };
+      return { icon: <PersonIcon />, color: '#eb5e43', bg: 'rgba(235,94,67,0.1)' };
     default:
-      return { icon: <AssignmentIcon />, color: '#a78bfa', bg: 'rgba(167,139,250,0.15)' };
+      return { icon: <AssignmentIcon />, color: '#1b5e55', bg: 'rgba(27,94,85,0.1)' };
   }
 };
 
@@ -53,36 +53,37 @@ function NotificationsPage() {
 
   return (
     <Layout>
-      <Box sx={{ p: 4, backgroundColor: '#0f1117', minHeight: '100vh' }}>
+      <Box sx={{ p: 4, backgroundColor: THEME.colors.mainBg, minHeight: '100vh' }}>
 
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
           <Box>
-            <Typography variant="h4" fontWeight="bold" sx={{ color: '#f1f5f9' }}>
+            <Typography variant="h4" fontWeight="bold" sx={{ color: THEME.colors.textMain }}>
               Notifications
             </Typography>
-            <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.5)', mt: 0.5 }}>
+            <Typography variant="body2" sx={{ color: THEME.colors.textMuted, mt: 0.5 }}>
               Stay updated with your team's activity
             </Typography>
           </Box>
           <Chip label={`${unreadCount} unread`} sx={{
-            backgroundColor: unreadCount > 0 ? 'rgba(124,58,237,0.2)' : 'rgba(255,255,255,0.08)',
-            color: unreadCount > 0 ? '#a78bfa' : 'rgba(255,255,255,0.4)',
-            fontWeight: 600,
-            border: unreadCount > 0 ? '1px solid rgba(124,58,237,0.35)' : '1px solid rgba(255,255,255,0.1)'
+            backgroundColor: unreadCount > 0 ? 'rgba(27,94,85,0.1)' : 'rgba(0,0,0,0.05)',
+            color: unreadCount > 0 ? THEME.colors.sidebarBg : THEME.colors.textMuted,
+            fontWeight: 700,
+            border: unreadCount > 0 ? '1px solid rgba(27,94,85,0.2)' : '1px solid rgba(0,0,0,0.08)'
           }} />
         </Box>
 
         {loading ? (
-          <Typography sx={{ color: 'white', py: 4 }}>Loading notifications...</Typography>
+          <Typography sx={{ color: THEME.colors.textMuted, py: 4 }}>Loading notifications...</Typography>
         ) : (
           <Paper elevation={0} sx={{
-            borderRadius: 3, maxWidth: 700,
-            background: 'linear-gradient(145deg, #1e2235, #1a1d2e)',
-            border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: 3.5, maxWidth: 700,
+            backgroundColor: '#ffffff',
+            border: '1px solid rgba(27,94,85,0.08)',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.02)',
             overflow: 'hidden'
           }}>
             {notifications.length === 0 ? (
-              <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.4)', py: 6, textAlign: 'center' }}>
+              <Typography variant="body2" sx={{ color: THEME.colors.textMuted, py: 6, textAlign: 'center' }}>
                 You have no notifications yet.
               </Typography>
             ) : (
@@ -93,15 +94,15 @@ function NotificationsPage() {
                 return (
                   <Box key={notif.id} sx={{
                     display: 'flex', alignItems: 'flex-start', gap: 2.5, p: 3,
-                    backgroundColor: notif.is_read ? 'transparent' : 'rgba(124,58,237,0.06)',
+                    backgroundColor: notif.is_read ? 'transparent' : 'rgba(27,94,85,0.04)',
                     borderBottom: index < notifications.length - 1
-                      ? '1px solid rgba(255,255,255,0.06)' : 'none',
+                      ? '1px solid rgba(27,94,85,0.08)' : 'none',
                     transition: 'all 0.2s',
-                    '&:hover': { backgroundColor: 'rgba(255,255,255,0.04)' }
+                    '&:hover': { backgroundColor: 'rgba(27,94,85,0.06)' }
                   }}>
 
                     <Box sx={{
-                      width: 42, height: 42, borderRadius: 2,
+                      width: 42, height: 42, borderRadius: 2.5,
                       backgroundColor: visual.bg,
                       display: 'flex', alignItems: 'center',
                       justifyContent: 'center', color: visual.color, flexShrink: 0
@@ -111,23 +112,23 @@ function NotificationsPage() {
 
                     <Box sx={{ flex: 1 }}>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
-                        <Typography variant="body2" fontWeight={notif.is_read ? 500 : 700}
-                          sx={{ color: notif.is_read ? '#e2e8f0' : '#f1f5f9' }}>
+                        <Typography variant="body2" fontWeight={notif.is_read ? 600 : 800}
+                          sx={{ color: THEME.colors.textMain }}>
                           {notif.type === 'ASSIGNMENT' ? 'New Assignment' : notif.type === 'COMMENT' ? 'New Comment' : 'Notification'}
                         </Typography>
                         {!notif.is_read && (
                           <Box sx={{
                             width: 8, height: 8, borderRadius: '50%',
-                            backgroundColor: '#7c3aed', flexShrink: 0
+                            backgroundColor: THEME.colors.sidebarBg, flexShrink: 0
                           }} />
                         )}
                       </Box>
                       <Typography variant="body2"
-                        sx={{ color: 'rgba(255,255,255,0.5)', mb: 0.5, fontSize: 13 }}>
+                        sx={{ color: THEME.colors.textMuted, mb: 0.5, fontSize: 13 }}>
                         {notif.message}
                       </Typography>
                       <Typography variant="caption"
-                        sx={{ color: 'rgba(255,255,255,0.3)', fontSize: 11 }}>
+                        sx={{ color: THEME.colors.textMuted, fontSize: 11 }}>
                         {date}
                       </Typography>
                     </Box>
