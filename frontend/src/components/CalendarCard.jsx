@@ -12,6 +12,7 @@ import CloseIcon from '@mui/icons-material/Close'
 import SendIcon from '@mui/icons-material/Send'
 import CommentIcon from '@mui/icons-material/Comment'
 import { api } from '../services/api'
+import { THEME } from '../theme'
 
 // Helper to format Date to YYYY-MM-DD
 const getLocalDateString = (date) => {
@@ -20,9 +21,9 @@ const getLocalDateString = (date) => {
 };
 
 const priorityColors = {
-  HIGH: '#f87171',
-  MEDIUM: '#fbbf24',
-  LOW: '#34d399',
+  HIGH: '#eb5e43',
+  MEDIUM: '#8890d3',
+  LOW: '#1b5e55',
 };
 
 const mapPriorityToUI = (priority) => {
@@ -215,7 +216,7 @@ function CalendarCard({ tasks }) {
         <Grid container columns={7} sx={{ mb: 1, textAlign: 'center' }}>
           {dayNames.map(d => (
             <Grid item xs={1} key={d}>
-              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.35)', fontWeight: 600 }}>
+              <Typography variant="caption" sx={{ color: THEME.colors.textMuted, fontWeight: 600 }}>
                 {d}
               </Typography>
             </Grid>
@@ -245,15 +246,15 @@ function CalendarCard({ tasks }) {
                     position: 'relative',
                     transition: 'all 0.15s',
                     backgroundColor: isSelected
-                      ? '#7c3aed'
+                      ? THEME.colors.sidebarBg
                       : isToday
-                      ? 'rgba(124,58,237,0.15)'
+                      ? 'rgba(27,94,85,0.1)'
                       : 'transparent',
-                    border: isToday && !isSelected ? '1px solid rgba(124,58,237,0.5)' : '1px solid transparent',
+                    border: isToday && !isSelected ? '1px solid rgba(27,94,85,0.3)' : '1px solid transparent',
                     '&:hover': {
                       backgroundColor: isSelected
-                        ? '#7c3aed'
-                        : 'rgba(255,255,255,0.06)',
+                        ? THEME.colors.sidebarBg
+                        : 'rgba(27,94,85,0.05)',
                     }
                   }}
                 >
@@ -263,8 +264,8 @@ function CalendarCard({ tasks }) {
                       color: isSelected
                         ? 'white'
                         : cell.isCurrentMonth
-                        ? 'rgba(255,255,255,0.9)'
-                        : 'rgba(255,255,255,0.25)',
+                        ? THEME.colors.textMain
+                        : 'rgba(27,94,85,0.3)',
                       fontWeight: isToday || isSelected ? 'bold' : 'normal',
                       fontSize: 13
                     }}
@@ -338,15 +339,15 @@ function CalendarCard({ tasks }) {
                 justifyContent: 'space-between',
                 transition: 'all 0.15s',
                 backgroundColor: isSelected
-                  ? '#7c3aed'
-                  : 'rgba(255,255,255,0.02)',
+                  ? THEME.colors.sidebarBg
+                  : '#ffffff',
                 border: isToday && !isSelected
-                  ? '1px solid rgba(124,58,237,0.4)'
+                  ? '1px solid rgba(27,94,85,0.3)'
                   : isSelected
-                  ? '1px solid #7c3aed'
-                  : '1px solid rgba(255,255,255,0.05)',
+                  ? '1px solid ' + THEME.colors.sidebarBg
+                  : '1px solid rgba(27,94,85,0.08)',
                 '&:hover': {
-                  backgroundColor: isSelected ? '#7c3aed' : 'rgba(255,255,255,0.06)'
+                  backgroundColor: isSelected ? THEME.colors.sidebarBg : 'rgba(27,94,85,0.04)'
                 }
               }}
             >
@@ -354,7 +355,7 @@ function CalendarCard({ tasks }) {
                 <Box sx={{ textAlign: 'center', minWidth: 32 }}>
                   <Typography variant="caption" sx={{
                     display: 'block',
-                    color: isSelected ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.4)',
+                    color: isSelected ? 'rgba(255,255,255,0.7)' : THEME.colors.textMuted,
                     fontSize: 10,
                     textTransform: 'uppercase',
                     fontWeight: 600
@@ -363,15 +364,15 @@ function CalendarCard({ tasks }) {
                   </Typography>
                   <Typography variant="body2" sx={{
                     fontWeight: 'bold',
-                    color: isSelected ? 'white' : 'rgba(255,255,255,0.85)',
+                    color: isSelected ? 'white' : THEME.colors.textMain,
                     fontSize: 14
                   }}>
                     {date.getDate()}
                   </Typography>
                 </Box>
-                <Divider orientation="vertical" flexItem sx={{ borderColor: 'rgba(255,255,255,0.08)' }} />
+                <Divider orientation="vertical" flexItem sx={{ borderColor: 'rgba(27,94,85,0.1)' }} />
                 <Typography variant="body2" sx={{
-                  color: isSelected ? 'white' : 'rgba(255,255,255,0.75)',
+                  color: isSelected ? 'white' : THEME.colors.textMain,
                   fontSize: 13,
                   fontWeight: cellTasks.length > 0 ? 600 : 400
                 }}>
@@ -409,7 +410,7 @@ function CalendarCard({ tasks }) {
 
     return (
       <Box sx={{ minHeight: 180 }}>
-        <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.5)', mb: 2, fontWeight: 500 }}>
+        <Typography variant="body2" sx={{ color: THEME.colors.textMuted, mb: 2, fontWeight: 500 }}>
           {dateStr}
         </Typography>
 
@@ -417,12 +418,12 @@ function CalendarCard({ tasks }) {
           <Box sx={{
             py: 4,
             textAlign: 'center',
-            backgroundColor: 'rgba(255,255,255,0.01)',
+            backgroundColor: '#ffffff',
             borderRadius: 2,
-            border: '1px dashed rgba(255,255,255,0.08)'
+            border: '1px dashed rgba(27,94,85,0.15)'
           }}>
-            <CalendarMonthIcon sx={{ color: 'rgba(255,255,255,0.15)', fontSize: 32, mb: 1 }} />
-            <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.3)' }}>
+            <CalendarMonthIcon sx={{ color: 'rgba(27,94,85,0.25)', fontSize: 32, mb: 1 }} />
+            <Typography variant="body2" sx={{ color: THEME.colors.textMuted }}>
               No tasks due on this day
             </Typography>
           </Box>
@@ -435,17 +436,18 @@ function CalendarCard({ tasks }) {
                 sx={{
                   p: 2,
                   borderRadius: 2.5,
-                  backgroundColor: 'rgba(255,255,255,0.03)',
-                  border: '1px solid rgba(255,255,255,0.06)',
-                  borderLeft: `4px solid ${priorityColors[task.priority] || '#7c3aed'}`,
+                  backgroundColor: '#ffffff',
+                  border: '1px solid rgba(27,94,85,0.08)',
+                  borderLeft: `4px solid ${priorityColors[task.priority] || '#1b5e55'}`,
                   cursor: 'pointer',
                   transition: 'all 0.2s',
                   '&:hover': {
-                    backgroundColor: 'rgba(255,255,255,0.06)'
+                    backgroundColor: 'rgba(27,94,85,0.04)',
+                    boxShadow: '0 2px 10px rgba(0,0,0,0.02)'
                   }
                 }}
               >
-                <Typography variant="body2" sx={{ color: '#f1f5f9', fontWeight: 600, mb: 0.5 }}>
+                <Typography variant="body2" sx={{ color: THEME.colors.textMain, fontWeight: 600, mb: 0.5 }}>
                   {task.title}
                 </Typography>
                 <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
@@ -468,9 +470,9 @@ function CalendarCard({ tasks }) {
                       height: 18,
                       fontSize: 9,
                       fontWeight: 600,
-                      color: '#94a3b8',
-                      backgroundColor: 'rgba(255,255,255,0.04)',
-                      border: '1px solid rgba(255,255,255,0.08)'
+                      color: THEME.colors.textMuted,
+                      backgroundColor: 'rgba(27,94,85,0.04)',
+                      border: '1px solid rgba(27,94,85,0.1)'
                     }}
                   />
                 </Box>
@@ -517,26 +519,26 @@ function CalendarCard({ tasks }) {
                   textAlign: 'center',
                   transition: 'all 0.2s',
                   backgroundColor: isCurrentMonth
-                    ? 'rgba(124,58,237,0.1)'
-                    : 'rgba(255,255,255,0.02)',
+                    ? 'rgba(27,94,85,0.1)'
+                    : '#ffffff',
                   border: isCurrentMonth
-                    ? '1px solid rgba(124,58,237,0.3)'
-                    : '1px solid rgba(255,255,255,0.05)',
+                    ? '1px solid rgba(27,94,85,0.3)'
+                    : '1px solid rgba(27,94,85,0.08)',
                   '&:hover': {
-                    backgroundColor: 'rgba(255,255,255,0.05)',
+                    backgroundColor: 'rgba(27,94,85,0.04)',
                     transform: 'translateY(-2px)'
                   }
                 }}
               >
                 <Typography variant="body2" sx={{
                   fontWeight: 'bold',
-                  color: isCurrentMonth ? '#a78bfa' : '#f1f5f9',
+                  color: isCurrentMonth ? THEME.colors.sidebarBg : THEME.colors.textMain,
                   fontSize: 13
                 }}>
                   {m.substring(0, 3)}
                 </Typography>
                 <Typography variant="caption" sx={{
-                  color: monthTaskCount > 0 ? '#fbbf24' : 'rgba(255,255,255,0.3)',
+                  color: monthTaskCount > 0 ? THEME.colors.orangeAccent : THEME.colors.textMuted,
                   fontSize: 10,
                   fontWeight: monthTaskCount > 0 ? 600 : 400
                 }}>
@@ -583,9 +585,9 @@ function CalendarCard({ tasks }) {
       elevation={0}
       sx={{
         p: 3,
-        borderRadius: 3,
-        background: 'linear-gradient(145deg, #1e2235, #1a1d2e)',
-        border: '1px solid rgba(255,255,255,0.08)',
+        borderRadius: 3.5,
+        backgroundColor: THEME.colors.scheduleBg,
+        border: 'none',
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
@@ -594,16 +596,16 @@ function CalendarCard({ tasks }) {
     >
       {/* Calendar View Controller & Mode Switcher */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h6" fontWeight="bold" sx={{ color: '#f1f5f9' }}>
+        <Typography variant="h6" fontWeight="bold" sx={{ color: THEME.colors.textMain }}>
           Schedule
         </Typography>
         <Box sx={{
           display: 'flex',
           gap: 0.5,
           p: 0.4,
-          borderRadius: 2,
-          backgroundColor: 'rgba(255,255,255,0.04)',
-          border: '1px solid rgba(255,255,255,0.06)'
+          borderRadius: 2.5,
+          backgroundColor: 'rgba(27,94,85,0.06)',
+          border: '1px solid rgba(27,94,85,0.1)'
         }}>
           {['Day', 'Week', 'Month', 'Year'].map(mode => (
             <Box
@@ -612,15 +614,15 @@ function CalendarCard({ tasks }) {
               sx={{
                 px: 1.4,
                 py: 0.6,
-                borderRadius: 1.6,
+                borderRadius: 2,
                 cursor: 'pointer',
                 fontSize: 11,
                 fontWeight: 600,
                 transition: 'all 0.2s',
-                color: viewMode === mode ? 'white' : 'rgba(255,255,255,0.45)',
-                backgroundColor: viewMode === mode ? '#7c3aed' : 'transparent',
+                color: viewMode === mode ? 'white' : THEME.colors.textMuted,
+                backgroundColor: viewMode === mode ? THEME.colors.sidebarBg : 'transparent',
                 '&:hover': {
-                  color: 'white'
+                  color: viewMode === mode ? 'white' : THEME.colors.textMain
                 }
               }}
             >
@@ -638,15 +640,15 @@ function CalendarCard({ tasks }) {
         px: 1,
         py: 0.8,
         borderRadius: 2.5,
-        backgroundColor: 'rgba(255,255,255,0.02)',
-        border: '1px solid rgba(255,255,255,0.04)'
+        backgroundColor: '#ffffff',
+        border: '1px solid rgba(27,94,85,0.08)'
       }}>
         <Button
           onClick={handlePrev}
           sx={{
             minWidth: 32, width: 32, height: 32, borderRadius: 2,
-            color: 'rgba(255,255,255,0.6)', p: 0,
-            '&:hover': { backgroundColor: 'rgba(255,255,255,0.06)', color: 'white' }
+            color: THEME.colors.sidebarBg, p: 0,
+            '&:hover': { backgroundColor: 'rgba(27,94,85,0.05)' }
           }}
         >
           <ChevronLeftIcon size="small" />
@@ -658,10 +660,10 @@ function CalendarCard({ tasks }) {
             variant="body2"
             fontWeight={600}
             sx={{
-              color: '#f1f5f9',
+              color: THEME.colors.textMain,
               cursor: 'pointer',
               fontSize: 13,
-              '&:hover': { color: '#a78bfa' }
+              '&:hover': { color: THEME.colors.sidebarBg }
             }}
           >
             {getHeaderTitle()}
@@ -672,8 +674,8 @@ function CalendarCard({ tasks }) {
           onClick={handleNext}
           sx={{
             minWidth: 32, width: 32, height: 32, borderRadius: 2,
-            color: 'rgba(255,255,255,0.6)', p: 0,
-            '&:hover': { backgroundColor: 'rgba(255,255,255,0.06)', color: 'white' }
+            color: THEME.colors.sidebarBg, p: 0,
+            '&:hover': { backgroundColor: 'rgba(27,94,85,0.05)' }
           }}
         >
           <ChevronRightIcon size="small" />
@@ -691,12 +693,12 @@ function CalendarCard({ tasks }) {
       {/* Preview Panel: Month Deadlines (Fills Blank Space) */}
       {viewMode === 'Month' && (
         <Box sx={{
-          borderTop: '1px solid rgba(255,255,255,0.06)',
+          borderTop: '1px solid rgba(27,94,85,0.1)',
           pt: 2.5,
           mt: 2
         }}>
           <Typography variant="body2" sx={{
-            color: 'rgba(255,255,255,0.45)',
+            color: THEME.colors.textMuted,
             fontWeight: 600,
             mb: 1.5,
             fontSize: 12,
@@ -711,16 +713,16 @@ function CalendarCard({ tasks }) {
               sx={{
                 height: 18,
                 fontSize: 9,
-                color: '#7c3aed',
-                backgroundColor: 'rgba(124,58,237,0.1)',
-                border: '1px solid rgba(124,58,237,0.25)',
+                color: THEME.colors.sidebarBg,
+                backgroundColor: 'rgba(27,94,85,0.1)',
+                border: '1px solid rgba(27,94,85,0.25)',
                 fontWeight: 600
               }}
             />
           </Typography>
 
           {activeMonthTasks.length === 0 ? (
-            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.3)', display: 'block', fontStyle: 'italic', py: 0.5 }}>
+            <Typography variant="caption" sx={{ color: THEME.colors.textMuted, display: 'block', fontStyle: 'italic', py: 0.5 }}>
               No tasks due in this month.
             </Typography>
           ) : (
@@ -729,15 +731,17 @@ function CalendarCard({ tasks }) {
                 const taskDate = new Date(task.due_date);
                 const dayNum = taskDate.getDate();
                 const dayName = dayNames[taskDate.getDay()];
+                const borderLeftColor = priorityColors[task.priority] || THEME.colors.sidebarBg;
                 return (
                   <Box
                     key={task.id}
                     onClick={() => handleOpenTaskModal(task)}
                     sx={{
                       p: 1.2,
-                      borderRadius: 2,
-                      backgroundColor: 'rgba(255,255,255,0.03)',
-                      border: '1px solid rgba(255,255,255,0.05)',
+                      borderRadius: 2.5,
+                      backgroundColor: '#ffffff',
+                      border: '1px solid rgba(27,94,85,0.08)',
+                      borderLeft: `4px solid ${borderLeftColor}`,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
@@ -745,7 +749,7 @@ function CalendarCard({ tasks }) {
                       cursor: 'pointer',
                       transition: 'all 0.15s',
                       '&:hover': {
-                        backgroundColor: 'rgba(255,255,255,0.07)',
+                        backgroundColor: 'rgba(27,94,85,0.04)',
                         transform: 'translateX(2px)'
                       }
                     }}
@@ -755,20 +759,20 @@ function CalendarCard({ tasks }) {
                         width: 38,
                         height: 22,
                         borderRadius: 1,
-                        backgroundColor: 'rgba(255,255,255,0.05)',
+                        backgroundColor: 'rgba(27,94,85,0.06)',
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        border: '1px solid rgba(255,255,255,0.08)'
+                        border: '1px solid rgba(27,94,85,0.1)'
                       }}>
-                        <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.5)', lineHeight: 1 }}>
+                        <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 700, color: THEME.colors.textMuted, lineHeight: 1 }}>
                           {dayName} {dayNum}
                         </Typography>
                       </Box>
                       <Typography
                         variant="body2"
-                        sx={{ color: '#e2e8f0', fontSize: 12.5, fontWeight: 500, minWidth: 0, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}
+                        sx={{ color: THEME.colors.textMain, fontSize: 12.5, fontWeight: 500, minWidth: 0, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}
                       >
                         {task.title}
                       </Typography>
@@ -800,23 +804,24 @@ function CalendarCard({ tasks }) {
         onClose={() => setDaySelectorOpen(false)}
         PaperProps={{
           sx: {
-            backgroundColor: '#1a1d2e',
+            backgroundColor: '#ffffff',
             backgroundImage: 'none',
-            border: '1px solid rgba(255,255,255,0.08)',
-            borderRadius: 3,
-            color: 'white',
+            border: '1px solid rgba(27,94,85,0.1)',
+            borderRadius: 3.5,
+            color: THEME.colors.textMain,
             maxWidth: 380,
-            width: '100%'
+            width: '100%',
+            boxShadow: '0 8px 30px rgba(0,0,0,0.08)'
           }
         }}
       >
         <DialogTitle sx={{ m: 0, p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Typography variant="h6" fontWeight="bold">{daySelectorTitle}</Typography>
-          <IconButton onClick={() => setDaySelectorOpen(false)} sx={{ color: 'rgba(255,255,255,0.5)' }}>
+          <Typography variant="h6" fontWeight="bold" sx={{ color: THEME.colors.textMain }}>{daySelectorTitle}</Typography>
+          <IconButton onClick={() => setDaySelectorOpen(false)} sx={{ color: THEME.colors.textMuted }}>
             <CloseIcon />
           </IconButton>
         </DialogTitle>
-        <DialogContent dividers sx={{ borderColor: 'rgba(255,255,255,0.08)', p: 2 }}>
+        <DialogContent dividers sx={{ borderColor: 'rgba(27,94,85,0.1)', p: 2 }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
             {daySelectorTasks.map(task => (
               <Box
@@ -828,20 +833,20 @@ function CalendarCard({ tasks }) {
                 sx={{
                   p: 1.5,
                   borderRadius: 2.5,
-                  backgroundColor: 'rgba(255,255,255,0.03)',
-                  border: '1px solid rgba(255,255,255,0.06)',
+                  backgroundColor: '#ffffff',
+                  border: '1px solid rgba(27,94,85,0.08)',
                   cursor: 'pointer',
                   transition: 'all 0.15s',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   '&:hover': {
-                    backgroundColor: 'rgba(255,255,255,0.08)',
-                    border: '1px solid rgba(124,58,237,0.5)'
+                    backgroundColor: 'rgba(27,94,85,0.04)',
+                    border: `1px solid ${THEME.colors.sidebarBg}`
                   }
                 }}
               >
-                <Typography variant="body2" sx={{ color: '#e2e8f0', fontWeight: 600 }}>
+                <Typography variant="body2" sx={{ color: THEME.colors.textMain, fontWeight: 600 }}>
                   {task.title}
                 </Typography>
                 <Chip
@@ -868,12 +873,12 @@ function CalendarCard({ tasks }) {
         maxWidth="sm"
         PaperProps={{
           sx: {
-            backgroundColor: '#151724',
+            backgroundColor: '#ffffff',
             backgroundImage: 'none',
-            border: '1px solid rgba(255,255,255,0.08)',
-            borderRadius: 3.5,
-            color: 'white',
-            boxShadow: '0 10px 40px rgba(0,0,0,0.5)'
+            border: '1px solid rgba(27,94,85,0.1)',
+            borderRadius: 4,
+            color: THEME.colors.textMain,
+            boxShadow: '0 10px 45px rgba(0,0,0,0.1)'
           }
         }}
       >
@@ -881,7 +886,7 @@ function CalendarCard({ tasks }) {
           <>
             <DialogTitle sx={{ m: 0, p: 2.5, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <Box sx={{ pr: 3 }}>
-                <Typography variant="h6" fontWeight="bold" sx={{ color: '#f8fafc', lineHeight: 1.3 }}>
+                <Typography variant="h6" fontWeight="bold" sx={{ color: THEME.colors.textMain, lineHeight: 1.3 }}>
                   {selectedTask.title}
                 </Typography>
                 <Box sx={{ display: 'flex', gap: 1, mt: 1.5, alignItems: 'center' }}>
@@ -904,25 +909,25 @@ function CalendarCard({ tasks }) {
                       height: 20,
                       fontSize: 10,
                       fontWeight: 600,
-                      color: '#60a5fa',
-                      backgroundColor: 'rgba(96,165,250,0.1)',
-                      border: '1px solid rgba(96,165,250,0.25)'
+                      color: THEME.colors.sidebarBg,
+                      backgroundColor: 'rgba(27,94,85,0.06)',
+                      border: '1px solid rgba(27,94,85,0.2)'
                     }}
                   />
                 </Box>
               </Box>
-              <IconButton onClick={handleCloseTaskModal} sx={{ color: 'rgba(255,255,255,0.4)', mt: -0.5 }}>
+              <IconButton onClick={handleCloseTaskModal} sx={{ color: THEME.colors.textMuted, mt: -0.5 }}>
                 <CloseIcon />
               </IconButton>
             </DialogTitle>
 
-            <DialogContent dividers sx={{ borderColor: 'rgba(255,255,255,0.06)', p: 3, display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+            <DialogContent dividers sx={{ borderColor: 'rgba(27,94,85,0.1)', p: 3, display: 'flex', flexDirection: 'column', gap: 2.5 }}>
               {/* Description */}
               <Box>
-                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.3)', fontWeight: 600, textTransform: 'uppercase', display: 'block', mb: 0.8 }}>
+                <Typography variant="caption" sx={{ color: THEME.colors.textMuted, fontWeight: 600, textTransform: 'uppercase', display: 'block', mb: 0.8 }}>
                   Description
                 </Typography>
-                <Typography variant="body2" sx={{ color: '#cbd5e1', lineHeight: 1.6, backgroundColor: 'rgba(255,255,255,0.02)', p: 1.8, borderRadius: 2, border: '1px solid rgba(255,255,255,0.04)' }}>
+                <Typography variant="body2" sx={{ color: THEME.colors.textMain, lineHeight: 1.6, backgroundColor: 'rgba(27,94,85,0.03)', p: 1.8, borderRadius: 2.5, border: '1px solid rgba(27,94,85,0.06)' }}>
                   {selectedTask.description || 'No description provided for this task.'}
                 </Typography>
               </Box>
@@ -930,33 +935,33 @@ function CalendarCard({ tasks }) {
               {/* Task metadata (Due date & Assignee) */}
               <Grid container spacing={2}>
                 <Grid item xs={6}>
-                  <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.3)', fontWeight: 600, textTransform: 'uppercase', display: 'block', mb: 0.5 }}>
+                  <Typography variant="caption" sx={{ color: THEME.colors.textMuted, fontWeight: 600, textTransform: 'uppercase', display: 'block', mb: 0.5 }}>
                     Due Date
                   </Typography>
-                  <Typography variant="body2" sx={{ color: '#94a3b8', fontWeight: 500 }}>
+                  <Typography variant="body2" sx={{ color: THEME.colors.textMain, fontWeight: 500 }}>
                     {new Date(selectedTask.due_date).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}
                   </Typography>
                 </Grid>
                 <Grid item xs={6}>
-                  <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.3)', fontWeight: 600, textTransform: 'uppercase', display: 'block', mb: 0.5 }}>
+                  <Typography variant="caption" sx={{ color: THEME.colors.textMuted, fontWeight: 600, textTransform: 'uppercase', display: 'block', mb: 0.5 }}>
                     Assignee
                   </Typography>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Avatar sx={{ width: 22, height: 22, fontSize: 10, fontWeight: 'bold', background: 'linear-gradient(135deg, #7c3aed, #3b82f6)' }}>
+                    <Avatar sx={{ width: 22, height: 22, fontSize: 10, fontWeight: 'bold', background: THEME.colors.sidebarBg, color: 'white' }}>
                       {(selectedTask.assignee?.name || 'U')[0].toUpperCase()}
                     </Avatar>
-                    <Typography variant="body2" sx={{ color: '#e2e8f0', fontWeight: 500 }}>
+                    <Typography variant="body2" sx={{ color: THEME.colors.textMain, fontWeight: 500 }}>
                       {selectedTask.assignee?.name || 'Unassigned'}
                     </Typography>
                   </Box>
                 </Grid>
               </Grid>
 
-              <Divider sx={{ borderColor: 'rgba(255,255,255,0.06)' }} />
+              <Divider sx={{ borderColor: 'rgba(27,94,85,0.1)' }} />
 
               {/* Comments Section */}
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.3)', fontWeight: 600, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography variant="caption" sx={{ color: THEME.colors.textMuted, fontWeight: 600, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 1 }}>
                   <CommentIcon sx={{ fontSize: 14 }} /> Comments ({comments.length})
                 </Typography>
 
@@ -972,14 +977,14 @@ function CalendarCard({ tasks }) {
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: 2.5,
-                        backgroundColor: 'rgba(255,255,255,0.04)',
+                        backgroundColor: 'rgba(27,94,85,0.03)',
                         fontSize: 13,
-                        color: 'white',
-                        '& fieldset': { borderColor: 'rgba(255,255,255,0.08)' },
-                        '&:hover fieldset': { borderColor: 'rgba(124,58,237,0.5)' },
-                        '&.Mui-focused fieldset': { borderColor: '#7c3aed' },
+                        color: THEME.colors.textMain,
+                        '& fieldset': { borderColor: 'rgba(27,94,85,0.1)' },
+                        '&:hover fieldset': { borderColor: THEME.colors.sidebarBg },
+                        '&.Mui-focused fieldset': { borderColor: THEME.colors.sidebarBg },
                       },
-                      '& input::placeholder': { color: 'rgba(255,255,255,0.25)' }
+                      '& input::placeholder': { color: 'rgba(27,94,85,0.4)' }
                     }}
                   />
                   <Button
@@ -990,11 +995,11 @@ function CalendarCard({ tasks }) {
                       width: 42,
                       height: 40,
                       borderRadius: 2.5,
-                      backgroundColor: '#7c3aed',
+                      backgroundColor: THEME.colors.sidebarBg,
                       color: 'white',
-                      boxShadow: '0 4px 10px rgba(124,58,237,0.2)',
-                      '&:hover': { backgroundColor: '#6d28d9' },
-                      '&:disabled': { backgroundColor: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.2)' }
+                      boxShadow: '0 4px 10px rgba(27,94,85,0.15)',
+                      '&:hover': { backgroundColor: '#13463f' },
+                      '&:disabled': { backgroundColor: 'rgba(0,0,0,0.05)', color: 'rgba(0,0,0,0.25)' }
                     }}
                   >
                     {submittingComment ? <CircularProgress size={16} sx={{ color: 'white' }} /> : <SendIcon sx={{ fontSize: 16 }} />}
@@ -1004,10 +1009,10 @@ function CalendarCard({ tasks }) {
                 {/* List of Comments */}
                 {loadingComments ? (
                   <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
-                    <CircularProgress size={20} sx={{ color: '#7c3aed' }} />
+                    <CircularProgress size={20} sx={{ color: THEME.colors.sidebarBg }} />
                   </Box>
                 ) : comments.length === 0 ? (
-                  <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.25)', fontStyle: 'italic', py: 2 }}>
+                  <Typography variant="caption" sx={{ color: THEME.colors.textMuted, fontStyle: 'italic', py: 2 }}>
                     No comments yet. Start the conversation!
                   </Typography>
                 ) : (
@@ -1020,23 +1025,23 @@ function CalendarCard({ tasks }) {
                       return (
                         <ListItem key={comment.id || i} alignItems="flex-start" sx={{ p: 0, gap: 1.2 }}>
                           <ListItemAvatar sx={{ minWidth: 'auto', mt: 0.5 }}>
-                            <Avatar sx={{ width: 28, height: 28, fontSize: 11, fontWeight: 'bold', background: 'linear-gradient(135deg, #4f46e5, #7c3aed)' }}>
+                            <Avatar sx={{ width: 28, height: 28, fontSize: 11, fontWeight: 'bold', background: THEME.colors.sidebarBg, color: 'white' }}>
                               {initial}
                             </Avatar>
                           </ListItemAvatar>
                           <ListItemText
                             primary={
                               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.3 }}>
-                                <Typography variant="caption" sx={{ color: '#e2e8f0', fontWeight: 600, fontSize: 11 }}>
+                                <Typography variant="caption" sx={{ color: THEME.colors.textMain, fontWeight: 600, fontSize: 11 }}>
                                   {name}
                                 </Typography>
-                                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.25)', fontSize: 9 }}>
+                                <Typography variant="caption" sx={{ color: THEME.colors.textMuted, fontSize: 9 }}>
                                   {dateStr}
                                 </Typography>
                               </Box>
                             }
                             secondary={
-                              <Typography variant="body2" sx={{ color: '#cbd5e1', fontSize: 12, lineHeight: 1.5 }}>
+                              <Typography variant="body2" sx={{ color: THEME.colors.textMain, fontSize: 12, lineHeight: 1.5 }}>
                                 {comment.message}
                               </Typography>
                             }
@@ -1049,8 +1054,8 @@ function CalendarCard({ tasks }) {
                 )}
               </Box>
             </DialogContent>
-            <DialogActions sx={{ p: 2, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-              <Button onClick={handleCloseTaskModal} sx={{ color: 'rgba(255,255,255,0.5)', textTransform: 'none', fontWeight: 600 }}>
+            <DialogActions sx={{ p: 2, borderTop: '1px solid rgba(27,94,85,0.1)' }}>
+              <Button onClick={handleCloseTaskModal} sx={{ color: THEME.colors.textMuted, textTransform: 'none', fontWeight: 600 }}>
                 Close
               </Button>
             </DialogActions>

@@ -1,25 +1,29 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
-import { Box, Typography, Grid, Paper, LinearProgress, Chip, Avatar } from '@mui/material'
+import { Box, Typography, Grid, Paper, LinearProgress, Chip, Avatar, InputBase, IconButton } from '@mui/material'
 import CalendarCard from '../components/CalendarCard'
-import TrendingUpIcon from '@mui/icons-material/TrendingUp'
 import AssignmentIcon from '@mui/icons-material/Assignment'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import PendingIcon from '@mui/icons-material/Pending'
 import PeopleIcon from '@mui/icons-material/People'
+import AddIcon from '@mui/icons-material/Add'
+import SearchIcon from '@mui/icons-material/Search'
+import MoreVertIcon from '@mui/icons-material/MoreVert'
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline'
 import { api } from '../services/api'
+import { THEME } from '../theme'
 
 const priorityColors = {
-  High: { color: '#f87171', bg: 'rgba(248,113,113,0.15)' },
-  Medium: { color: '#fbbf24', bg: 'rgba(251,191,36,0.15)' },
-  Low: { color: '#34d399', bg: 'rgba(52,211,153,0.15)' },
+  High: { color: '#eb5e43', bg: 'rgba(235,94,67,0.12)' },
+  Medium: { color: '#8890d3', bg: 'rgba(136,144,211,0.12)' },
+  Low: { color: '#1b5e55', bg: 'rgba(27,94,85,0.12)' },
 }
 
 const statusColors = {
-  'In Progress': { color: '#fbbf24', bg: 'rgba(251,191,36,0.15)' },
-  'To Do': { color: '#60a5fa', bg: 'rgba(96,165,250,0.15)' },
-  'Completed': { color: '#34d399', bg: 'rgba(52,211,153,0.15)' },
+  'In Progress': { color: '#8890d3', bg: 'rgba(136,144,211,0.12)' },
+  'To Do': { color: '#627575', bg: 'rgba(98,117,117,0.12)' },
+  'Completed': { color: '#1b5e55', bg: 'rgba(27,94,85,0.12)' },
 }
 
 const mapStatusToUI = (status) => {
@@ -50,7 +54,6 @@ function DashboardPage() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    // Parse current logged in user from localStorage
     const savedUser = localStorage.getItem('user');
     if (savedUser) {
       try {
@@ -75,227 +78,315 @@ function DashboardPage() {
     loadData();
   }, [])
 
-  // Derived stats
+  // Stats derivations
   const totalTasks = tasks.length;
   const inProgressTasks = tasks.filter(t => t.status === 'IN_PROGRESS').length;
   const completedTasks = tasks.filter(t => t.status === 'COMPLETED').length;
   const todoTasks = tasks.filter(t => t.status === 'TODO').length;
   const totalUsers = users.length;
 
-  const stats = [
-    { label: 'Total Tasks', value: totalTasks, icon: <AssignmentIcon sx={{ fontSize: 28 }} />, color: '#a78bfa', bg: 'rgba(167,139,250,0.15)', path: '/taskboard' },
-    { label: 'In Progress', value: inProgressTasks, icon: <PendingIcon sx={{ fontSize: 28 }} />, color: '#fbbf24', bg: 'rgba(251,191,36,0.15)', path: '/taskboard' },
-    { label: 'Completed', value: completedTasks, icon: <CheckCircleIcon sx={{ fontSize: 28 }} />, color: '#34d399', bg: 'rgba(52,211,153,0.15)', path: '/taskboard' },
-    { label: 'Team Members', value: totalUsers, icon: <PeopleIcon sx={{ fontSize: 28 }} />, color: '#60a5fa', bg: 'rgba(96,165,250,0.15)', path: '/users' },
-  ]
-
-  // Calculate percentages
   const completedPercent = totalTasks ? Math.round((completedTasks / totalTasks) * 100) : 0;
   const inProgressPercent = totalTasks ? Math.round((inProgressTasks / totalTasks) * 100) : 0;
   const todoPercent = totalTasks ? Math.round((todoTasks / totalTasks) * 100) : 0;
 
-  // Recent tasks (up to 5, sorted by latest)
+  // Recent tasks (agenda items/upcoming)
   const recentTasks = [...tasks]
     .sort((a, b) => new Date(b.created_at || b.id) - new Date(a.created_at || a.id))
-    .slice(0, 5);
+    .slice(0, 3);
+
+  // Format today's date like "18 August 2024"
+  const formattedDate = new Date().toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
 
   return (
     <Layout>
-      <Box sx={{ p: 4, backgroundColor: '#0f1117', minHeight: '100vh' }}>
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="h4" fontWeight="bold"
-            sx={{ color: '#f1f5f9', letterSpacing: -0.5 }}>
-            Dashboard
-          </Typography>
-          <Typography variant="body2"
-            sx={{ color: 'rgba(255,255,255,0.5)', mt: 0.5 }}>
-            Welcome back, {currentUser?.name || 'User'}! Here's what's happening today.
-          </Typography>
+      <Box sx={{ p: 4, backgroundColor: THEME.colors.mainBg, minHeight: '100vh' }}>
+        
+        {/* Main Banner Heading */}
+        <Typography variant="h3" fontWeight="bold" sx={{ color: THEME.colors.sidebarBg, mb: 4, fontFamily: 'Outfit, sans-serif', letterSpacing: -0.8 }}>
+          Task Dashboard
+        </Typography>
+
+        {/* Hello Banner row */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2, mb: 4 }}>
+          <Box>
+            <Typography variant="h5" fontWeight="bold" sx={{ color: THEME.colors.textMain }}>
+              Hello, {currentUser?.name?.split(' ')[0] || 'James'}
+            </Typography>
+            <Typography variant="body2" sx={{ color: THEME.colors.textMuted, fontWeight: 500, mt: 0.2 }}>
+              {formattedDate}
+            </Typography>
+          </Box>
+
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            {/* Search Input Button */}
+            <Paper component="div" sx={{ p: '2px 4px', display: 'flex', alignItems: 'center', width: 240, borderRadius: 2.5, boxShadow: 'none', border: '1px solid rgba(27,94,85,0.12)' }}>
+              <InputBase
+                sx={{ ml: 1, flex: 1, fontSize: 13 }}
+                placeholder="Search tasks..."
+                inputProps={{ 'aria-label': 'search tasks' }}
+              />
+              <IconButton type="button" sx={{ p: '6px', color: THEME.colors.textMuted }} aria-label="search">
+                <SearchIcon fontSize="small" />
+              </IconButton>
+            </Paper>
+
+            {/* Add New Task Button */}
+            <Box onClick={() => navigate('/create-task')} sx={{
+              display: 'flex', alignItems: 'center', gap: 1,
+              backgroundColor: THEME.colors.darkBtnBg,
+              color: 'white', px: 2.5, py: 1.2,
+              borderRadius: 2.5, cursor: 'pointer',
+              fontWeight: 600, fontSize: 13,
+              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+              transition: 'transform 0.15s, opacity 0.15s',
+              '&:hover': {
+                opacity: 0.9,
+                transform: 'translateY(-1px)'
+              }
+            }}>
+              <AddIcon fontSize="small" />
+              Add New Task
+            </Box>
+          </Box>
         </Box>
 
+        {/* Category Cards Row */}
         <Grid container spacing={3} sx={{ mb: 4 }}>
-          {stats.map((stat) => (
-            <Grid item xs={12} sm={6} md={3} key={stat.label}>
-              <Paper elevation={0} onClick={() => navigate(stat.path)} sx={{
-                p: 3, borderRadius: 3,
-                background: 'linear-gradient(145deg, #1e2235, #1a1d2e)',
-                border: '1px solid rgba(255,255,255,0.08)',
-                display: 'flex', alignItems: 'center', gap: 2.5,
-                cursor: 'pointer',
-                transition: 'all 0.25s',
-                '&:hover': {
-                  border: `1px solid ${stat.color}60`,
-                  transform: 'translateY(-3px)',
-                  boxShadow: `0 8px 25px ${stat.color}20`
-                }
-              }}>
-                <Box sx={{
-                  width: 56, height: 56, borderRadius: 2.5,
-                  backgroundColor: stat.bg,
-                  display: 'flex', alignItems: 'center',
-                  justifyContent: 'center', color: stat.color, flexShrink: 0
-                }}>
-                  {stat.icon}
-                </Box>
-                <Box>
-                  <Typography variant="h4" fontWeight="bold"
-                    sx={{ color: '#f1f5f9', lineHeight: 1 }}>
-                    {loading ? '...' : stat.value}
-                  </Typography>
-                  <Typography variant="body2"
-                    sx={{ color: 'rgba(255,255,255,0.5)', mt: 0.5 }}>
-                    {stat.label}
-                  </Typography>
-                </Box>
-              </Paper>
-            </Grid>
-          ))}
+          {/* Completed Card (Green) */}
+          <Grid item xs={12} md={4}>
+            <Paper elevation={0} sx={{
+              p: 3, borderRadius: 4,
+              backgroundColor: THEME.colors.greenAccent,
+              color: '#ffffff',
+              boxShadow: '0 8px 25px rgba(27,94,85,0.12)',
+              position: 'relative'
+            }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2.5 }}>
+                <Typography variant="body1" fontWeight="bold">Completed</Typography>
+                <IconButton size="small" sx={{ color: 'white' }}><MoreVertIcon fontSize="small" /></IconButton>
+              </Box>
+              <Typography variant="h5" fontWeight="bold" sx={{ mb: 1 }}>
+                Completed Progress
+              </Typography>
+              <LinearProgress variant="determinate" value={completedPercent} sx={{
+                height: 8, borderRadius: 4,
+                backgroundColor: 'rgba(255,255,255,0.2)',
+                mb: 2,
+                '& .MuiLinearProgress-bar': { backgroundColor: 'white', borderRadius: 4 }
+              }} />
+              <Typography variant="body2" sx={{ opacity: 0.85, fontWeight: 500 }}>
+                {completedTasks} tasks ({completedPercent}%)
+              </Typography>
+            </Paper>
+          </Grid>
+
+          {/* In Progress Card (Orange) */}
+          <Grid item xs={12} md={4}>
+            <Paper elevation={0} sx={{
+              p: 3, borderRadius: 4,
+              backgroundColor: THEME.colors.orangeAccent,
+              color: '#ffffff',
+              boxShadow: '0 8px 25px rgba(235,94,67,0.12)',
+              position: 'relative'
+            }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2.5 }}>
+                <Typography variant="body1" fontWeight="bold">In Progress</Typography>
+                <IconButton size="small" sx={{ color: 'white' }}><MoreVertIcon fontSize="small" /></IconButton>
+              </Box>
+              <Typography variant="h5" fontWeight="bold" sx={{ mb: 1 }}>
+                Current Progress
+              </Typography>
+              <LinearProgress variant="determinate" value={inProgressPercent} sx={{
+                height: 8, borderRadius: 4,
+                backgroundColor: 'rgba(255,255,255,0.2)',
+                mb: 2,
+                '& .MuiLinearProgress-bar': { backgroundColor: 'white', borderRadius: 4 }
+              }} />
+              <Typography variant="body2" sx={{ opacity: 0.85, fontWeight: 500 }}>
+                {inProgressTasks} tasks ({inProgressPercent}%)
+              </Typography>
+            </Paper>
+          </Grid>
+
+          {/* To Do Card (Purple) */}
+          <Grid item xs={12} md={4}>
+            <Paper elevation={0} sx={{
+              p: 3, borderRadius: 4,
+              backgroundColor: THEME.colors.purpleAccent,
+              color: '#ffffff',
+              boxShadow: '0 8px 25px rgba(136,144,211,0.12)',
+              position: 'relative'
+            }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2.5 }}>
+                <Typography variant="body1" fontWeight="bold">To Do</Typography>
+                <IconButton size="small" sx={{ color: 'white' }}><MoreVertIcon fontSize="small" /></IconButton>
+              </Box>
+              <Typography variant="h5" fontWeight="bold" sx={{ mb: 1 }}>
+                Planner Progress
+              </Typography>
+              <LinearProgress variant="determinate" value={todoPercent} sx={{
+                height: 8, borderRadius: 4,
+                backgroundColor: 'rgba(255,255,255,0.2)',
+                mb: 2,
+                '& .MuiLinearProgress-bar': { backgroundColor: 'white', borderRadius: 4 }
+              }} />
+              <Typography variant="body2" sx={{ opacity: 0.85, fontWeight: 500 }}>
+                {todoTasks} tasks ({todoPercent}%)
+              </Typography>
+            </Paper>
+          </Grid>
         </Grid>
 
-        <Grid container spacing={3}>
-          {/* Left Column: Overall Progress & Recent Tasks */}
+        <Grid container spacing={3.5}>
+          {/* Left Column: Summary & Upcoming Task list */}
           <Grid item xs={12} md={8}>
-            <Grid container spacing={3}>
-              {/* Overall Progress */}
+            <Grid container spacing={3.5}>
+              
+              {/* Task Summary Grid */}
               <Grid item xs={12}>
-                <Paper elevation={0} sx={{
-                  p: 3, borderRadius: 3,
-                  background: 'linear-gradient(145deg, #1e2235, #1a1d2e)',
-                  border: '1px solid rgba(255,255,255,0.08)'
-                }}>
-                  <Typography variant="h6" fontWeight="bold"
-                    sx={{ color: '#f1f5f9', mb: 3 }}>
-                    Overall Progress
-                  </Typography>
+                <Typography variant="h6" fontWeight="bold" sx={{ color: THEME.colors.textMain, mb: 2 }}>
+                  Task Summary
+                </Typography>
+                <Grid container spacing={2.5}>
                   {[
-                    { label: 'Completed', value: completedPercent, color: '#34d399' },
-                    { label: 'In Progress', value: inProgressPercent, color: '#fbbf24' },
-                    { label: 'To Do', value: todoPercent, color: '#60a5fa' },
-                  ].map((item) => (
-                    <Box key={item.label} sx={{ mb: 3 }}>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                        <Typography variant="body2"
-                          sx={{ color: 'rgba(255,255,255,0.7)', fontWeight: 500 }}>
-                          {item.label}
+                    { label: 'Total Tasks', value: totalTasks, icon: <AssignmentIcon sx={{ fontSize: 22 }} />, color: THEME.colors.sidebarBg, path: '/taskboard' },
+                    { label: 'In Progress', value: inProgressTasks, icon: <PendingIcon sx={{ fontSize: 22 }} />, color: THEME.colors.purpleAccent, path: '/taskboard' },
+                    { label: 'Completed', value: completedTasks, icon: <CheckCircleIcon sx={{ fontSize: 22 }} />, color: THEME.colors.greenAccent, path: '/taskboard' },
+                    { label: 'To Do', value: todoTasks, icon: <AssignmentIcon sx={{ fontSize: 22 }} />, color: THEME.colors.orangeAccent, path: '/taskboard' },
+                    { label: 'Team Members', value: totalUsers, icon: <PeopleIcon sx={{ fontSize: 22 }} />, color: '#4f46e5', path: '/users' },
+                  ].map((stat) => (
+                    <Grid item xs={6} sm={4} key={stat.label}>
+                      <Paper elevation={0} onClick={() => navigate(stat.path)} sx={{
+                        p: 2.5, borderRadius: 3.5,
+                        backgroundColor: '#ebf0f0',
+                        border: '1px solid rgba(27,94,85,0.08)',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'space-between',
+                        minHeight: 110,
+                        '&:hover': {
+                          backgroundColor: '#e3e8e8',
+                          transform: 'translateY(-2px)'
+                        }
+                      }}>
+                        <Typography variant="h4" fontWeight="bold" sx={{ color: THEME.colors.textMain, lineHeight: 1 }}>
+                          {loading ? '...' : stat.value}
                         </Typography>
-                        <Typography variant="body2"
-                          sx={{ color: item.color, fontWeight: 700 }}>
-                          {item.value}%
+                        <Typography variant="body2" sx={{ color: THEME.colors.textMuted, fontWeight: 600, fontSize: 13 }}>
+                          {stat.label}
                         </Typography>
-                      </Box>
-                      <LinearProgress variant="determinate" value={item.value} sx={{
-                        height: 8, borderRadius: 4,
-                        backgroundColor: 'rgba(255,255,255,0.08)',
-                        '& .MuiLinearProgress-bar': { backgroundColor: item.color, borderRadius: 4 }
-                      }} />
-                    </Box>
+                      </Paper>
+                    </Grid>
                   ))}
-                  <Box sx={{
-                    mt: 2, p: 2, borderRadius: 2,
-                    background: 'rgba(124,58,237,0.12)',
-                    border: '1px solid rgba(124,58,237,0.25)',
-                    display: 'flex', alignItems: 'center', gap: 1.5
-                  }}>
-                    <TrendingUpIcon sx={{ color: '#a78bfa', fontSize: 20 }} />
-                    <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.75)' }}>
-                      Overall health: {completedPercent}% tasks completed
-                    </Typography>
-                  </Box>
-                </Paper>
+
+                  {/* Add New Data Card styled matching mockup */}
+                  <Grid item xs={6} sm={4}>
+                    <Paper elevation={0} onClick={() => navigate('/create-task')} sx={{
+                      p: 2.5, borderRadius: 3.5,
+                      backgroundColor: 'rgba(27,94,85,0.06)',
+                      border: '1px dashed rgba(27,94,85,0.3)',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      minHeight: 110,
+                      gap: 1,
+                      '&:hover': {
+                        backgroundColor: 'rgba(27,94,85,0.1)',
+                        transform: 'translateY(-2px)'
+                      }
+                    }}>
+                      <AddIcon sx={{ color: THEME.colors.sidebarBg }} />
+                      <Typography variant="body2" sx={{ color: THEME.colors.sidebarBg, fontWeight: 700, fontSize: 13 }}>
+                        New Task
+                      </Typography>
+                    </Paper>
+                  </Grid>
+                </Grid>
               </Grid>
 
-              {/* Recent Tasks */}
+              {/* Upcoming Task Section */}
               <Grid item xs={12}>
-                <Paper elevation={0} sx={{
-                  p: 3, borderRadius: 3,
-                  background: 'linear-gradient(145deg, #1e2235, #1a1d2e)',
-                  border: '1px solid rgba(255,255,255,0.08)'
-                }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                    <Typography variant="h6" fontWeight="bold" sx={{ color: '#f1f5f9' }}>
-                      Recent Tasks
-                    </Typography>
-                    <Typography variant="body2" onClick={() => navigate('/taskboard')} sx={{
-                      color: '#a78bfa', cursor: 'pointer', fontWeight: 500,
-                      '&:hover': { textDecoration: 'underline' }
-                    }}>
-                      View all →
-                    </Typography>
-                  </Box>
-                  {loading ? (
-                    <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.5)', py: 4, textAlign: 'center' }}>
-                      Loading recent tasks...
-                    </Typography>
-                  ) : recentTasks.length === 0 ? (
-                    <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.5)', py: 4, textAlign: 'center' }}>
-                      No tasks found. Create a new task to get started!
-                    </Typography>
-                  ) : (
-                    recentTasks.map((task, index) => {
-                      const uiStatus = mapStatusToUI(task.status);
+                <Typography variant="h6" fontWeight="bold" sx={{ color: THEME.colors.textMain, mb: 2 }}>
+                  Upcoming Task
+                </Typography>
+                
+                {loading ? (
+                  <Typography variant="body2" sx={{ color: THEME.colors.textMuted, py: 4, textAlign: 'center' }}>
+                    Loading tasks...
+                  </Typography>
+                ) : recentTasks.length === 0 ? (
+                  <Typography variant="body2" sx={{ color: THEME.colors.textMuted, py: 4, textAlign: 'center' }}>
+                    No tasks found. Create a new task to get started!
+                  </Typography>
+                ) : (
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    {recentTasks.map((task) => {
                       const uiPriority = mapPriorityToUI(task.priority);
-                      const progress = getStatusProgress(task.status);
-                      const assigneeName = task.assignee?.name || 'Unassigned';
-                      const avatarLetter = assigneeName[0].toUpperCase();
+                      const uiStatus = mapStatusToUI(task.status);
+                      const priorityColor = priorityColors[uiPriority]?.color || THEME.colors.sidebarBg;
 
                       return (
-                        <Box key={task.id} sx={{
-                          display: 'flex', alignItems: 'center', gap: 2, py: 2,
-                          borderBottom: index < recentTasks.length - 1
-                            ? '1px solid rgba(255,255,255,0.06)' : 'none'
+                        <Paper key={task.id} elevation={0} sx={{
+                          p: 2.5, borderRadius: 3.5,
+                          backgroundColor: '#ffffff',
+                          border: '1px solid rgba(27,94,85,0.08)',
+                          borderTop: `5px solid ${priorityColor}`,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: 2,
+                          transition: 'transform 0.15s',
+                          '&:hover': {
+                            transform: 'translateY(-1px)'
+                          }
                         }}>
-                          <Avatar sx={{
-                            width: 36, height: 36, fontSize: 14, fontWeight: 'bold',
-                            background: 'linear-gradient(135deg, #7c3aed, #3b82f6)', flexShrink: 0
-                          }}>
-                            {avatarLetter}
-                          </Avatar>
                           <Box sx={{ flex: 1, minWidth: 0 }}>
-                            <Typography variant="body2"
-                              sx={{ color: '#e2e8f0', fontWeight: 500 }} noWrap>
+                            <Typography variant="body1" fontWeight="bold" sx={{ color: THEME.colors.textMain }} noWrap>
                               {task.title}
                             </Typography>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.8 }}>
-                              <LinearProgress variant="determinate" value={progress} sx={{
-                                flex: 1, height: 4, borderRadius: 2,
-                                backgroundColor: 'rgba(255,255,255,0.08)',
-                                '& .MuiLinearProgress-bar': {
-                                  backgroundColor: progress === 100 ? '#34d399' : '#a78bfa',
-                                  borderRadius: 2
-                                }
-                              }} />
-                              <Typography variant="caption"
-                                sx={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, flexShrink: 0 }}>
-                                {progress}%
-                              </Typography>
-                            </Box>
+                            <Typography variant="body2" sx={{ color: THEME.colors.textMuted, mt: 0.5, fontSize: 12.5 }} noWrap>
+                              {task.description || 'No description provided.'}
+                            </Typography>
                           </Box>
-                          <Chip label={uiPriority} size="small" sx={{
-                            backgroundColor: priorityColors[uiPriority]?.bg || 'rgba(255,255,255,0.1)',
-                            color: priorityColors[uiPriority]?.color || 'white',
-                            fontWeight: 600, fontSize: 11, height: 24, flexShrink: 0,
-                            border: `1px solid ${priorityColors[uiPriority]?.color || 'white'}40`
-                          }} />
-                          <Chip label={uiStatus} size="small" sx={{
-                            backgroundColor: statusColors[uiStatus]?.bg || 'rgba(255,255,255,0.1)',
-                            color: statusColors[uiStatus]?.color || 'white',
-                            fontWeight: 600, fontSize: 11, height: 24, flexShrink: 0,
-                            border: `1px solid ${statusColors[uiStatus]?.color || 'white'}40`
-                          }} />
-                        </Box>
+
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0 }}>
+                            <Chip label={uiPriority} size="small" sx={{
+                              backgroundColor: priorityColors[uiPriority]?.bg || 'rgba(0,0,0,0.05)',
+                              color: priorityColor,
+                              fontWeight: 700, fontSize: 11, height: 24
+                            }} />
+                            <Chip label={uiStatus} size="small" sx={{
+                              backgroundColor: statusColors[uiStatus]?.bg || 'rgba(0,0,0,0.05)',
+                              color: statusColors[uiStatus]?.color || THEME.colors.textMuted,
+                              fontWeight: 700, fontSize: 11, height: 24
+                            }} />
+                            <CheckCircleOutlineIcon sx={{ color: task.status === 'COMPLETED' ? THEME.colors.greenAccent : 'rgba(0,0,0,0.15)' }} />
+                          </Box>
+                        </Paper>
                       );
-                    })
-                  )}
-                </Paper>
+                    })}
+                  </Box>
+                )}
               </Grid>
+
             </Grid>
           </Grid>
 
-          {/* Right Column: Calendar / Schedule Card */}
+          {/* Right Column: Schedule Card */}
           <Grid item xs={12} md={4}>
             <CalendarCard tasks={tasks} />
           </Grid>
         </Grid>
+
       </Box>
     </Layout>
   )
