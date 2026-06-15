@@ -11,6 +11,7 @@ import VisibilityIcon from '@mui/icons-material/Visibility'
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import { api } from '../services/api'
+import { THEME } from '../theme'
 
 function LoginPage() {
   const [email, setEmail] = useState('')
@@ -52,7 +53,7 @@ function LoginPage() {
     <Box sx={{
       minHeight: '100vh',
       display: 'flex',
-      backgroundColor: '#0f1117',
+      backgroundColor: THEME.colors.mainBg,
     }}>
       {/* Left side */}
       <Box sx={{
@@ -63,20 +64,20 @@ function LoginPage() {
         p: 8,
         position: 'relative',
         overflow: 'hidden',
-        background: 'linear-gradient(145deg, #1a1d2e 0%, #0f1117 100%)',
-        borderRight: '1px solid rgba(124,58,237,0.2)'
+        background: THEME.colors.sidebarBg,
+        borderRight: '1px solid rgba(255,255,255,0.06)'
       }}>
         {/* Decorative blobs */}
         <Box sx={{
           position: 'absolute', top: '10%', left: '60%',
           width: 300, height: 300, borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(124,58,237,0.15) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%)',
           pointerEvents: 'none'
         }} />
         <Box sx={{
           position: 'absolute', bottom: '15%', left: '20%',
           width: 250, height: 250, borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(59,130,246,0.12) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%)',
           pointerEvents: 'none'
         }} />
 
@@ -85,32 +86,28 @@ function LoginPage() {
           <Box sx={{
             width: 44, height: 44,
             borderRadius: 2,
-            background: 'linear-gradient(135deg, #7c3aed, #3b82f6)',
+            background: '#ffffff',
             display: 'flex', alignItems: 'center',
             justifyContent: 'center',
-            fontWeight: 'bold', fontSize: 22, color: 'white'
+            fontWeight: 'bold', fontSize: 22, color: THEME.colors.sidebarBg
           }}>
             T
           </Box>
-          <Typography variant="h5" fontWeight="bold" color="white">
-            TaskFlow
+          <Typography variant="h5" fontWeight="bold" color="white" sx={{ letterSpacing: 0.5 }}>
+            MyTask
           </Typography>
         </Box>
 
         <Typography variant="h2" fontWeight="bold" color="white"
           lineHeight={1.15} mb={3} sx={{ fontSize: { md: 38, lg: 46 } }}>
           Your team's<br />
-          <Box component="span" sx={{
-            background: 'linear-gradient(90deg, #7c3aed, #3b82f6)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent'
-          }}>
+          <Box component="span" sx={{ color: '#ffffff', opacity: 0.95 }}>
             work hub.
           </Box>
         </Typography>
 
         <Typography variant="body1" sx={{
-          color: 'rgba(255,255,255,0.55)', mb: 6,
+          color: 'rgba(255,255,255,0.7)', mb: 6,
           lineHeight: 1.8, maxWidth: 380, fontSize: 16
         }}>
           Plan, track and manage your team's work in one place. Stay aligned, move fast.
@@ -124,8 +121,8 @@ function LoginPage() {
             'Powerful dashboard and analytics'
           ].map((item, i) => (
             <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-              <CheckCircleIcon sx={{ color: '#7c3aed', fontSize: 20 }} />
-              <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.65)', fontSize: 14 }}>
+              <CheckCircleIcon sx={{ color: '#ffffff', fontSize: 20, opacity: 0.9 }} />
+              <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.85)', fontSize: 14 }}>
                 {item}
               </Typography>
             </Box>
@@ -135,12 +132,12 @@ function LoginPage() {
         {/* Stats row */}
         <Box sx={{
           display: 'flex', gap: 4, mt: 8,
-          pt: 4, borderTop: '1px solid rgba(255,255,255,0.08)'
+          pt: 4, borderTop: '1px solid rgba(255,255,255,0.1)'
         }}>
           {[['500+', 'Teams'], ['10k+', 'Tasks done'], ['99%', 'Uptime']].map(([num, label]) => (
             <Box key={label}>
               <Typography variant="h5" fontWeight="bold" color="white">{num}</Typography>
-              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.45)' }}>{label}</Typography>
+              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)' }}>{label}</Typography>
             </Box>
           ))}
         </Box>
@@ -154,7 +151,7 @@ function LoginPage() {
         justifyContent: 'center',
         alignItems: 'center',
         p: { xs: 3, md: 6 },
-        backgroundColor: '#0f1117'
+        backgroundColor: '#ffffff'
       }}>
         <Box sx={{ width: '100%', maxWidth: 400 }}>
 
@@ -165,32 +162,32 @@ function LoginPage() {
           }}>
             <Box sx={{
               width: 36, height: 36, borderRadius: 2,
-              background: 'linear-gradient(135deg, #7c3aed, #3b82f6)',
+              background: THEME.colors.sidebarBg,
               display: 'flex', alignItems: 'center',
               justifyContent: 'center', color: 'white', fontWeight: 'bold'
             }}>T</Box>
-            <Typography variant="h6" fontWeight="bold" color="white">TaskFlow</Typography>
+            <Typography variant="h6" fontWeight="bold" sx={{ color: THEME.colors.textMain }}>MyTask</Typography>
           </Box>
 
-          <Typography variant="h4" fontWeight="bold" color="white" mb={0.8}>
+          <Typography variant="h4" fontWeight="bold" sx={{ color: THEME.colors.textMain }} mb={0.8}>
             Welcome back
           </Typography>
-          <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.45)', mb: 4 }}>
-            Sign in to continue to TaskFlow
+          <Typography variant="body2" sx={{ color: THEME.colors.textMuted, mb: 4 }}>
+            Sign in to continue to MyTask
           </Typography>
 
           {error && (
             <Alert severity="error" sx={{
-              mb: 3, borderRadius: 2,
-              backgroundColor: 'rgba(239,68,68,0.12)',
-              border: '1px solid rgba(239,68,68,0.3)',
-              color: '#fca5a5'
+              mb: 3, borderRadius: 2.5,
+              backgroundColor: '#fef2f2',
+              border: '1px solid #fee2e2',
+              color: '#ef4444'
             }}>{error}</Alert>
           )}
 
           {/* Email */}
           <Typography variant="body2" fontWeight={500}
-            sx={{ color: 'rgba(255,255,255,0.7)', mb: 1 }}>
+            sx={{ color: THEME.colors.textMain, mb: 1 }}>
             Email address
           </Typography>
           <TextField
@@ -203,20 +200,20 @@ function LoginPage() {
             sx={{
               mb: 3,
               '& .MuiOutlinedInput-root': {
-                borderRadius: 2,
-                backgroundColor: 'rgba(255,255,255,0.05)',
-                color: 'white',
-                '& fieldset': { borderColor: 'rgba(255,255,255,0.12)' },
-                '&:hover fieldset': { borderColor: 'rgba(124,58,237,0.5)' },
-                '&.Mui-focused fieldset': { borderColor: '#7c3aed' },
+                borderRadius: 2.5,
+                backgroundColor: 'rgba(27,94,85,0.03)',
+                color: THEME.colors.textMain,
+                '& fieldset': { borderColor: 'rgba(27,94,85,0.1)' },
+                '&:hover fieldset': { borderColor: THEME.colors.sidebarBg },
+                '&.Mui-focused fieldset': { borderColor: THEME.colors.sidebarBg },
               },
-              '& input::placeholder': { color: 'rgba(255,255,255,0.25)' },
-              '& input': { color: 'white' }
+              '& input::placeholder': { color: 'rgba(27,94,85,0.4)' },
+              '& input': { color: THEME.colors.textMain }
             }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <EmailIcon sx={{ color: 'rgba(255,255,255,0.3)', fontSize: 20 }} />
+                  <EmailIcon sx={{ color: THEME.colors.textMuted, fontSize: 20 }} />
                 </InputAdornment>
               )
             }}
@@ -225,11 +222,11 @@ function LoginPage() {
           {/* Password */}
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
             <Typography variant="body2" fontWeight={500}
-              sx={{ color: 'rgba(255,255,255,0.7)' }}>
+              sx={{ color: THEME.colors.textMain }}>
               Password
             </Typography>
             <Typography variant="body2"
-              sx={{ color: '#7c3aed', cursor: 'pointer',
+              sx={{ color: THEME.colors.sidebarBg, cursor: 'pointer', fontWeight: 600,
                 '&:hover': { textDecoration: 'underline' }
               }}>
               Forgot password?
@@ -245,28 +242,28 @@ function LoginPage() {
             sx={{
               mb: 2,
               '& .MuiOutlinedInput-root': {
-                borderRadius: 2,
-                backgroundColor: 'rgba(255,255,255,0.05)',
-                color: 'white',
-                '& fieldset': { borderColor: 'rgba(255,255,255,0.12)' },
-                '&:hover fieldset': { borderColor: 'rgba(124,58,237,0.5)' },
-                '&.Mui-focused fieldset': { borderColor: '#7c3aed' },
+                borderRadius: 2.5,
+                backgroundColor: 'rgba(27,94,85,0.03)',
+                color: THEME.colors.textMain,
+                '& fieldset': { borderColor: 'rgba(27,94,85,0.1)' },
+                '&:hover fieldset': { borderColor: THEME.colors.sidebarBg },
+                '&.Mui-focused fieldset': { borderColor: THEME.colors.sidebarBg },
               },
-              '& input::placeholder': { color: 'rgba(255,255,255,0.25)' },
-              '& input': { color: 'white' }
+              '& input::placeholder': { color: 'rgba(27,94,85,0.4)' },
+              '& input': { color: THEME.colors.textMain }
             }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <LockIcon sx={{ color: 'rgba(255,255,255,0.3)', fontSize: 20 }} />
+                  <LockIcon sx={{ color: THEME.colors.textMuted, fontSize: 20 }} />
                 </InputAdornment>
               ),
               endAdornment: (
                 <InputAdornment position="end">
                   <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
                     {showPassword
-                      ? <VisibilityOffIcon sx={{ color: 'rgba(255,255,255,0.3)', fontSize: 20 }} />
-                      : <VisibilityIcon sx={{ color: 'rgba(255,255,255,0.3)', fontSize: 20 }} />}
+                      ? <VisibilityOffIcon sx={{ color: THEME.colors.textMuted, fontSize: 20 }} />
+                      : <VisibilityIcon sx={{ color: THEME.colors.textMuted, fontSize: 20 }} />}
                   </IconButton>
                 </InputAdornment>
               )
@@ -277,13 +274,13 @@ function LoginPage() {
             control={
               <Checkbox size="small" checked={remember}
                 onChange={(e) => setRemember(e.target.checked)}
-                sx={{ color: 'rgba(255,255,255,0.3)',
-                  '&.Mui-checked': { color: '#7c3aed' }
+                sx={{ color: 'rgba(27,94,85,0.2)',
+                  '&.Mui-checked': { color: THEME.colors.sidebarBg }
                 }}
               />
             }
             label={
-              <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.5)' }}>
+              <Typography variant="body2" sx={{ color: THEME.colors.textMuted }}>
                 Remember me for 30 days
               </Typography>
             }
@@ -295,15 +292,17 @@ function LoginPage() {
             onClick={handleLogin} disabled={loading}
             sx={{
               py: 1.6, fontSize: 15, fontWeight: 'bold',
-              borderRadius: 2, textTransform: 'none',
-              background: loading
-                ? 'rgba(124,58,237,0.4)'
-                : 'linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%)',
-              boxShadow: '0 4px 20px rgba(124,58,237,0.35)',
+              borderRadius: 2.5, textTransform: 'none',
+              backgroundColor: THEME.colors.sidebarBg,
+              boxShadow: '0 4px 14px rgba(27,94,85,0.15)',
               mb: 3,
               '&:hover': {
-                background: 'linear-gradient(135deg, #6d28d9 0%, #2563eb 100%)',
-                boxShadow: '0 6px 25px rgba(124,58,237,0.5)',
+                backgroundColor: '#13463f',
+                boxShadow: '0 6px 20px rgba(27,94,85,0.25)',
+              },
+              '&:disabled': {
+                backgroundColor: 'rgba(27,94,85,0.4)',
+                color: 'white'
               }
             }}
           >
@@ -311,10 +310,10 @@ function LoginPage() {
           </Button>
 
           <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.45)' }}>
+            <Typography variant="body2" sx={{ color: THEME.colors.textMuted }}>
               Don't have an account?{' '}
               <Link to="/signup" style={{
-                color: '#7c3aed', fontWeight: 600,
+                color: THEME.colors.sidebarBg, fontWeight: 600,
                 textDecoration: 'none'
               }}>
                 Create account

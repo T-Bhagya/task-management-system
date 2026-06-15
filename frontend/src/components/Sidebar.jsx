@@ -9,6 +9,7 @@ import NotificationsIcon from '@mui/icons-material/Notifications'
 import LogoutIcon from '@mui/icons-material/Logout'
 import MenuIcon from '@mui/icons-material/Menu'
 import CloseIcon from '@mui/icons-material/Close'
+import { THEME } from '../theme'
 
 const menuItems = [
   { icon: <DashboardIcon />, label: 'Dashboard', path: '/dashboard' },
@@ -25,7 +26,8 @@ function Sidebar({ expanded, setExpanded }) {
 
   const userStr = localStorage.getItem('user')
   const user = userStr ? JSON.parse(userStr) : null
-  const userName = user?.name || 'User'
+  const userName = user?.name || 'James Smith'
+  const userEmail = user?.email || 'jamesm@mail.com'
   const userRole = user?.role ? (user.role.charAt(0) + user.role.slice(1).toLowerCase()).replace('_', ' ') : 'Collaborator'
   const initial = userName.charAt(0).toUpperCase()
 
@@ -33,8 +35,8 @@ function Sidebar({ expanded, setExpanded }) {
     <div style={{
       width: expanded ? '240px' : '72px',
       minHeight: '100vh',
-      background: 'linear-gradient(180deg, #13151f 0%, #0f1117 100%)',
-      borderRight: '1px solid rgba(255,255,255,0.07)',
+      background: THEME.colors.sidebarBg,
+      borderRight: '1px solid rgba(255,255,255,0.06)',
       display: 'flex',
       flexDirection: 'column',
       transition: 'width 0.3s ease',
@@ -53,26 +55,43 @@ function Sidebar({ expanded, setExpanded }) {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
             <Box sx={{
               width: 36, height: 36, borderRadius: 2,
-              background: 'linear-gradient(135deg, #7c3aed, #3b82f6)',
+              background: '#ffffff',
               display: 'flex', alignItems: 'center',
               justifyContent: 'center',
-              color: 'white', fontWeight: 'bold', fontSize: 18
+              color: THEME.colors.sidebarBg, fontWeight: 'bold', fontSize: 18
             }}>T</Box>
-            <Typography variant="h6" fontWeight="bold" sx={{ color: 'white', fontSize: 17 }}>
-              TaskFlow
+            <Typography variant="h6" fontWeight="bold" sx={{ color: 'white', fontSize: 17, letterSpacing: 0.5 }}>
+              MyTask
             </Typography>
           </Box>
         )}
         <Box onClick={() => setExpanded(!expanded)} sx={{
-          cursor: 'pointer', color: 'rgba(255,255,255,0.5)',
+          cursor: 'pointer', color: 'rgba(255,255,255,0.7)',
           display: 'flex', alignItems: 'center', p: 0.8, borderRadius: 1.5,
-          '&:hover': { color: 'white', backgroundColor: 'rgba(255,255,255,0.08)' }
+          '&:hover': { color: 'white', backgroundColor: 'rgba(255,255,255,0.1)' }
         }}>
           {expanded ? <CloseIcon fontSize="small" /> : <MenuIcon fontSize="small" />}
         </Box>
       </Box>
 
-      <Divider sx={{ borderColor: 'rgba(255,255,255,0.06)', mx: 2, mb: 2 }} />
+      <Divider sx={{ borderColor: 'rgba(255,255,255,0.08)', mx: 2, mb: 2 }} />
+
+      {/* User profile details header area inside sidebar like mockup */}
+      {expanded && (
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', px: 2, mb: 3 }}>
+          <Avatar sx={{
+            width: 72, height: 72, fontSize: 24, fontWeight: 'bold',
+            background: '#d1d5db', color: '#4b5563', mb: 1.5,
+            border: '2px solid rgba(255,255,255,0.2)'
+          }}>{initial}</Avatar>
+          <Typography variant="body1" sx={{ color: 'white', fontWeight: 600, fontSize: 15, mb: 0.2 }}>
+            {userName}
+          </Typography>
+          <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', fontSize: 12 }}>
+            {userEmail}
+          </Typography>
+        </Box>
+      )}
 
       <Box sx={{ flex: 1, px: 1.5 }}>
         {menuItems.map((item) => {
@@ -81,27 +100,27 @@ function Sidebar({ expanded, setExpanded }) {
             <Tooltip key={item.path} title={!expanded ? item.label : ''} placement="right">
               <Box onClick={() => navigate(item.path)} sx={{
                 display: 'flex', alignItems: 'center', gap: 2,
-                px: expanded ? 2 : 0, py: 1.4, mb: 0.5,
+                px: expanded ? 2 : 0, py: 1.2, mb: 0.5,
                 borderRadius: 2, cursor: 'pointer',
                 justifyContent: expanded ? 'flex-start' : 'center',
-                backgroundColor: isActive ? 'rgba(124,58,237,0.2)' : 'transparent',
-                border: isActive ? '1px solid rgba(124,58,237,0.35)' : '1px solid transparent',
+                backgroundColor: isActive ? 'rgba(255,255,255,0.12)' : 'transparent',
+                border: isActive ? '1px solid rgba(255,255,255,0.15)' : '1px solid transparent',
                 transition: 'all 0.2s',
                 '&:hover': {
-                  backgroundColor: isActive ? 'rgba(124,58,237,0.25)' : 'rgba(255,255,255,0.06)',
+                  backgroundColor: isActive ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.06)',
                 }
               }}>
                 <Box sx={{
-                  color: isActive ? '#a78bfa' : 'rgba(255,255,255,0.45)',
-                  display: 'flex', alignItems: 'center', fontSize: 22, flexShrink: 0,
+                  color: isActive ? '#ffffff' : 'rgba(255,255,255,0.7)',
+                  display: 'flex', alignItems: 'center', fontSize: 20, flexShrink: 0,
                   ml: expanded ? 0 : 'auto', mr: expanded ? 0 : 'auto',
                 }}>
                   {item.icon}
                 </Box>
                 {expanded && (
                   <Typography variant="body2" sx={{
-                    color: isActive ? '#a78bfa' : 'rgba(255,255,255,0.65)',
-                    fontWeight: isActive ? 600 : 400, fontSize: 14, whiteSpace: 'nowrap'
+                    color: isActive ? '#ffffff' : 'rgba(255,255,255,0.75)',
+                    fontWeight: isActive ? 600 : 400, fontSize: 13.5, whiteSpace: 'nowrap'
                   }}>
                     {item.label}
                   </Typography>
@@ -112,25 +131,25 @@ function Sidebar({ expanded, setExpanded }) {
         })}
       </Box>
 
-      <Divider sx={{ borderColor: 'rgba(255,255,255,0.06)', mx: 2, mb: 2 }} />
+      <Divider sx={{ borderColor: 'rgba(255,255,255,0.08)', mx: 2, mb: 2 }} />
 
       <Box sx={{ px: 1.5, pb: 2.5 }}>
         {expanded && (
           <Box sx={{
             display: 'flex', alignItems: 'center', gap: 1.5,
-            px: 2, py: 1.5, mb: 1, borderRadius: 2,
+            px: 2, py: 1.2, mb: 1, borderRadius: 2,
             backgroundColor: 'rgba(255,255,255,0.05)',
             border: '1px solid rgba(255,255,255,0.07)'
           }}>
             <Avatar sx={{
-              width: 34, height: 34, fontSize: 14, fontWeight: 'bold',
-              background: 'linear-gradient(135deg, #7c3aed, #3b82f6)'
+              width: 32, height: 32, fontSize: 13, fontWeight: 'bold',
+              background: '#e2e8f0', color: THEME.colors.sidebarBg
             }}>{initial}</Avatar>
             <Box>
-              <Typography variant="body2" sx={{ color: '#e2e8f0', fontWeight: 600, fontSize: 13 }}>
-                {userName}
+              <Typography variant="body2" sx={{ color: '#ffffff', fontWeight: 600, fontSize: 12.5 }}>
+                {userName.split(' ')[0]}
               </Typography>
-              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', fontSize: 11 }}>
+              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', fontSize: 10 }}>
                 {userRole}
               </Typography>
             </Box>
@@ -139,16 +158,16 @@ function Sidebar({ expanded, setExpanded }) {
         <Tooltip title={!expanded ? 'Logout' : ''} placement="right">
           <Box onClick={() => { localStorage.removeItem('token'); navigate('/') }} sx={{
             display: 'flex', alignItems: 'center', gap: 2,
-            px: expanded ? 2 : 0, py: 1.3, borderRadius: 2,
+            px: expanded ? 2 : 0, py: 1.1, borderRadius: 2,
             cursor: 'pointer', justifyContent: expanded ? 'flex-start' : 'center',
-            '&:hover': { backgroundColor: 'rgba(239,68,68,0.12)' }, transition: 'all 0.2s'
+            '&:hover': { backgroundColor: 'rgba(239,68,68,0.15)' }, transition: 'all 0.2s'
           }}>
             <LogoutIcon sx={{
-              color: 'rgba(255,255,255,0.4)', fontSize: 20, flexShrink: 0,
+              color: 'rgba(255,255,255,0.6)', fontSize: 18, flexShrink: 0,
               ml: expanded ? 0 : 'auto', mr: expanded ? 0 : 'auto',
             }} />
             {expanded && (
-              <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.45)', fontSize: 14 }}>
+              <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)', fontSize: 13 }}>
                 Logout
               </Typography>
             )}

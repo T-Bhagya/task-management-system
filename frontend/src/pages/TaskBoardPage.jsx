@@ -8,17 +8,18 @@ import CloseIcon from '@mui/icons-material/Close'
 import SendIcon from '@mui/icons-material/Send'
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
 import { api } from '../services/api'
+import { THEME } from '../theme'
 
 const columns = [
-  { key: 'todo', label: 'To Do', color: '#60a5fa', bg: 'rgba(96,165,250,0.1)', dbStatus: 'TODO' },
-  { key: 'inProgress', label: 'In Progress', color: '#fbbf24', bg: 'rgba(251,191,36,0.1)', dbStatus: 'IN_PROGRESS' },
-  { key: 'completed', label: 'Completed', color: '#34d399', bg: 'rgba(52,211,153,0.1)', dbStatus: 'COMPLETED' },
+  { key: 'todo', label: 'To Do', color: '#627575', bg: 'rgba(98,117,117,0.1)', dbStatus: 'TODO' },
+  { key: 'inProgress', label: 'In Progress', color: '#8890d3', bg: 'rgba(136,144,211,0.1)', dbStatus: 'IN_PROGRESS' },
+  { key: 'completed', label: 'Completed', color: '#1b5e55', bg: 'rgba(27,94,85,0.1)', dbStatus: 'COMPLETED' },
 ]
 
 const priorityColors = {
-  High: { color: '#f87171', bg: 'rgba(248,113,113,0.15)' },
-  Medium: { color: '#fbbf24', bg: 'rgba(251,191,36,0.15)' },
-  Low: { color: '#34d399', bg: 'rgba(52,211,153,0.15)' },
+  High: { color: '#eb5e43', bg: 'rgba(235,94,67,0.12)' },
+  Medium: { color: '#8890d3', bg: 'rgba(136,144,211,0.12)' },
+  Low: { color: '#1b5e55', bg: 'rgba(27,94,85,0.12)' },
 }
 
 const mapPriorityToUI = (priority) => {
@@ -52,7 +53,6 @@ function TaskBoardPage() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    // Current user context
     const savedUser = localStorage.getItem('user');
     if (savedUser) {
       try {
@@ -61,7 +61,6 @@ function TaskBoardPage() {
         console.error(e);
       }
     }
-
     loadTasks();
   }, [])
 
@@ -87,18 +86,16 @@ function TaskBoardPage() {
     if (!destination) return
     if (source.droppableId === destination.droppableId && source.index === destination.index) return
 
-    // Identify details
     const taskId = parseInt(draggableId);
     const fromColKey = source.droppableId;
     const toColKey = destination.droppableId;
     const newStatus = mapColKeyToStatus(toColKey);
 
-    // Optimistic local state update
     const sourceCol = [...tasks[fromColKey]]
     const destCol = fromColKey === toColKey ? sourceCol : [...tasks[toColKey]]
 
     const [moved] = sourceCol.splice(source.index, 1)
-    moved.status = newStatus; // update status locally
+    moved.status = newStatus;
     destCol.splice(destination.index, 0, moved)
 
     setTasks({
@@ -107,12 +104,10 @@ function TaskBoardPage() {
       [toColKey]: destCol,
     })
 
-    // Persist to API
     try {
       await api.updateTask(taskId, { status: newStatus });
     } catch (error) {
       console.error('Failed to persist task status update:', error.message);
-      // Revert in case of API failure
       loadTasks();
     }
   }
@@ -121,7 +116,6 @@ function TaskBoardPage() {
     setSelectedTask(task)
     setComments([])
     try {
-      // Re-fetch comments dynamically to make sure we see latest comments
       const fetchedComments = await api.getComments(task.id);
       setComments(fetchedComments);
     } catch (error) {
@@ -137,13 +131,12 @@ function TaskBoardPage() {
 
   const handlePostComment = async () => {
     if (!commentText.trim() || !selectedTask) return
-    
+
     try {
       const newComment = await api.addComment(selectedTask.id, commentText);
       setComments([...comments, newComment]);
       setCommentText('');
-      
-      // Update comment count on task card locally
+
       const colKey = mapStatusToColKey(selectedTask.status);
       const updatedColTasks = tasks[colKey].map(t => {
         if (t.id === selectedTask.id) {
@@ -165,40 +158,51 @@ function TaskBoardPage() {
 
   return (
     <Layout>
-      <Box sx={{ p: 4, backgroundColor: '#0f1117', minHeight: '100vh' }}>
+      <Box sx={{ p: 4, backgroundColor: THEME.colors.mainBg, minHeight: '100vh' }}>
 
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
           <Box>
-            <Typography variant="h4" fontWeight="bold" sx={{ color: '#f1f5f9' }}>
+            <Typography variant="h4" fontWeight="bold" sx={{ color: THEME.colors.textMain }}>
               Task Board
             </Typography>
-            <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.5)', mt: 0.5 }}>
+            <Typography variant="body2" sx={{ color: THEME.colors.textMuted, mt: 0.5 }}>
               Drag and drop tasks • Click to view comments
             </Typography>
           </Box>
-          <Button startIcon={<AddIcon />} variant="contained"
-            onClick={() => navigate('/create-task')} sx={{
-              background: 'linear-gradient(135deg, #7c3aed, #3b82f6)',
-              borderRadius: 2, textTransform: 'none', fontWeight: 600, px: 3,
-              '&:hover': { background: 'linear-gradient(135deg, #6d28d9, #2563eb)' }
-            }}>
+          <Button
+            startIcon={<AddIcon />}
+            variant="contained"
+            onClick={() => navigate('/create-task')}
+            sx={{
+              backgroundColor: THEME.colors.darkBtnBg,
+              color: 'white',
+              borderRadius: 2.5,
+              textTransform: 'none',
+              fontWeight: 600,
+              px: 3,
+              boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+              '&:hover': {
+                backgroundColor: '#272936'
+              }
+            }}
+          >
             Add Task
           </Button>
         </Box>
 
         {loading && Object.keys(tasks).every(k => tasks[k].length === 0) ? (
-          <Typography sx={{ color: 'white', textAlign: 'center', py: 8 }}>
+          <Typography sx={{ color: THEME.colors.textMuted, textAlign: 'center', py: 8 }}>
             Loading board tasks...
           </Typography>
         ) : (
           <DragDropContext onDragEnd={onDragEnd}>
             <Box sx={{ display: 'flex', gap: 3, alignItems: 'flex-start', flexWrap: { xs: 'wrap', md: 'nowrap' } }}>
               {columns.map((col) => (
-                <Box key={col.key} sx={{ flex: 1, minWidth: 280, width: '100%' }}>
+                <Box key={col.key} sx={{ flex: 1, minWidth: 280, width: '100%', backgroundColor: 'rgba(27,94,85,0.03)', p: 2, borderRadius: 4, border: '1px solid rgba(27,94,85,0.05)' }}>
 
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
                     <Box sx={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: col.color }} />
-                    <Typography fontWeight="bold" sx={{ color: '#f1f5f9' }}>
+                    <Typography fontWeight="bold" sx={{ color: THEME.colors.textMain }}>
                       {col.label}
                     </Typography>
                     <Chip label={tasks[col.key]?.length || 0} size="small" sx={{
@@ -213,10 +217,10 @@ function TaskBoardPage() {
                         ref={provided.innerRef}
                         {...provided.droppableProps}
                         sx={{
-                          minHeight: 300,
+                          minHeight: 400,
                           backgroundColor: snapshot.isDraggingOver
-                            ? `${col.color}10` : 'transparent',
-                          borderRadius: 2,
+                            ? 'rgba(27,94,85,0.06)' : 'transparent',
+                          borderRadius: 3,
                           transition: 'background-color 0.2s',
                           p: 0.5
                         }}
@@ -237,45 +241,44 @@ function TaskBoardPage() {
                                   elevation={0}
                                   onClick={() => openTask(task)}
                                   sx={{
-                                    p: 2.5, mb: 2, borderRadius: 2.5,
-                                    background: 'linear-gradient(145deg, #1e2235, #1a1d2e)',
+                                    p: 2.5, mb: 2, borderRadius: 3,
+                                    backgroundColor: '#ffffff',
                                     border: snapshot.isDragging
-                                      ? `1px solid ${col.color}80`
-                                      : '1px solid rgba(255,255,255,0.07)',
+                                      ? `1px solid ${THEME.colors.sidebarBg}`
+                                      : '1px solid rgba(27,94,85,0.08)',
                                     cursor: 'pointer',
                                     boxShadow: snapshot.isDragging
-                                      ? `0 8px 25px ${col.color}30` : 'none',
+                                      ? `0 6px 20px rgba(27,94,85,0.1)` : 'none',
                                     transition: 'all 0.2s',
                                     '&:hover': {
-                                      border: `1px solid ${col.color}50`,
+                                      border: `1px solid ${THEME.colors.sidebarBg}`,
                                       transform: 'translateY(-2px)',
                                     }
                                   }}
                                 >
                                   <Typography variant="body2" sx={{
-                                    color: '#e2e8f0', fontWeight: 500, mb: 2
+                                    color: THEME.colors.textMain, fontWeight: 600, mb: 2
                                   }}>
                                     {task.title}
                                   </Typography>
                                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <Chip label={uiPriority} size="small" sx={{
-                                      backgroundColor: priorityColors[uiPriority]?.bg || 'rgba(255,255,255,0.1)',
-                                      color: priorityColors[uiPriority]?.color || 'white',
-                                      fontWeight: 600, fontSize: 11, height: 22,
-                                      border: `1px solid ${priorityColors[uiPriority]?.color || 'white'}40`
+                                      backgroundColor: priorityColors[uiPriority]?.bg || 'rgba(0,0,0,0.05)',
+                                      color: priorityColors[uiPriority]?.color || THEME.colors.textMuted,
+                                      fontWeight: 700, fontSize: 11, height: 22,
                                     }} />
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                       {commentsCount > 0 && (
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                          <CommentIcon sx={{ fontSize: 14, color: 'rgba(255,255,255,0.3)' }} />
-                                          <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.3)', fontSize: 11 }}>
+                                          <CommentIcon sx={{ fontSize: 14, color: THEME.colors.textMuted }} />
+                                          <Typography variant="caption" sx={{ color: THEME.colors.textMuted, fontSize: 11 }}>
                                             {commentsCount}
                                           </Typography>
                                         </Box>
                                       )}
                                       <Avatar sx={{
                                         width: 28, height: 28, fontSize: 12, fontWeight: 'bold',
-                                        background: 'linear-gradient(135deg, #7c3aed, #3b82f6)'
+                                        background: THEME.colors.sidebarBg, color: 'white'
                                       }} title={assigneeName}>
                                         {avatarLetter}
                                       </Avatar>
@@ -303,49 +306,50 @@ function TaskBoardPage() {
             position: 'absolute', top: '50%', left: '50%',
             transform: 'translate(-50%, -50%)',
             width: 500, maxWidth: '95vw', maxHeight: '85vh',
-            background: 'linear-gradient(145deg, #1e2235, #1a1d2e)',
-            border: '1px solid rgba(255,255,255,0.1)',
-            borderRadius: 3, p: 3,
-            display: 'flex', flexDirection: 'column'
+            backgroundColor: '#ffffff',
+            border: '1px solid rgba(27,94,85,0.1)',
+            borderRadius: 4, p: 3,
+            display: 'flex', flexDirection: 'column',
+            boxShadow: '0 10px 40px rgba(0,0,0,0.1)'
           }}>
             {selectedTask && (
               <>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                  <Typography variant="h6" fontWeight="bold" sx={{ color: '#f1f5f9' }}>
+                  <Typography variant="h6" fontWeight="bold" sx={{ color: THEME.colors.textMain }}>
                     {selectedTask.title}
                   </Typography>
                   <Box onClick={closeTask} sx={{
-                    cursor: 'pointer', color: 'rgba(255,255,255,0.5)',
-                    '&:hover': { color: 'white' }
+                    cursor: 'pointer', color: THEME.colors.textMuted,
+                    '&:hover': { color: THEME.colors.textMain }
                   }}>
                     <CloseIcon />
                   </Box>
                 </Box>
 
                 {selectedTask.description && (
-                  <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.6)', mb: 2 }}>
+                  <Typography variant="body2" sx={{ color: THEME.colors.textMuted, mb: 2 }}>
                     {selectedTask.description}
                   </Typography>
                 )}
 
                 <Chip label={mapPriorityToUI(selectedTask.priority)} size="small" sx={{
                   alignSelf: 'flex-start', mb: 2,
-                  backgroundColor: priorityColors[mapPriorityToUI(selectedTask.priority)]?.bg || 'rgba(255,255,255,0.1)',
-                  color: priorityColors[mapPriorityToUI(selectedTask.priority)]?.color || 'white',
-                  fontWeight: 600, fontSize: 11,
+                  backgroundColor: priorityColors[mapPriorityToUI(selectedTask.priority)]?.bg || 'rgba(0,0,0,0.05)',
+                  color: priorityColors[mapPriorityToUI(selectedTask.priority)]?.color || THEME.colors.textMuted,
+                  fontWeight: 700, fontSize: 11,
                 }} />
 
-                <Divider sx={{ borderColor: 'rgba(255,255,255,0.06)', mb: 2 }} />
+                <Divider sx={{ borderColor: 'rgba(27,94,85,0.1)', mb: 2 }} />
 
                 <Typography variant="body2" fontWeight="bold"
-                  sx={{ color: 'rgba(255,255,255,0.7)', mb: 2 }}>
+                  sx={{ color: THEME.colors.textMain, mb: 2 }}>
                   Comments ({comments.length})
                 </Typography>
 
                 <Box sx={{ flex: 1, overflowY: 'auto', mb: 2, maxHeight: 280, pr: 0.5 }}>
                   {comments.length === 0 ? (
                     <Typography variant="body2"
-                      sx={{ color: 'rgba(255,255,255,0.3)', textAlign: 'center', py: 3 }}>
+                      sx={{ color: THEME.colors.textMuted, textAlign: 'center', py: 3 }}>
                       No comments yet. Be the first to comment!
                     </Typography>
                   ) : (
@@ -358,22 +362,22 @@ function TaskBoardPage() {
                         <Box key={c.id} sx={{ display: 'flex', gap: 1.5, mb: 2 }}>
                           <Avatar sx={{
                             width: 32, height: 32, fontSize: 13, fontWeight: 'bold', flexShrink: 0,
-                            background: 'linear-gradient(135deg, #7c3aed, #3b82f6)'
+                            background: THEME.colors.sidebarBg, color: 'white'
                           }}>{letter}</Avatar>
                           <Box sx={{
-                            flex: 1, p: 1.5, borderRadius: 2,
-                            backgroundColor: 'rgba(255,255,255,0.05)',
-                            border: '1px solid rgba(255,255,255,0.07)'
+                            flex: 1, p: 1.5, borderRadius: 2.5,
+                            backgroundColor: 'rgba(27,94,85,0.03)',
+                            border: '1px solid rgba(27,94,85,0.06)'
                           }}>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                              <Typography variant="caption" fontWeight="bold" sx={{ color: '#a78bfa' }}>
+                              <Typography variant="caption" fontWeight="bold" sx={{ color: THEME.colors.sidebarBg }}>
                                 {commentUser}
                               </Typography>
-                              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.3)' }}>
+                              <Typography variant="caption" sx={{ color: THEME.colors.textMuted }}>
                                 {date}
                               </Typography>
                             </Box>
-                            <Typography variant="body2" sx={{ color: '#e2e8f0', fontSize: 13 }}>
+                            <Typography variant="body2" sx={{ color: THEME.colors.textMain, fontSize: 13 }}>
                               {c.message}
                             </Typography>
                           </Box>
@@ -383,12 +387,12 @@ function TaskBoardPage() {
                   )}
                 </Box>
 
-                <Divider sx={{ borderColor: 'rgba(255,255,255,0.06)', mb: 2 }} />
+                <Divider sx={{ borderColor: 'rgba(27,94,85,0.1)', mb: 2 }} />
 
                 <Box sx={{ display: 'flex', gap: 1.5 }}>
                   <Avatar sx={{
                     width: 32, height: 32, fontSize: 13, fontWeight: 'bold', flexShrink: 0,
-                    background: 'linear-gradient(135deg, #7c3aed, #3b82f6)'
+                    background: THEME.colors.sidebarBg, color: 'white'
                   }}>{currentUser?.name?.[0].toUpperCase() || 'U'}</Avatar>
                   <TextField
                     fullWidth placeholder="Write a comment..."
@@ -398,22 +402,23 @@ function TaskBoardPage() {
                     size="small"
                     sx={{
                       '& .MuiOutlinedInput-root': {
-                        borderRadius: 2,
-                        backgroundColor: 'rgba(255,255,255,0.05)',
-                        color: 'white',
-                        '& fieldset': { borderColor: 'rgba(255,255,255,0.12)' },
-                        '&:hover fieldset': { borderColor: 'rgba(124,58,237,0.5)' },
-                        '&.Mui-focused fieldset': { borderColor: '#7c3aed' },
+                        borderRadius: 2.5,
+                        backgroundColor: 'rgba(27,94,85,0.03)',
+                        color: THEME.colors.textMain,
+                        '& fieldset': { borderColor: 'rgba(27,94,85,0.1)' },
+                        '&:hover fieldset': { borderColor: THEME.colors.sidebarBg },
+                        '&.Mui-focused fieldset': { borderColor: THEME.colors.sidebarBg },
                       },
-                      '& input': { color: 'white' },
-                      '& input::placeholder': { color: 'rgba(255,255,255,0.3)' },
+                      '& input::placeholder': { color: 'rgba(27,94,85,0.4)' },
                     }}
                   />
                   <Button variant="contained" onClick={handlePostComment} sx={{
                     minWidth: 42, px: 1.5,
-                    background: 'linear-gradient(135deg, #7c3aed, #3b82f6)',
-                    borderRadius: 2,
-                    '&:hover': { background: 'linear-gradient(135deg, #6d28d9, #2563eb)' }
+                    backgroundColor: THEME.colors.sidebarBg,
+                    color: 'white',
+                    borderRadius: 2.5,
+                    boxShadow: '0 4px 10px rgba(27,94,85,0.15)',
+                    '&:hover': { backgroundColor: '#13463f' }
                   }}>
                     <SendIcon sx={{ fontSize: 18 }} />
                   </Button>
