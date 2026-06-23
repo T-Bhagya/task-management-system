@@ -118,6 +118,9 @@ jobs:
           cd backend
           npm ci --omit=dev
           npx prisma migrate deploy
+          cd ../notification-service
+          npm ci
+          npx prisma db push --accept-data-loss
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
