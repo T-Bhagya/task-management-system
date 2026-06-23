@@ -136,6 +136,8 @@ jobs:
             --name ${{ env.APP_NAME }} \
             --resource-group ${{ env.RESOURCE_GROUP }} \
             --image ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }} \
+            --target-port 5000 \
+            --ingress external \
             --set-env-vars DATABASE_URL="${{ secrets.DATABASE_URL }}" JWT_SECRET="${{ secrets.JWT_SECRET }}" NODE_ENV=production PORT=5000 >> ../deploy-debug.txt 2>&1 || { echo "Main app deployment failed" >> ../deploy-debug.txt; exit 1; }
 
       - name: 🔔 Deploy Notification Service to Container Apps
@@ -145,6 +147,8 @@ jobs:
             --name ${{ env.NOTIFICATIONS_APP_NAME }} \
             --resource-group ${{ env.RESOURCE_GROUP }} \
             --image ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ env.NOTIFICATIONS_IMAGE_NAME }}:sha-${{ github.sha }} \
+            --target-port 3001 \
+            --ingress external \
             --set-env-vars DATABASE_URL="${{ secrets.DATABASE_URL }}" JWT_SECRET="${{ secrets.JWT_SECRET }}" NODE_ENV=production PORT=3001 >> ../deploy-debug.txt 2>&1 || { echo "Notification service deployment failed" >> ../deploy-debug.txt; exit 1; }
 
       - name: 📤 Upload Debug Logs on Failure

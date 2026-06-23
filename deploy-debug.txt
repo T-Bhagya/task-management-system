@@ -1,0 +1,6 @@
+=== DEPLOYING MAIN APP ===
+ERROR: unrecognized arguments: --target-port 5000 --ingress external
+
+https://aka.ms/cli_ref
+Read more about the command in reference docs
+Main app deployment failed
