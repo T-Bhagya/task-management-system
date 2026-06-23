@@ -1,50 +1,45 @@
-const nodemailer = require('nodemailer');
+const { EmailClient } = require('@azure/communication-email');
 
-const hasSmtpConfig = process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS;
+const connectionString = process.env.AZURE_COMMUNICATION_CONNECTION_STRING;
+const senderAddress = process.env.AZURE_SENDER_ADDRESS;
 
-let transporter = null;
+const hasAzureConfig = connectionString && senderAddress;
 
-if (hasSmtpConfig) {
-  transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: process.env.SMTP_SECURE === 'true', // true for 465, false for 587
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-  });
-  console.log('✉️ Email transporter initialized successfully!');
+let emailClient = null;
+
+if (hasAzureConfig) {
+  emailClient = new EmailClient(connectionString);
+  console.log('✉️ Azure Communication Services Email client initialized successfully!');
 } else {
   console.warn(
-    '\n⚠️ [WARNING]: SMTP settings are missing from backend/.env.\n' +
-    'Please add SMTP_HOST, SMTP_PORT, SMTP_USER, and SMTP_PASS to send real emails.\n' +
+    '\n⚠️ [WARNING]: Azure Email settings are missing from backend/.env.\n' +
+    'Please add AZURE_COMMUNICATION_CONNECTION_STRING and AZURE_SENDER_ADDRESS to send real emails.\n' +
     'Falling back to Console Logging / Simulated Welcome Emails.\n'
   );
 }
 
 /**
  * Sends a real welcome email with a temporary password to a collaborator.
- * Falls back gracefully to console printing if SMTP is not configured.
+ * Falls back gracefully to console printing if Azure Email is not configured.
  */
 async function sendTemporaryPasswordEmail(to, name, tempPassword) {
-  if (!hasSmtpConfig || !transporter) {
+  if (!hasAzureConfig || !emailClient) {
     console.log('\n==================================================');
-    console.log(`✉️ [SIMULATED EMAIL SENT TO ${to}] (SMTP not configured)`);
+    console.log(`✉️ [SIMULATED EMAIL SENT TO ${to}] (Azure Email not configured)`);
     console.log(`Subject: Welcome to TaskFlow! Your Temporary Password`);
     console.log(`Body: Hello ${name}, your account has been created.`);
     console.log(`Use this temporary password to log in: ${tempPassword}`);
     console.log('Please change your password immediately upon logging in.');
     console.log('==================================================\n');
-    return { message: 'Email logged to console (SMTP not configured)' };
+    return { message: 'Email logged to console (Azure Email not configured)' };
   }
 
-  const mailOptions = {
-    from: `"TaskFlow" <${process.env.SMTP_USER}>`,
-    to: to,
-    subject: 'Welcome to TaskFlow! Your Temporary Password',
-    text: `Hello ${name},\n\nYour collaborator account has been created successfully.\n\nUse this temporary password to log in: ${tempPassword}\n\nPlease change your password immediately upon logging in.\n\nBest regards,\nThe TaskFlow Team`,
-    html: `
+  const emailMessage = {
+    senderAddress: senderAddress,
+    content: {
+      subject: 'Welcome to TaskFlow! Your Temporary Password',
+      plainText: `Hello ${name},\n\nYour collaborator account has been created successfully.\n\nUse this temporary password to log in: ${tempPassword}\n\nPlease change your password immediately upon logging in.\n\nBest regards,\nThe TaskFlow Team`,
+      html: `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff; color: #1e293b;">
         <div style="text-align: center; margin-bottom: 24px;">
           <h2 style="color: #1b5e55; font-size: 24px; margin: 0; font-weight: bold;">Welcome to TaskFlow!</h2>
@@ -68,13 +63,22 @@ async function sendTemporaryPasswordEmail(to, name, tempPassword) {
           <strong>The TaskFlow Team</strong>
         </p>
       </div>
-    `,
+      `,
+    },
+    recipients: {
+      to: [
+        {
+          address: to,
+        },
+      ],
+    },
   };
 
   try {
-    const info = await transporter.sendMail(mailOptions);
-    console.log(`🚀 Real email sent to ${to} (Message ID: ${info.messageId})`);
-    return info;
+    const poller = await emailClient.beginSend(emailMessage);
+    const response = await poller.pollUntilDone();
+    console.log(`🚀 Real email sent to ${to} (Message ID: ${response.id})`);
+    return response;
   } catch (error) {
     console.error(`❌ Failed to send email to ${to}:`, error.message);
     throw error;
