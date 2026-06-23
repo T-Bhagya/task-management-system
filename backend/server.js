@@ -9,8 +9,20 @@ const app = express();
 const prisma = new PrismaClient(); // Initializing the database connector
 
 // 1. Global Middleware
-app.use(cors());
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(',')
+    : ['http://localhost:5173', 'http://localhost:3000'];
+
+app.use(cors({
+    origin: process.env.NODE_ENV === 'production' ? allowedOrigins : true,
+    credentials: true
+}));
 app.use(express.json());
+
+// Health check endpoint (used by Docker & Azure)
+app.get('/api/health', (req, res) => {
+    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
 
 // Attach prisma instance to the request object so your controllers can access it seamlessly
 app.use((req, res, next) => {
@@ -31,6 +43,7 @@ app.get('/api/test', verifyToken, (req, res) => {
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/tasks', require('./routes/taskRoutes'));
+app.use('/api/projects', require('./routes/projectRoutes'));
 
 // Serve static assets from frontend/dist in production
 app.use(express.static(path.join(__dirname, '../frontend/dist')));

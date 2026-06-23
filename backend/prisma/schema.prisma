@@ -3,23 +3,28 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
+
+
 model User {
-  id                  Int            @id @default(autoincrement())
+  id                  Int             @id @default(autoincrement())
   name                String
-  email               String         @unique
+  email               String          @unique
   password_hash       String
-  role                String         @default("COLLABORATOR")
-  is_active           Boolean        @default(true)
-  must_reset_password Boolean        @default(false)
-  created_at          DateTime       @default(now())
-  tasks_assigned      Task[]         @relation("AssignedTo")
-  tasks_created       Task[]         @relation("CreatedBy")
+  role                String          @default("COLLABORATOR")
+  is_active           Boolean         @default(true)
+  must_reset_password Boolean         @default(false)
+  created_at          DateTime        @default(now())
+  tasks_assigned      Task[]          @relation("AssignedTo")
+  tasks_created       Task[]          @relation("CreatedBy")
   comments            Comment[]
   notifications       Notification[]
+  projects_created    Project[]       @relation("ProjectCreator")
+  projects_managed    Project[]       @relation("ProjectManager")
+  project_memberships ProjectMember[]
 }
 
 model Task {
@@ -33,9 +38,35 @@ model Task {
   updated_at  DateTime  @updatedAt
   assigned_to    Int?
   created_by     Int
+  project_id     Int?
   assignee       User?     @relation("AssignedTo", fields: [assigned_to], references: [id])
   creator        User      @relation("CreatedBy", fields: [created_by], references: [id])
   comments       Comment[]
+  project        Project?  @relation(fields: [project_id], references: [id], onDelete: Cascade)
+}
+
+model Project {
+  id          Int             @id @default(autoincrement())
+  name        String
+  description String?
+  created_at  DateTime        @default(now())
+  updated_at  DateTime        @updatedAt
+  created_by  Int
+  manager_id  Int
+  creator     User            @relation("ProjectCreator", fields: [created_by], references: [id])
+  manager     User            @relation("ProjectManager", fields: [manager_id], references: [id])
+  tasks       Task[]
+  members     ProjectMember[]
+}
+
+model ProjectMember {
+  id         Int     @id @default(autoincrement())
+  project_id Int
+  user_id    Int
+  project    Project @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  user       User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([project_id, user_id])
 }
 
 model Comment {
