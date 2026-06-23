@@ -35,12 +35,14 @@ model Task {
   priority                    Priority  @default(MEDIUM)
   status                      Status    @default(TODO)
   created_at                  DateTime  @default(now())
-  updated_at                  DateTime
+  updated_at                  DateTime  @updatedAt
   assigned_to                 Int?
   created_by                  Int
+  project_id                  Int?
   Comment                     Comment[]
   User_Task_assigned_toToUser User?     @relation("Task_assigned_toToUser", fields: [assigned_to], references: [id])
   User_Task_created_byToUser  User      @relation("Task_created_byToUser", fields: [created_by], references: [id])
+  Project                     Project?  @relation(fields: [project_id], references: [id], onDelete: Cascade)
 }
 
 model User {
@@ -56,6 +58,33 @@ model User {
   Notification                Notification[]
   Task_Task_assigned_toToUser Task[]         @relation("Task_assigned_toToUser")
   Task_Task_created_byToUser  Task[]         @relation("Task_created_byToUser")
+  Project_Creator             Project[]      @relation("ProjectCreator")
+  Project_Manager             Project[]      @relation("ProjectManager")
+  ProjectMember               ProjectMember[]
+}
+
+model Project {
+  id          Int             @id @default(autoincrement())
+  name        String
+  description String?
+  created_at  DateTime        @default(now())
+  updated_at  DateTime        @updatedAt
+  created_by  Int
+  manager_id  Int
+  Creator     User            @relation("ProjectCreator", fields: [created_by], references: [id])
+  Manager     User            @relation("ProjectManager", fields: [manager_id], references: [id])
+  Tasks       Task[]
+  Members     ProjectMember[]
+}
+
+model ProjectMember {
+  id         Int     @id @default(autoincrement())
+  project_id Int
+  user_id    Int
+  Project    Project @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  User       User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([project_id, user_id])
 }
 
 enum Priority {
@@ -75,3 +104,4 @@ enum Status {
   IN_PROGRESS
   COMPLETED
 }
+

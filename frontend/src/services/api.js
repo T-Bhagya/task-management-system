@@ -55,6 +55,7 @@ export const api = {
     if (filters.status) query.append('status', filters.status);
     if (filters.priority) query.append('priority', filters.priority);
     if (filters.assignedTo) query.append('assignedTo', filters.assignedTo);
+    if (filters.projectId) query.append('projectId', filters.projectId);
     const queryString = query.toString();
     return request(`/tasks${queryString ? `?${queryString}` : ''}`, { method: 'GET' });
   },
@@ -70,6 +71,28 @@ export const api = {
 
   deleteTask: (id) => 
     request(`/tasks/${id}`, { method: 'DELETE' }),
+
+  // Projects API
+  getProjects: () =>
+    request('/projects', { method: 'GET' }),
+
+  getProjectById: (id) =>
+    request(`/projects/${id}`, { method: 'GET' }),
+
+  createProject: (projectData) =>
+    request('/projects', { method: 'POST', body: projectData }),
+
+  updateProject: (id, projectData) =>
+    request(`/projects/${id}`, { method: 'PUT', body: projectData }),
+
+  deleteProject: (id) =>
+    request(`/projects/${id}`, { method: 'DELETE' }),
+
+  addProjectMembers: (id, userIds) =>
+    request(`/projects/${id}/members`, { method: 'POST', body: { user_ids: userIds } }),
+
+  removeProjectMember: (id, userId) =>
+    request(`/projects/${id}/members/${userId}`, { method: 'DELETE' }),
 
   // Comments API
   getComments: (taskId) => 

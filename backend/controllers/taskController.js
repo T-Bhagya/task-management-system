@@ -38,17 +38,32 @@ async function sendNotificationHelper(userId, title, message, type) {
 // Get all tasks
 async function getAllTasks(req, res) {
   try {
-    const { status, priority, assignedTo } = req.query;
+    const { status, priority, assignedTo, projectId } = req.query;
     const where = {};
     if (status) where.status = status;
     if (priority) where.priority = priority;
     if (assignedTo) where.assigned_to = parseInt(assignedTo);
+    if (projectId) where.project_id = parseInt(projectId);
+
+    // Enforce role-based scoping if no specific project is requested
+    const role = req.user.role;
+    const userId = req.user.id;
+
+    if (role === 'PROJECT_MANAGER' && !projectId) {
+      where.project = { manager_id: userId };
+    } else if (role === 'COLLABORATOR' && !projectId) {
+      where.OR = [
+        { assigned_to: userId },
+        { project: { members: { some: { user_id: userId } } } }
+      ];
+    }
 
     const tasks = await prisma.task.findMany({
       where,
       include: {
         assignee: { select: { id: true, name: true, email: true, role: true } },
         creator: { select: { id: true, name: true, email: true, role: true } },
+        project: { select: { id: true, name: true, manager_id: true } },
         comments: {
           include: {
             user: { select: { id: true, name: true, email: true, role: true } }
@@ -65,10 +80,25 @@ async function getAllTasks(req, res) {
 // Create a new task
 async function createTask(req, res) {
   try {
-    const { title, description, assigned_to, due_date, priority } = req.body;
+    const { title, description, assigned_to, due_date, priority, project_id } = req.body;
     if (!title) return res.status(400).json({ message: 'Title is required' });
+    if (!project_id) return res.status(400).json({ message: 'Project ID is required' });
 
-    const realUserId = req.user.id; // from authMiddleware verifyToken
+    const role = req.user.role;
+    const userId = req.user.id;
+
+    if (role === 'COLLABORATOR') {
+      return res.status(403).json({ message: 'Only Admins and Project Managers can create tasks' });
+    }
+
+    const projectId = parseInt(project_id);
+    const project = await prisma.project.findUnique({ where: { id: projectId } });
+    if (!project) return res.status(404).json({ message: 'Project not found' });
+
+    if (role === 'PROJECT_MANAGER' && project.manager_id !== userId) {
+      return res.status(403).json({ message: 'Access denied. You do not manage this project.' });
+    }
+
     const task = await prisma.task.create({
       data: {
         title,
@@ -76,12 +106,13 @@ async function createTask(req, res) {
         assigned_to: assigned_to ? parseInt(assigned_to) : null,
         due_date: due_date ? new Date(due_date) : null,
         priority: priority || 'MEDIUM',
-        created_by: realUserId
+        created_by: userId,
+        project_id: projectId
       }
     });
 
     // Automatically create a notification for the assignee
-    if (task.assigned_to && task.assigned_to !== realUserId) {
+    if (task.assigned_to && task.assigned_to !== userId) {
       await sendNotificationHelper(
         task.assigned_to, 
         'New Task Assigned', 
@@ -104,6 +135,11 @@ async function getTaskById(req, res) {
       include: {
         assignee: { select: { id: true, name: true, email: true, role: true } },
         creator: { select: { id: true, name: true, email: true, role: true } },
+        project: {
+          include: {
+            members: true
+          }
+        },
         comments: {
           include: {
             user: { select: { id: true, name: true, email: true, role: true } }
@@ -112,6 +148,19 @@ async function getTaskById(req, res) {
       }
     });
     if (!task) return res.status(404).json({ message: 'Task not found' });
+
+    const role = req.user.role;
+    const userId = req.user.id;
+
+    if (role === 'PROJECT_MANAGER' && task.project && task.project.manager_id !== userId) {
+      return res.status(403).json({ message: 'Access denied' });
+    } else if (role === 'COLLABORATOR') {
+      const isMember = task.project && task.project.members.some(m => m.user_id === userId);
+      if (!isMember && task.assigned_to !== userId) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+    }
+
     res.json(task);
   } catch (err) {
     res.status(500).json({ message: 'Failed to get task', error: err.message });
@@ -121,16 +170,33 @@ async function getTaskById(req, res) {
 // Update a task
 async function updateTask(req, res) {
   try {
-    const { title, description, assigned_to, due_date, priority, status } = req.body;
+    const { title, description, assigned_to, due_date, priority, status, project_id } = req.body;
     const taskId = parseInt(req.params.id);
+    const role = req.user.role;
+    const userId = req.user.id;
 
-    // Fetch current task state to compare assignee
+    // Fetch current task state to compare assignee and check project management
     const currentTask = await prisma.task.findUnique({
-      where: { id: taskId }
+      where: { id: taskId },
+      include: { project: true }
     });
 
     if (!currentTask) {
       return res.status(404).json({ message: 'Task not found' });
+    }
+
+    if (role === 'COLLABORATOR') {
+      // Collaborators can only update status
+      if (title || description || assigned_to || due_date || priority || project_id) {
+        return res.status(403).json({ message: 'Collaborators can only update task status' });
+      }
+      if (currentTask.assigned_to !== userId) {
+        return res.status(403).json({ message: 'You can only update status of tasks assigned to you' });
+      }
+    } else if (role === 'PROJECT_MANAGER') {
+      if (currentTask.project && currentTask.project.manager_id !== userId) {
+        return res.status(403).json({ message: 'Access denied. You do not manage this project.' });
+      }
     }
 
     const task = await prisma.task.update({
@@ -141,7 +207,8 @@ async function updateTask(req, res) {
         ...(assigned_to !== undefined && { assigned_to: assigned_to ? parseInt(assigned_to) : null }),
         ...(due_date && { due_date: new Date(due_date) }),
         ...(priority && { priority }),
-        ...(status && { status })
+        ...(status && { status }),
+        ...(project_id && { project_id: parseInt(project_id) })
       }
     });
 
@@ -165,10 +232,27 @@ async function updateTask(req, res) {
 async function deleteTask(req, res) {
   try {
     const role = req.user.role;
-    if (role !== 'ADMIN' && role !== 'PROJECT_MANAGER') {
-      return res.status(403).json({ message: 'Only Admins and Project Managers can delete tasks' });
+    const userId = req.user.id;
+    const taskId = parseInt(req.params.id);
+
+    const currentTask = await prisma.task.findUnique({
+      where: { id: taskId },
+      include: { project: true }
+    });
+
+    if (!currentTask) {
+      return res.status(404).json({ message: 'Task not found' });
     }
-    await prisma.task.delete({ where: { id: parseInt(req.params.id) } });
+
+    if (role === 'COLLABORATOR') {
+      return res.status(403).json({ message: 'Only Admins and Project Managers can delete tasks' });
+    } else if (role === 'PROJECT_MANAGER') {
+      if (currentTask.project && currentTask.project.manager_id !== userId) {
+        return res.status(403).json({ message: 'Access denied. You do not manage this project.' });
+      }
+    }
+
+    await prisma.task.delete({ where: { id: taskId } });
     res.json({ message: 'Task deleted successfully!' });
   } catch (err) {
     res.status(500).json({ message: 'Failed to delete task', error: err.message });

@@ -7,6 +7,7 @@ import CreateTaskPage from './pages/CreateTaskPage'
 import ProfilePage from './pages/ProfilePage'
 import UsersPage from './pages/UsersPage'
 import NotificationsPage from './pages/NotificationsPage'
+import ProjectsPage from './pages/ProjectsPage'
 
 // Simple auth check - looks for token in localStorage
 function PrivateRoute({ children }) {
@@ -24,6 +25,7 @@ function App() {
 
         {/* Protected routes */}
         <Route path="/dashboard" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
+        <Route path="/projects" element={<PrivateRoute><ProjectsPage /></PrivateRoute>} />
         <Route path="/taskboard" element={<PrivateRoute><TaskBoardPage /></PrivateRoute>} />
         <Route path="/create-task" element={<PrivateRoute><CreateTaskPage /></PrivateRoute>} />
         <Route path="/profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />

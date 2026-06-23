@@ -24,3 +24,19 @@ exports.verifyToken = (req, res, next) => {
         res.status(401).json({ message: "Invalid or expired token." });
     }
 };
+
+exports.requireAdmin = (req, res, next) => {
+    if (req.user && req.user.role === 'ADMIN') {
+        next();
+    } else {
+        res.status(403).json({ message: "Access denied. Admins only." });
+    }
+};
+
+exports.requireAdminOrPM = (req, res, next) => {
+    if (req.user && (req.user.role === 'ADMIN' || req.user.role === 'PROJECT_MANAGER')) {
+        next();
+    } else {
+        res.status(403).json({ message: "Access denied. Admins and Project Managers only." });
+    }
+};
