@@ -50,7 +50,8 @@ exports.login = async (req, res, next) => {
                 id: user.id,
                 name: user.name,
                 email: user.email,
-                role: user.role
+                role: user.role,
+                must_reset_password: user.must_reset_password  // ← required for forced reset flow
             }
         });
 

@@ -4,7 +4,7 @@ import Layout from '../components/Layout'
 import { 
   Box, Typography, Paper, Avatar, Chip, 
   Button, Dialog, DialogTitle, DialogContent, 
-  DialogActions, TextField, Alert, Grid, MenuItem, 
+  DialogActions, TextField, Grid, MenuItem, 
   Select, FormControl, InputLabel, OutlinedInput, 
   Checkbox, ListItemText, Card, CardContent, CardActions,
   IconButton
@@ -16,6 +16,36 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import GroupIcon from '@mui/icons-material/Group'
 import { api } from '../services/api'
 import { THEME } from '../theme'
+
+const fieldStyle = {
+  mb: 3,
+  '& .MuiOutlinedInput-root': {
+    borderRadius: 2.5,
+    backgroundColor: 'rgba(27,94,85,0.03)',
+    color: THEME.colors.textMain,
+    '& fieldset': { borderColor: 'rgba(27,94,85,0.1)' },
+    '&:hover fieldset': { borderColor: THEME.colors.sidebarBg },
+    '&.Mui-focused fieldset': { borderColor: THEME.colors.sidebarBg },
+  },
+  '& .MuiInputLabel-root': { color: THEME.colors.textMuted },
+  '& .MuiInputLabel-root.Mui-focused': { color: THEME.colors.sidebarBg },
+  '& input': { color: THEME.colors.textMain },
+  '& textarea': { color: THEME.colors.textMain },
+  '& .MuiSelect-select': { color: THEME.colors.textMain },
+}
+
+const menuProps = {
+  PaperProps: {
+    sx: {
+      backgroundColor: '#ffffff',
+      border: '1px solid rgba(27,94,85,0.1)',
+      '& .MuiMenuItem-root': {
+        color: THEME.colors.textMain,
+        '&:hover': { backgroundColor: 'rgba(27,94,85,0.05)' }
+      }
+    }
+  }
+}
 
 function ProjectsPage() {
   const [projects, setProjects] = useState([])
@@ -283,90 +313,224 @@ function ProjectsPage() {
         )}
 
         {/* Dialog for Create / Edit Project */}
-        <Dialog open={open} onClose={() => setOpen(false)} maxWidth="sm" fullWidth>
-          <DialogTitle fontWeight="bold" sx={{ color: THEME.colors.textMain }}>
-            {editMode ? 'Edit Project' : 'Create New Project'}
-          </DialogTitle>
-          <DialogContent>
-            {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-            
+        <Dialog
+          open={open}
+          onClose={() => setOpen(false)}
+          maxWidth="sm"
+          fullWidth
+          PaperProps={{
+            sx: {
+              borderRadius: 3.5,
+              backgroundColor: '#ffffff',
+              border: '1px solid rgba(27,94,85,0.08)',
+              boxShadow: '0 20px 60px rgba(27,94,85,0.12)',
+              overflow: 'hidden',
+            }
+          }}
+        >
+          {/* Styled Header */}
+          <Box sx={{
+            px: 3, pt: 3, pb: 2,
+            borderBottom: '1px solid rgba(27,94,85,0.06)',
+            background: 'linear-gradient(135deg, rgba(27,94,85,0.04) 0%, rgba(27,94,85,0.01) 100%)',
+          }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <Box sx={{
+                width: 36, height: 36, borderRadius: 2,
+                backgroundColor: THEME.colors.sidebarBg,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0,
+              }}>
+                <Typography sx={{ fontSize: 18 }}>{editMode ? '✏️' : '📁'}</Typography>
+              </Box>
+              <Box>
+                <Typography fontWeight={700} sx={{ color: THEME.colors.textMain, fontSize: 18, lineHeight: 1.2 }}>
+                  {editMode ? 'Edit Project' : 'Create New Project'}
+                </Typography>
+                <Typography sx={{ color: THEME.colors.textMuted, fontSize: 12, mt: 0.3 }}>
+                  {editMode ? 'Update project details and team members' : 'Set up a new project and assign your team'}
+                </Typography>
+              </Box>
+            </Box>
+          </Box>
+
+          <DialogContent sx={{ px: 3, pt: 3, pb: 1 }}>
+            {error && (
+              <Box sx={{ mb: 3, p: 2, borderRadius: 2.5, backgroundColor: '#fef2f2', border: '1px solid #fee2e2' }}>
+                <Typography sx={{ color: '#ef4444', fontWeight: 600, fontSize: 14 }}>❌ {error}</Typography>
+              </Box>
+            )}
+
             <TextField
-              margin="dense"
-              label="Project Name"
-              type="text"
+              label="Project Name *"
               fullWidth
               variant="outlined"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              sx={{ mb: 2 }}
+              sx={fieldStyle}
+              placeholder="e.g. Website Redesign"
             />
 
             <TextField
-              margin="dense"
               label="Description"
-              type="text"
               fullWidth
               multiline
               rows={3}
               variant="outlined"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              sx={{ mb: 2 }}
+              sx={fieldStyle}
+              placeholder="Briefly describe the project goals..."
             />
 
-            <FormControl fullWidth sx={{ mb: 2 }}>
-              <InputLabel id="manager-select-label">Project Manager</InputLabel>
-              <Select
-                labelId="manager-select-label"
-                value={managerId}
-                label="Project Manager"
-                onChange={(e) => setManagerId(e.target.value)}
-              >
-                {projectManagers.map(pm => (
+            <TextField
+              fullWidth
+              select
+              label="Project Manager *"
+              value={managerId}
+              onChange={(e) => setManagerId(e.target.value)}
+              sx={fieldStyle}
+              SelectProps={{ MenuProps: menuProps }}
+            >
+              <MenuItem value="" disabled>Select a Project Manager</MenuItem>
+              {projectManagers.length === 0 ? (
+                <MenuItem disabled>
+                  <Typography sx={{ color: THEME.colors.textMuted, fontSize: 13, fontStyle: 'italic' }}>
+                    No Project Managers found. Add users with PM role first.
+                  </Typography>
+                </MenuItem>
+              ) : (
+                projectManagers.map(pm => (
                   <MenuItem key={pm.id} value={pm.id}>
-                    {pm.name} ({pm.email})
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                      <Box sx={{
+                        width: 28, height: 28, borderRadius: '50%',
+                        backgroundColor: THEME.colors.sidebarBg,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                      }}>
+                        <Typography sx={{ color: '#fff', fontSize: 10, fontWeight: 700 }}>
+                          {pm.name.slice(0, 2).toUpperCase()}
+                        </Typography>
+                      </Box>
+                      <Box>
+                        <Typography sx={{ fontSize: 13, fontWeight: 600, color: THEME.colors.textMain }}>{pm.name}</Typography>
+                        <Typography sx={{ fontSize: 11, color: THEME.colors.textMuted }}>{pm.email}</Typography>
+                      </Box>
+                    </Box>
                   </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+                ))
+              )}
+            </TextField>
 
-            <FormControl fullWidth>
-              <InputLabel id="collaborators-select-label">Collaborators</InputLabel>
+            <FormControl fullWidth sx={{ mb: 3 }}>
+              <InputLabel
+                id="collaborators-select-label"
+                sx={{
+                  color: THEME.colors.textMuted,
+                  '&.Mui-focused': { color: THEME.colors.sidebarBg }
+                }}
+              >
+                Collaborators
+              </InputLabel>
               <Select
                 labelId="collaborators-select-label"
                 multiple
                 value={selectedMembers}
                 onChange={(e) => setSelectedMembers(e.target.value)}
                 input={<OutlinedInput label="Collaborators" />}
+                MenuProps={menuProps}
                 renderValue={(selected) => {
                   const selectedUsers = collaborators.filter(u => selected.includes(u.id))
-                  return selectedUsers.map(u => u.name).join(', ')
+                  return selectedUsers.length === 0
+                    ? 'None selected'
+                    : selectedUsers.map(u => u.name).join(', ')
+                }}
+                sx={{
+                  borderRadius: 2.5,
+                  backgroundColor: 'rgba(27,94,85,0.03)',
+                  color: THEME.colors.textMain,
+                  '& fieldset': { borderColor: 'rgba(27,94,85,0.1)' },
+                  '&:hover fieldset': { borderColor: THEME.colors.sidebarBg },
+                  '&.Mui-focused fieldset': { borderColor: THEME.colors.sidebarBg },
                 }}
               >
-                {collaborators.map(c => (
-                  <MenuItem key={c.id} value={c.id}>
-                    <Checkbox checked={selectedMembers.indexOf(c.id) > -1} />
-                    <ListItemText primary={c.name} secondary={c.email} />
+                {collaborators.length === 0 ? (
+                  <MenuItem disabled>
+                    <Typography sx={{ color: THEME.colors.textMuted, fontSize: 13, fontStyle: 'italic' }}>
+                      No collaborators found.
+                    </Typography>
                   </MenuItem>
-                ))}
+                ) : (
+                  collaborators.map(c => (
+                    <MenuItem key={c.id} value={c.id}>
+                      <Checkbox
+                        checked={selectedMembers.indexOf(c.id) > -1}
+                        sx={{
+                          color: 'rgba(27,94,85,0.3)',
+                          '&.Mui-checked': { color: THEME.colors.sidebarBg }
+                        }}
+                      />
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, ml: 0.5 }}>
+                        <Box sx={{
+                          width: 28, height: 28, borderRadius: '50%',
+                          backgroundColor: 'rgba(27,94,85,0.15)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                        }}>
+                          <Typography sx={{ color: THEME.colors.sidebarBg, fontSize: 10, fontWeight: 700 }}>
+                            {c.name.slice(0, 2).toUpperCase()}
+                          </Typography>
+                        </Box>
+                        <Box>
+                          <Typography sx={{ fontSize: 13, fontWeight: 600, color: THEME.colors.textMain }}>{c.name}</Typography>
+                          <Typography sx={{ fontSize: 11, color: THEME.colors.textMuted }}>{c.email}</Typography>
+                        </Box>
+                      </Box>
+                    </MenuItem>
+                  ))
+                )}
               </Select>
             </FormControl>
-
           </DialogContent>
-          <DialogActions sx={{ px: 3, pb: 3 }}>
-            <Button onClick={() => setOpen(false)} sx={{ color: THEME.colors.textMuted }}>
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleSubmit} 
-              variant="contained" 
-              disabled={submitting}
-              sx={{ 
-                backgroundColor: THEME.colors.greenAccent,
-                '&:hover': { backgroundColor: '#14463f' }
+
+          <DialogActions sx={{
+            px: 3, pb: 3, pt: 1,
+            gap: 1.5,
+            borderTop: '1px solid rgba(27,94,85,0.06)',
+          }}>
+            <Button
+              onClick={() => setOpen(false)}
+              sx={{
+                color: THEME.colors.textMuted,
+                fontWeight: 600,
+                textTransform: 'none',
+                borderRadius: 2.5,
+                px: 3,
+                border: '1px solid rgba(27,94,85,0.12)',
+                '&:hover': {
+                  backgroundColor: 'rgba(27,94,85,0.04)',
+                  borderColor: 'rgba(27,94,85,0.25)',
+                }
               }}
             >
-              {submitting ? 'Saving...' : editMode ? 'Save Changes' : 'Create Project'}
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              variant="contained"
+              disabled={submitting}
+              sx={{
+                py: 1.2, px: 4,
+                fontWeight: 700,
+                fontSize: 14,
+                borderRadius: 2.5,
+                textTransform: 'none',
+                backgroundColor: THEME.colors.sidebarBg,
+                boxShadow: '0 4px 14px rgba(27,94,85,0.25)',
+                '&:hover': { backgroundColor: '#13463f', boxShadow: '0 6px 20px rgba(27,94,85,0.35)' },
+                '&.Mui-disabled': { backgroundColor: 'rgba(27,94,85,0.3)', color: 'white' }
+              }}
+            >
+              {submitting ? 'Saving...' : editMode ? '✓ Save Changes' : '+ Create Project'}
             </Button>
           </DialogActions>
         </Dialog>

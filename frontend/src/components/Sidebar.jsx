@@ -63,9 +63,9 @@ function Sidebar({ expanded, setExpanded }) {
               display: 'flex', alignItems: 'center',
               justifyContent: 'center',
               color: THEME.colors.sidebarBg, fontWeight: 'bold', fontSize: 18
-            }}>T</Box>
+            }}>D</Box>
             <Typography variant="h6" fontWeight="bold" sx={{ color: 'white', fontSize: 17, letterSpacing: 0.5 }}>
-              MyTask
+              DoIT
             </Typography>
           </Box>
         )}

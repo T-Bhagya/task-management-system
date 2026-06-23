@@ -85,8 +85,8 @@ function SignupPage() {
             display: 'flex', alignItems: 'center',
             justifyContent: 'center',
             fontWeight: 'bold', fontSize: 22, color: THEME.colors.sidebarBg
-          }}>T</Box>
-          <Typography variant="h5" fontWeight="bold" color="white" sx={{ letterSpacing: 0.5 }}>MyTask</Typography>
+          }}>D</Box>
+          <Typography variant="h5" fontWeight="bold" color="white" sx={{ letterSpacing: 0.5 }}>DoIT</Typography>
         </Box>
 
         <Typography variant="h2" fontWeight="bold" color="white"
