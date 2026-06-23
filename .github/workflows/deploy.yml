@@ -119,12 +119,12 @@ jobs:
         run: |
           cd backend
           npm ci --omit=dev
-          echo "=== RUNNING BACKEND MIGRATIONS ===" > ../migration-debug.log
-          npx prisma migrate deploy >> ../migration-debug.log 2>&1 || { echo "Backend migration failed" >> ../migration-debug.log; exit 1; }
-          echo "=== RUNNING NOTIFICATION MIGRATIONS ===" >> ../migration-debug.log
+          echo "=== RUNNING BACKEND MIGRATIONS ===" > ../migration-debug.txt
+          npx prisma migrate deploy >> ../migration-debug.txt 2>&1 || { echo "Backend migration failed" >> ../migration-debug.txt; exit 1; }
+          echo "=== RUNNING NOTIFICATION MIGRATIONS ===" >> ../migration-debug.txt
           cd ../notification-service
-          npm ci >> ../migration-debug.log 2>&1
-          npx prisma db push --accept-data-loss >> ../migration-debug.log 2>&1 || { echo "Notification db push failed" >> ../migration-debug.log; exit 1; }
+          npm ci >> ../migration-debug.txt 2>&1
+          npx prisma db push --accept-data-loss >> ../migration-debug.txt 2>&1 || { echo "Notification db push failed" >> ../migration-debug.txt; exit 1; }
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
@@ -133,7 +133,7 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add migration-debug.log
+          git add -f migration-debug.txt
           git commit -m "chore: upload migration debug log [skip ci]"
           git push origin HEAD:${{ github.ref }}
 
