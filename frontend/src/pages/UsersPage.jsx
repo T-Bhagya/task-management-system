@@ -5,7 +5,7 @@ import {
   Box, Typography, Paper, Avatar, Chip, 
   Button, Dialog, DialogTitle, DialogContent, 
   DialogContentText, DialogActions, TextField, Alert,
-  IconButton, Tooltip
+  IconButton, Tooltip, FormControl, InputLabel, Select, MenuItem
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
@@ -35,6 +35,7 @@ function UsersPage() {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
+  const [role, setRole] = useState('COLLABORATOR')
   const [error, setError] = useState('')
   const [creating, setCreating] = useState(false)
   const [tempPassword, setTempPassword] = useState('')
@@ -81,7 +82,7 @@ function UsersPage() {
     setError('');
     setCreating(true);
     try {
-      const res = await api.createUser({ name, email });
+      const res = await api.createUser({ name, email, role });
       setTempPassword(res.tempPassword);
       
       // Refresh user list
@@ -143,6 +144,7 @@ function UsersPage() {
                 setError('');
                 setName('');
                 setEmail('');
+                setRole('COLLABORATOR');
               }}
               sx={{
                 backgroundColor: THEME.colors.sidebarBg,
@@ -354,8 +356,21 @@ function UsersPage() {
                 variant="outlined"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                sx={{ mb: 1, '& .MuiOutlinedInput-root': { borderRadius: 2.5 } }}
+                sx={{ mb: 2, '& .MuiOutlinedInput-root': { borderRadius: 2.5 } }}
               />
+
+              <FormControl fullWidth variant="outlined" sx={{ mb: 1, '& .MuiOutlinedInput-root': { borderRadius: 2.5 } }}>
+                <InputLabel id="role-select-label">Role</InputLabel>
+                <Select
+                  labelId="role-select-label"
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                  label="Role"
+                >
+                  <MenuItem value="COLLABORATOR">Collaborator</MenuItem>
+                  <MenuItem value="PROJECT_MANAGER">Project Manager</MenuItem>
+                </Select>
+              </FormControl>
             </>
           )}
         </DialogContent>
