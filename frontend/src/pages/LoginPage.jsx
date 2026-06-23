@@ -22,6 +22,12 @@ function LoginPage() {
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
 
+  // Password reset flow states
+  const [mustReset, setMustReset] = useState(false)
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [showNewPassword, setShowNewPassword] = useState(false)
+
   const handleLogin = async () => {
     if (!email || !password) {
       setError('Please enter both email and password')
@@ -41,9 +47,45 @@ function LoginPage() {
       const res = await api.login(email, password);
       localStorage.setItem('token', res.token);
       localStorage.setItem('user', JSON.stringify(res.user));
-      navigate('/dashboard');
+      
+      if (res.user.must_reset_password) {
+        setMustReset(true);
+      } else {
+        navigate('/dashboard');
+      }
     } catch (err) {
       setError(err.message || 'Login failed. Please check your credentials.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const handlePasswordReset = async () => {
+    if (!newPassword || !confirmPassword) {
+      setError('Please fill in both password fields')
+      return
+    }
+    if (newPassword.length < 6) {
+      setError('Password must be at least 6 characters')
+      return
+    }
+    if (newPassword !== confirmPassword) {
+      setError('Passwords do not match')
+      return
+    }
+    setError('')
+    setLoading(true)
+    try {
+      await api.changePassword(newPassword);
+      
+      // Update local storage user object
+      const storedUser = JSON.parse(localStorage.getItem('user'));
+      storedUser.must_reset_password = false;
+      localStorage.setItem('user', JSON.stringify(storedUser));
+      
+      navigate('/dashboard');
+    } catch (err) {
+      setError(err.message || 'Failed to update password.');
     } finally {
       setLoading(false);
     }
@@ -170,10 +212,12 @@ function LoginPage() {
           </Box>
 
           <Typography variant="h4" fontWeight="bold" sx={{ color: THEME.colors.textMain }} mb={0.8}>
-            Welcome back
+            {mustReset ? 'Reset Password' : 'Welcome back'}
           </Typography>
           <Typography variant="body2" sx={{ color: THEME.colors.textMuted, mb: 4 }}>
-            Sign in to continue to MyTask
+            {mustReset 
+              ? 'You are logging in with a temporary password. Please create a new password.'
+              : 'Sign in to continue to MyTask'}
           </Typography>
 
           {error && (
@@ -185,141 +229,246 @@ function LoginPage() {
             }}>{error}</Alert>
           )}
 
-          {/* Email */}
-          <Typography variant="body2" fontWeight={500}
-            sx={{ color: THEME.colors.textMain, mb: 1 }}>
-            Email address
-          </Typography>
-          <TextField
-            fullWidth
-            placeholder="you@example.com"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
-            sx={{
-              mb: 3,
-              '& .MuiOutlinedInput-root': {
-                borderRadius: 2.5,
-                backgroundColor: 'rgba(27,94,85,0.03)',
-                color: THEME.colors.textMain,
-                '& fieldset': { borderColor: 'rgba(27,94,85,0.1)' },
-                '&:hover fieldset': { borderColor: THEME.colors.sidebarBg },
-                '&.Mui-focused fieldset': { borderColor: THEME.colors.sidebarBg },
-              },
-              '& input::placeholder': { color: 'rgba(27,94,85,0.4)' },
-              '& input': { color: THEME.colors.textMain }
-            }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <EmailIcon sx={{ color: THEME.colors.textMuted, fontSize: 20 }} />
-                </InputAdornment>
-              )
-            }}
-          />
-
-          {/* Password */}
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-            <Typography variant="body2" fontWeight={500}
-              sx={{ color: THEME.colors.textMain }}>
-              Password
-            </Typography>
-            <Typography variant="body2"
-              sx={{ color: THEME.colors.sidebarBg, cursor: 'pointer', fontWeight: 600,
-                '&:hover': { textDecoration: 'underline' }
-              }}>
-              Forgot password?
-            </Typography>
-          </Box>
-          <TextField
-            fullWidth
-            placeholder="••••••••"
-            type={showPassword ? 'text' : 'password'}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
-            sx={{
-              mb: 2,
-              '& .MuiOutlinedInput-root': {
-                borderRadius: 2.5,
-                backgroundColor: 'rgba(27,94,85,0.03)',
-                color: THEME.colors.textMain,
-                '& fieldset': { borderColor: 'rgba(27,94,85,0.1)' },
-                '&:hover fieldset': { borderColor: THEME.colors.sidebarBg },
-                '&.Mui-focused fieldset': { borderColor: THEME.colors.sidebarBg },
-              },
-              '& input::placeholder': { color: 'rgba(27,94,85,0.4)' },
-              '& input': { color: THEME.colors.textMain }
-            }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <LockIcon sx={{ color: THEME.colors.textMuted, fontSize: 20 }} />
-                </InputAdornment>
-              ),
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
-                    {showPassword
-                      ? <VisibilityOffIcon sx={{ color: THEME.colors.textMuted, fontSize: 20 }} />
-                      : <VisibilityIcon sx={{ color: THEME.colors.textMuted, fontSize: 20 }} />}
-                  </IconButton>
-                </InputAdornment>
-              )
-            }}
-          />
-
-          <FormControlLabel
-            control={
-              <Checkbox size="small" checked={remember}
-                onChange={(e) => setRemember(e.target.checked)}
-                sx={{ color: 'rgba(27,94,85,0.2)',
-                  '&.Mui-checked': { color: THEME.colors.sidebarBg }
+          {mustReset ? (
+            <>
+              {/* New Password */}
+              <Typography variant="body2" fontWeight={500}
+                sx={{ color: THEME.colors.textMain, mb: 1 }}>
+                New Password
+              </Typography>
+              <TextField
+                fullWidth
+                placeholder="••••••••"
+                type={showNewPassword ? 'text' : 'password'}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handlePasswordReset()}
+                sx={{
+                  mb: 3,
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2.5,
+                    backgroundColor: 'rgba(27,94,85,0.03)',
+                    color: THEME.colors.textMain,
+                    '& fieldset': { borderColor: 'rgba(27,94,85,0.1)' },
+                    '&:hover fieldset': { borderColor: THEME.colors.sidebarBg },
+                    '&.Mui-focused fieldset': { borderColor: THEME.colors.sidebarBg },
+                  },
+                  '& input::placeholder': { color: 'rgba(27,94,85,0.4)' },
+                  '& input': { color: THEME.colors.textMain }
+                }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <LockIcon sx={{ color: THEME.colors.textMuted, fontSize: 20 }} />
+                    </InputAdornment>
+                  ),
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton onClick={() => setShowNewPassword(!showNewPassword)} edge="end">
+                        {showNewPassword
+                          ? <VisibilityOffIcon sx={{ color: THEME.colors.textMuted, fontSize: 20 }} />
+                          : <VisibilityIcon sx={{ color: THEME.colors.textMuted, fontSize: 20 }} />}
+                      </IconButton>
+                    </InputAdornment>
+                  )
                 }}
               />
-            }
-            label={
-              <Typography variant="body2" sx={{ color: THEME.colors.textMuted }}>
-                Remember me for 30 days
+
+              {/* Confirm Password */}
+              <Typography variant="body2" fontWeight={500}
+                sx={{ color: THEME.colors.textMain, mb: 1 }}>
+                Confirm New Password
               </Typography>
-            }
-            sx={{ mb: 3 }}
-          />
+              <TextField
+                fullWidth
+                placeholder="••••••••"
+                type={showNewPassword ? 'text' : 'password'}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handlePasswordReset()}
+                sx={{
+                  mb: 3,
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2.5,
+                    backgroundColor: 'rgba(27,94,85,0.03)',
+                    color: THEME.colors.textMain,
+                    '& fieldset': { borderColor: 'rgba(27,94,85,0.1)' },
+                    '&:hover fieldset': { borderColor: THEME.colors.sidebarBg },
+                    '&.Mui-focused fieldset': { borderColor: THEME.colors.sidebarBg },
+                  },
+                  '& input::placeholder': { color: 'rgba(27,94,85,0.4)' },
+                  '& input': { color: THEME.colors.textMain }
+                }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <LockIcon sx={{ color: THEME.colors.textMuted, fontSize: 20 }} />
+                    </InputAdornment>
+                  )
+                }}
+              />
 
-          <Button
-            fullWidth variant="contained" size="large"
-            onClick={handleLogin} disabled={loading}
-            sx={{
-              py: 1.6, fontSize: 15, fontWeight: 'bold',
-              borderRadius: 2.5, textTransform: 'none',
-              backgroundColor: THEME.colors.sidebarBg,
-              boxShadow: '0 4px 14px rgba(27,94,85,0.15)',
-              mb: 3,
-              '&:hover': {
-                backgroundColor: '#13463f',
-                boxShadow: '0 6px 20px rgba(27,94,85,0.25)',
-              },
-              '&:disabled': {
-                backgroundColor: 'rgba(27,94,85,0.4)',
-                color: 'white'
-              }
-            }}
-          >
-            {loading ? 'Signing in...' : 'Sign in'}
-          </Button>
+              <Button
+                fullWidth variant="contained" size="large"
+                onClick={handlePasswordReset} disabled={loading}
+                sx={{
+                  py: 1.6, fontSize: 15, fontWeight: 'bold',
+                  borderRadius: 2.5, textTransform: 'none',
+                  backgroundColor: THEME.colors.sidebarBg,
+                  boxShadow: '0 4px 14px rgba(27,94,85,0.15)',
+                  mb: 3,
+                  '&:hover': {
+                    backgroundColor: '#13463f',
+                    boxShadow: '0 6px 20px rgba(27,94,85,0.25)',
+                  },
+                  '&:disabled': {
+                    backgroundColor: 'rgba(27,94,85,0.4)',
+                    color: 'white'
+                  }
+                }}
+              >
+                {loading ? 'Updating...' : 'Update Password'}
+              </Button>
+            </>
+          ) : (
+            <>
+              {/* Email */}
+              <Typography variant="body2" fontWeight={500}
+                sx={{ color: THEME.colors.textMain, mb: 1 }}>
+                Email address
+              </Typography>
+              <TextField
+                fullWidth
+                placeholder="you@example.com"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
+                sx={{
+                  mb: 3,
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2.5,
+                    backgroundColor: 'rgba(27,94,85,0.03)',
+                    color: THEME.colors.textMain,
+                    '& fieldset': { borderColor: 'rgba(27,94,85,0.1)' },
+                    '&:hover fieldset': { borderColor: THEME.colors.sidebarBg },
+                    '&.Mui-focused fieldset': { borderColor: THEME.colors.sidebarBg },
+                  },
+                  '& input::placeholder': { color: 'rgba(27,94,85,0.4)' },
+                  '& input': { color: THEME.colors.textMain }
+                }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <EmailIcon sx={{ color: THEME.colors.textMuted, fontSize: 20 }} />
+                    </InputAdornment>
+                  )
+                }}
+              />
 
-          <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="body2" sx={{ color: THEME.colors.textMuted }}>
-              Don't have an account?{' '}
-              <Link to="/signup" style={{
-                color: THEME.colors.sidebarBg, fontWeight: 600,
-                textDecoration: 'none'
-              }}>
-                Create account
-              </Link>
-            </Typography>
-          </Box>
+              {/* Password */}
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                <Typography variant="body2" fontWeight={500}
+                  sx={{ color: THEME.colors.textMain }}>
+                  Password
+                </Typography>
+                <Typography variant="body2"
+                  sx={{ color: THEME.colors.sidebarBg, cursor: 'pointer', fontWeight: 600,
+                    '&:hover': { textDecoration: 'underline' }
+                  }}>
+                  Forgot password?
+                </Typography>
+              </Box>
+              <TextField
+                fullWidth
+                placeholder="••••••••"
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
+                sx={{
+                  mb: 2,
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2.5,
+                    backgroundColor: 'rgba(27,94,85,0.03)',
+                    color: THEME.colors.textMain,
+                    '& fieldset': { borderColor: 'rgba(27,94,85,0.1)' },
+                    '&:hover fieldset': { borderColor: THEME.colors.sidebarBg },
+                    '&.Mui-focused fieldset': { borderColor: THEME.colors.sidebarBg },
+                  },
+                  '& input::placeholder': { color: 'rgba(27,94,85,0.4)' },
+                  '& input': { color: THEME.colors.textMain }
+                }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <LockIcon sx={{ color: THEME.colors.textMuted, fontSize: 20 }} />
+                    </InputAdornment>
+                  ),
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
+                        {showPassword
+                          ? <VisibilityOffIcon sx={{ color: THEME.colors.textMuted, fontSize: 20 }} />
+                          : <VisibilityIcon sx={{ color: THEME.colors.textMuted, fontSize: 20 }} />}
+                      </IconButton>
+                    </InputAdornment>
+                  )
+                }}
+              />
+
+              <FormControlLabel
+                control={
+                  <Checkbox size="small" checked={remember}
+                    onChange={(e) => setRemember(e.target.checked)}
+                    sx={{ color: 'rgba(27,94,85,0.2)',
+                      '&.Mui-checked': { color: THEME.colors.sidebarBg }
+                    }}
+                  />
+                }
+                label={
+                  <Typography variant="body2" sx={{ color: THEME.colors.textMuted }}>
+                    Remember me for 30 days
+                  </Typography>
+                }
+                sx={{ mb: 3 }}
+              />
+
+              <Button
+                fullWidth variant="contained" size="large"
+                onClick={handleLogin} disabled={loading}
+                sx={{
+                  py: 1.6, fontSize: 15, fontWeight: 'bold',
+                  borderRadius: 2.5, textTransform: 'none',
+                  backgroundColor: THEME.colors.sidebarBg,
+                  boxShadow: '0 4px 14px rgba(27,94,85,0.15)',
+                  mb: 3,
+                  '&:hover': {
+                    backgroundColor: '#13463f',
+                    boxShadow: '0 6px 20px rgba(27,94,85,0.25)',
+                  },
+                  '&:disabled': {
+                    backgroundColor: 'rgba(27,94,85,0.4)',
+                    color: 'white'
+                  }
+                }}
+              >
+                {loading ? 'Signing in...' : 'Sign in'}
+              </Button>
+
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography variant="body2" sx={{ color: THEME.colors.textMuted }}>
+                  Don't have an account?{' '}
+                  <Link to="/signup" style={{
+                    color: THEME.colors.sidebarBg, fontWeight: 600,
+                    textDecoration: 'none'
+                  }}>
+                    Create account
+                  </Link>
+                </Typography>
+              </Box>
+            </>
+          )}
 
         </Box>
       </Box>

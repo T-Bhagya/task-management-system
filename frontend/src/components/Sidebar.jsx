@@ -10,6 +10,7 @@ import LogoutIcon from '@mui/icons-material/Logout'
 import MenuIcon from '@mui/icons-material/Menu'
 import CloseIcon from '@mui/icons-material/Close'
 import { THEME } from '../theme'
+import { useNotifications } from '../context/NotificationContext'
 
 const menuItems = [
   { icon: <DashboardIcon />, label: 'Dashboard', path: '/dashboard' },
@@ -23,6 +24,7 @@ const menuItems = [
 function Sidebar({ expanded, setExpanded }) {
   const navigate = useNavigate()
   const location = useLocation()
+  const { unreadCount } = useNotifications()
 
   const userStr = localStorage.getItem('user')
   const user = userStr ? JSON.parse(userStr) : null
@@ -114,15 +116,35 @@ function Sidebar({ expanded, setExpanded }) {
                   color: isActive ? '#ffffff' : 'rgba(255,255,255,0.7)',
                   display: 'flex', alignItems: 'center', fontSize: 20, flexShrink: 0,
                   ml: expanded ? 0 : 'auto', mr: expanded ? 0 : 'auto',
+                  position: 'relative'
                 }}>
                   {item.icon}
+                  {!expanded && item.path === '/notifications' && unreadCount > 0 && (
+                    <Box sx={{
+                      position: 'absolute', top: -3, right: -3,
+                      width: 8, height: 8, borderRadius: '50%',
+                      backgroundColor: '#eb5e43', border: '1px solid ' + THEME.colors.sidebarBg
+                    }} />
+                  )}
                 </Box>
                 {expanded && (
                   <Typography variant="body2" sx={{
                     color: isActive ? '#ffffff' : 'rgba(255,255,255,0.75)',
-                    fontWeight: isActive ? 600 : 400, fontSize: 13.5, whiteSpace: 'nowrap'
+                    fontWeight: isActive ? 600 : 400, fontSize: 13.5, whiteSpace: 'nowrap',
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%'
                   }}>
-                    {item.label}
+                    <span>{item.label}</span>
+                    {item.path === '/notifications' && unreadCount > 0 && (
+                      <Box sx={{
+                        backgroundColor: '#eb5e43', color: 'white',
+                        fontSize: 10, fontWeight: 'bold',
+                        px: 0.8, py: 0.2, borderRadius: 10,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        minWidth: 16, height: 16, ml: 1
+                      }}>
+                        {unreadCount}
+                      </Box>
+                    )}
                   </Typography>
                 )}
               </Box>

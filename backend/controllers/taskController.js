@@ -1,5 +1,40 @@
 const prisma = require('../prismaClient');
 
+// Helper to dual-write notifications to Postgres and SQLite real-time service
+async function sendNotificationHelper(userId, title, message, type) {
+  // 1. Write to local PostgreSQL DB (for safety / fallback)
+  let pgNotif = null;
+  try {
+    pgNotif = await prisma.notification.create({
+      data: {
+        message,
+        type: type === 'task_assigned' ? 'ASSIGNMENT' : type === 'comment_added' ? 'COMMENT' : 'SYSTEM',
+        user_id: parseInt(userId)
+      }
+    });
+  } catch (err) {
+    console.error('Failed to create local Postgres notification:', err.message);
+  }
+
+  // 2. Relay via Socket.io notification-service
+  try {
+    await fetch('http://localhost:3003/api/notifications', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId: String(userId),
+        title,
+        message,
+        type
+      })
+    });
+  } catch (err) {
+    console.error('Failed to relay notification to real-time service:', err.message);
+  }
+
+  return pgNotif;
+}
+
 // Get all tasks
 async function getAllTasks(req, res) {
   try {
@@ -47,13 +82,12 @@ async function createTask(req, res) {
 
     // Automatically create a notification for the assignee
     if (task.assigned_to && task.assigned_to !== realUserId) {
-      await prisma.notification.create({
-        data: {
-          message: `New task assigned to you: "${task.title}"`,
-          type: 'ASSIGNMENT',
-          user_id: task.assigned_to
-        }
-      }).catch(err => console.error('Failed to create assignment notification:', err.message));
+      await sendNotificationHelper(
+        task.assigned_to, 
+        'New Task Assigned', 
+        `New task assigned to you: "${task.title}"`, 
+        'task_assigned'
+      );
     }
 
     res.status(201).json(task);
@@ -113,13 +147,12 @@ async function updateTask(req, res) {
 
     // If assignee changed, notify the new assignee
     if (assigned_to && parseInt(assigned_to) !== currentTask.assigned_to && parseInt(assigned_to) !== req.user.id) {
-      await prisma.notification.create({
-        data: {
-          message: `Task assigned to you: "${task.title}"`,
-          type: 'ASSIGNMENT',
-          user_id: parseInt(assigned_to)
-        }
-      }).catch(err => console.error('Notification error:', err.message));
+      await sendNotificationHelper(
+        parseInt(assigned_to), 
+        'Task Assigned', 
+        `Task assigned to you: "${task.title}"`, 
+        'task_assigned'
+      );
     }
 
     res.json(task);
@@ -177,25 +210,24 @@ async function addComment(req, res) {
     // Create notifications for creator and assignee
     const task = await prisma.task.findUnique({ where: { id: comment.task_id } });
     if (task) {
+      const summary = `${message.substring(0, 30)}${message.length > 30 ? '...' : ''}`;
       // Notify creator
       if (task.created_by !== req.user.id) {
-        await prisma.notification.create({
-          data: {
-            message: `New comment on task "${task.title}": "${message.substring(0, 30)}${message.length > 30 ? '...' : ''}"`,
-            type: 'COMMENT',
-            user_id: task.created_by
-          }
-        }).catch(err => console.error('Notification error:', err.message));
+        await sendNotificationHelper(
+          task.created_by, 
+          'New Comment Added', 
+          `New comment on task "${task.title}": "${summary}"`, 
+          'comment_added'
+        );
       }
       // Notify assignee
       if (task.assigned_to && task.assigned_to !== req.user.id && task.assigned_to !== task.created_by) {
-        await prisma.notification.create({
-          data: {
-            message: `New comment on task "${task.title}": "${message.substring(0, 30)}${message.length > 30 ? '...' : ''}"`,
-            type: 'COMMENT',
-            user_id: task.assigned_to
-          }
-        }).catch(err => console.error('Notification error:', err.message));
+        await sendNotificationHelper(
+          task.assigned_to, 
+          'New Comment Added', 
+          `New comment on task "${task.title}": "${summary}"`, 
+          'comment_added'
+        );
       }
     }
 

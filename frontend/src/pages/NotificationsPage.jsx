@@ -4,8 +4,8 @@ import { Box, Typography, Paper, Chip } from '@mui/material'
 import AssignmentIcon from '@mui/icons-material/Assignment'
 import PersonIcon from '@mui/icons-material/Person'
 import CommentIcon from '@mui/icons-material/Comment'
-import { api } from '../services/api'
 import { THEME } from '../theme'
+import { useNotifications } from '../context/NotificationContext'
 
 const getNotificationIcon = (type) => {
   switch (type) {
@@ -21,33 +21,18 @@ const getNotificationIcon = (type) => {
 };
 
 function NotificationsPage() {
-  const [notifications, setNotifications] = useState([])
+  const { notifications, markAllAsRead, fetchNotifications } = useNotifications()
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    async function loadNotifications() {
-      try {
-        const fetched = await api.getNotifications();
-        setNotifications(fetched);
-
-        // Mark unread notifications as read in the background
-        const unread = fetched.filter(n => !n.is_read);
-        if (unread.length > 0) {
-          Promise.all(unread.map(n => api.markNotificationAsRead(n.id)))
-            .then(() => {
-              // Optionally update state to read
-              setNotifications(prev => prev.map(item => ({ ...item, is_read: true })));
-            })
-            .catch(err => console.error('Error marking notifications as read:', err.message));
-        }
-      } catch (err) {
-        console.error('Failed to load notifications:', err.message);
-      } finally {
-        setLoading(false);
-      }
+    async function init() {
+      await fetchNotifications();
+      setLoading(false);
+      // Mark all as read after loading the page
+      await markAllAsRead();
     }
-    loadNotifications();
-  }, [])
+    init();
+  }, []);
 
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
