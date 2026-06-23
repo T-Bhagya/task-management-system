@@ -3,6 +3,8 @@
 # ─────────────────────────────────────────────
 FROM node:20-alpine AS builder
 
+RUN apk add --no-cache openssl libc6-compat
+
 WORKDIR /app
 
 COPY package*.json ./
@@ -16,6 +18,8 @@ RUN npm run build
 # ─────────────────────────────────────────────
 FROM node:20-alpine AS production
 
+RUN apk add --no-cache openssl libc6-compat
+
 WORKDIR /app
 
 COPY package*.json ./
@@ -25,7 +29,7 @@ COPY --from=builder /app/dist ./dist
 
 # Copy prisma schema for client generation
 COPY prisma ./prisma
-RUN npx prisma generate && npx prisma db push
+RUN npx prisma generate
 
 EXPOSE 3001
 
