@@ -108,6 +108,9 @@ export const api = {
   createUser: (userData) =>
     request('/users', { method: 'POST', body: userData }),
 
+  deleteUser: (id) =>
+    request(`/users/${id}`, { method: 'DELETE' }),
+
   getProfile: () => 
     request('/users/profile', { method: 'GET' }),
 

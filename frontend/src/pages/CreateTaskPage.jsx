@@ -36,6 +36,12 @@ const menuProps = {
   }
 }
 
+const priorityOptions = [
+  { value: 'High',   label: 'High',   color: '#dc2626', bg: '#fef2f2' },
+  { value: 'Medium', label: 'Medium', color: '#d97706', bg: '#fffbeb' },
+  { value: 'Low',    label: 'Low',    color: '#16a34a', bg: '#f0fdf4' },
+]
+
 function getBusyLevel(taskCount) {
   if (taskCount <= 1) return { label: 'Available', color: '#16a34a', bg: '#f0fdf4', dot: '#16a34a' }
   if (taskCount <= 3) return { label: 'Moderate', color: '#d97706', bg: '#fffbeb', dot: '#f59e0b' }
@@ -105,7 +111,7 @@ function TeamAvailabilityPanel({ users }) {
                 </Box>
               </Box>
 
-              {/* Right: dot + status — fixed width so it never wraps */}
+              {/* Right: dot + status */}
               <Box sx={{
                 display: 'flex', alignItems: 'center', gap: 0.6,
                 flexShrink: 0, ml: 1, width: 72, justifyContent: 'flex-end'
@@ -122,71 +128,207 @@ function TeamAvailabilityPanel({ users }) {
           )
         })
       )}
-
-      {/* Legend */}
-      <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid rgba(27,94,85,0.08)' }}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.6 }}>
-          {[
-            { dot: '#16a34a', label: 'Available — 0 to 1 tasks' },
-            { dot: '#f59e0b', label: 'Moderate — 2 to 3 tasks' },
-            { dot: '#ef4444', label: 'Busy — 4 or more tasks' },
-          ].map((item) => (
-            <Box key={item.label} sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
-              <Box sx={{ width: 7, height: 7, borderRadius: '50%', backgroundColor: item.dot, flexShrink: 0 }} />
-              <Typography sx={{ fontSize: 11, color: THEME.colors.textMuted }}>{item.label}</Typography>
-            </Box>
-          ))}
-        </Box>
-      </Box>
     </Paper>
   )
 }
 
-function PriorityGuidePanel() {
-  const priorities = [
-    { label: 'High', desc: 'Urgent — needs immediate attention', color: '#dc2626', bg: '#fef2f2' },
-    { label: 'Medium', desc: 'Important but not urgent', color: '#d97706', bg: '#fffbeb' },
-    { label: 'Low', desc: 'Can be done when time allows', color: '#16a34a', bg: '#f0fdf4' },
-  ]
+
+function CreateTaskPage() {
+  const [form, setForm] = useState({
+    title: '', description: '', priority: '',
+    assignee: '', dueDate: '', status: '',
+  })
+  const [users, setUsers] = useState([])
+  const [usersWithTasks, setUsersWithTasks] = useState([])
+  const [submitted, setSubmitted] = useState(false)
+  const [error, setError] = useState('')
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    async function loadUsers() {
+      try {
+        const fetchedUsers = await api.getUsers()
+        setUsers(fetchedUsers)
+        const tasks = await api.getTasks()
+        const countMap = {}
+        tasks.forEach(t => {
+          if (t.assigned_to) {
+            countMap[t.assigned_to] = (countMap[t.assigned_to] || 0) + 1
+          }
+        })
+        const enriched = fetchedUsers.map(u => ({ ...u, taskCount: countMap[u.id] || 0 }))
+        setUsersWithTasks(enriched)
+      } catch (err) {
+        console.error('Failed to load users:', err.message)
+      }
+    }
+    loadUsers()
+  }, [])
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value })
+  }
+
+  const handleSubmit = async () => {
+    if (!form.title || !form.priority || !form.status) {
+      setError('Please fill in Title, Priority, and Status.')
+      return
+    }
+    setError('')
+    setSubmitted(false)
+
+    let mappedPriority = 'MEDIUM'
+    if (form.priority === 'High') mappedPriority = 'HIGH'
+    else if (form.priority === 'Low') mappedPriority = 'LOW'
+
+    let mappedStatus = 'TODO'
+    if (form.status === 'In Progress') mappedStatus = 'IN_PROGRESS'
+    else if (form.status === 'Completed') mappedStatus = 'COMPLETED'
+
+    const payload = {
+      title: form.title,
+      description: form.description || null,
+      priority: mappedPriority,
+      status: mappedStatus,
+      assigned_to: form.assignee ? parseInt(form.assignee) : null,
+      due_date: form.dueDate ? new Date(form.dueDate).toISOString() : null,
+    }
+
+    try {
+      await api.createTask(payload)
+      setSubmitted(true)
+      setTimeout(() => {
+        setSubmitted(false)
+        navigate('/taskboard')
+      }, 1500)
+    } catch (err) {
+      setError(err.message || 'Failed to create task. Please try again.')
+    }
+  }
+
+  const selectedPriority = priorityOptions.find(p => p.value === form.priority)
+
   return (
-    <Paper elevation={0} sx={{
-      p: 3, borderRadius: 3.5,
-      backgroundColor: '#ffffff',
-      border: '1px solid rgba(27,94,85,0.08)',
-      boxShadow: '0 4px 25px rgba(27,94,85,0.04)',
-    }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-        <Box sx={{
-          width: 32, height: 32, borderRadius: '50%',
-          backgroundColor: 'rgba(27,94,85,0.08)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center'
-        }}>
-          <Typography sx={{ fontSize: 16 }}>🚦</Typography>
+    <Layout>
+      <Box sx={{ p: 4, backgroundColor: THEME.colors.mainBg, minHeight: '100vh' }}>
+
+        <Box sx={{ mb: 4 }}>
+          <Typography variant="h4" fontWeight="bold" sx={{ color: THEME.colors.textMain }}>
+            Create Task
+          </Typography>
+          <Typography variant="body2" sx={{ color: THEME.colors.textMuted, mt: 0.5 }}>
+            Add a new task to the board
+          </Typography>
         </Box>
-        <Typography fontWeight={600} sx={{ color: THEME.colors.textMain, fontSize: 15 }}>
-          Priority Guide
-        </Typography>
-      </Box>
-      {priorities.map((p) => (
-        <Box key={p.label} sx={{
-          display: 'flex', alignItems: 'center', gap: 1.5,
-          p: 1.2, mb: 1, borderRadius: 2,
-          backgroundColor: p.bg,
-        }}>
-          <Box sx={{
-            px: 1.2, py: 0.3, borderRadius: 1.5,
-            backgroundColor: p.color,
-            minWidth: 52, textAlign: 'center', flexShrink: 0
-          }}>
-            <Typography sx={{ color: '#fff', fontSize: 11, fontWeight: 600 }}>{p.label}</Typography>
+
+        {/* Two column layout */}
+        <Box sx={{ display: 'flex', gap: 3, alignItems: 'flex-start' }}>
+
+          {/* LEFT — form */}
+          <Box sx={{ flex: '0 0 55%', minWidth: 0 }}>
+            <Paper elevation={0} sx={{
+              p: 3, borderRadius: 3.5,
+              backgroundColor: '#ffffff',
+              border: '1px solid rgba(27,94,85,0.08)',
+              boxShadow: '0 4px 25px rgba(27,94,85,0.04)'
+            }}>
+
+              {submitted && (
+                <Box sx={{ mb: 3, p: 2, borderRadius: 2.5, backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0' }}>
+                  <Typography sx={{ color: '#16a34a', fontWeight: 600 }}>
+                    ✅ Task created successfully! Redirecting...
+                  </Typography>
+                </Box>
+              )}
+
+              {error && (
+                <Box sx={{ mb: 3, p: 2, borderRadius: 2.5, backgroundColor: '#fef2f2', border: '1px solid #fee2e2' }}>
+                  <Typography sx={{ color: '#ef4444', fontWeight: 600 }}>
+                    ❌ {error}
+                  </Typography>
+                </Box>
+              )}
+
+              <TextField fullWidth label="Task Title *" name="title"
+                value={form.title} onChange={handleChange} sx={fieldStyle} />
+
+              <TextField fullWidth label="Description" name="description"
+                value={form.description} onChange={handleChange}
+                multiline rows={3} sx={fieldStyle} />
+
+              {/* Priority dropdown with color-coded items */}
+              <TextField fullWidth select label="Priority *" name="priority"
+                value={form.priority} onChange={handleChange}
+                sx={{
+                  ...fieldStyle,
+                  '& .MuiOutlinedInput-root': {
+                    ...fieldStyle['& .MuiOutlinedInput-root'],
+                    backgroundColor: selectedPriority ? selectedPriority.bg : 'rgba(27,94,85,0.03)',
+                    '& fieldset': {
+                      borderColor: selectedPriority ? `${selectedPriority.color}55` : 'rgba(27,94,85,0.1)'
+                    },
+                  },
+                  '& .MuiSelect-select': {
+                    color: selectedPriority ? selectedPriority.color : THEME.colors.textMain,
+                    fontWeight: selectedPriority ? 700 : 400,
+                  }
+                }}
+                SelectProps={{ MenuProps: menuProps }}
+              >
+                {priorityOptions.map((p) => (
+                  <MenuItem key={p.value} value={p.value} sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <Box sx={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: p.color, flexShrink: 0 }} />
+                    <Typography sx={{ color: p.color, fontWeight: 600, fontSize: 14 }}>{p.label}</Typography>
+                  </MenuItem>
+                ))}
+              </TextField>
+
+              <TextField fullWidth select label="Status *" name="status"
+                value={form.status} onChange={handleChange}
+                sx={fieldStyle} SelectProps={{ MenuProps: menuProps }}>
+                {['To Do', 'In Progress', 'Completed'].map((s) => (
+                  <MenuItem key={s} value={s}>{s}</MenuItem>
+                ))}
+              </TextField>
+
+              <TextField fullWidth select label="Assignee" name="assignee"
+                value={form.assignee} onChange={handleChange}
+                sx={fieldStyle} SelectProps={{ MenuProps: menuProps }}>
+                <MenuItem value="">Unassigned</MenuItem>
+                {users.map((u) => (
+                  <MenuItem key={u.id} value={u.id}>{u.name} ({u.email})</MenuItem>
+                ))}
+              </TextField>
+
+              <TextField fullWidth label="Due Date" name="dueDate"
+                type="date" value={form.dueDate} onChange={handleChange}
+                InputLabelProps={{ shrink: true }} sx={fieldStyle} />
+
+              <Button fullWidth variant="contained" endIcon={<SendIcon />}
+                onClick={handleSubmit}
+                sx={{
+                  py: 1.5, fontWeight: 'bold', fontSize: 15,
+                  borderRadius: 2.5, textTransform: 'none',
+                  backgroundColor: THEME.colors.sidebarBg,
+                  boxShadow: '0 4px 14px rgba(27,94,85,0.15)',
+                  '&:hover': { backgroundColor: '#13463f' }
+                }}>
+                Create Task
+              </Button>
+
+            </Paper>
           </Box>
-          <Typography sx={{ fontSize: 11, color: THEME.colors.textMuted, lineHeight: 1.4 }}>{p.desc}</Typography>
+
+          {/* RIGHT — Team Availability only */}
+          <Box sx={{ flex: '0 0 42%', minWidth: 0 }}>
+            <TeamAvailabilityPanel users={usersWithTasks} />
+          </Box>
+
         </Box>
-      ))}
-    </Paper>
+      </Box>
+    </Layout>
   )
 }
-
 
 
 export default CreateTaskPage

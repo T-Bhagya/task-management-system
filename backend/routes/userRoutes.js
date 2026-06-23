@@ -6,6 +6,7 @@ const { verifyToken } = require('../middleware/authMiddleware'); // Import your 
 // Secure routes that require a valid JWT token
 router.get('/', verifyToken, userController.getAllUsers);
 router.post('/', verifyToken, userController.createUser);
+router.delete('/:id', verifyToken, userController.deleteUser);
 router.get('/profile', verifyToken, userController.getProfile);
 router.get('/notifications', verifyToken, userController.getNotifications);
 router.put('/notifications/:id/read', verifyToken, userController.markNotificationAsRead);
