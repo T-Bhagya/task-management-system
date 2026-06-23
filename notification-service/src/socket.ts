@@ -90,7 +90,7 @@ export function initSocketServer(server: http.Server) {
         await prisma.notification.updateMany({
           where: {
             id: {
-              in: offlineNotifications.map((n) => n.id),
+              in: offlineNotifications.map((n: any) => n.id),
             },
           },
           data: {
