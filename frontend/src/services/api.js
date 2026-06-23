@@ -46,6 +46,9 @@ export const api = {
   signup: (name, email, password, role) => 
     request('/auth/register', { method: 'POST', body: { name, email, password, role } }),
 
+  changePassword: (newPassword) =>
+    request('/auth/change-password', { method: 'PUT', body: { newPassword } }),
+
   // Tasks API
   getTasks: (filters = {}) => {
     const query = new URLSearchParams();
@@ -78,6 +81,9 @@ export const api = {
   // Users API
   getUsers: () => 
     request('/users', { method: 'GET' }),
+
+  createUser: (userData) =>
+    request('/users', { method: 'POST', body: userData }),
 
   getProfile: () => 
     request('/users/profile', { method: 'GET' }),

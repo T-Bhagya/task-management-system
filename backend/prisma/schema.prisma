@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 model User {
@@ -12,7 +12,7 @@ model User {
   name                String
   email               String         @unique
   password_hash       String
-  role                Role           @default(COLLABORATOR)
+  role                String         @default("COLLABORATOR")
   is_active           Boolean        @default(true)
   must_reset_password Boolean        @default(false)
   created_at          DateTime       @default(now())
@@ -22,19 +22,13 @@ model User {
   notifications       Notification[]
 }
 
-enum Role {
-  ADMIN
-  PROJECT_MANAGER
-  COLLABORATOR
-}
-
 model Task {
   id          Int       @id @default(autoincrement())
   title       String
   description String?
   due_date    DateTime?
-  priority    Priority  @default(MEDIUM)
-  status      Status    @default(TODO)
+  priority    String    @default("MEDIUM")
+  status      String    @default("TODO")
   created_at  DateTime  @default(now())
   updated_at  DateTime  @updatedAt
   assigned_to    Int?
@@ -42,18 +36,6 @@ model Task {
   assignee       User?     @relation("AssignedTo", fields: [assigned_to], references: [id])
   creator        User      @relation("CreatedBy", fields: [created_by], references: [id])
   comments       Comment[]
-}
-
-enum Priority {
-  LOW
-  MEDIUM
-  HIGH
-}
-
-enum Status {
-  TODO
-  IN_PROGRESS
-  COMPLETED
 }
 
 model Comment {

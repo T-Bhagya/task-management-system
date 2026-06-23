@@ -117,3 +117,29 @@ exports.register = async (req, res, next) => {
         next(error);
     }
 };
+
+exports.changePassword = async (req, res, next) => {
+    try {
+        const { newPassword } = req.body;
+        if (!newPassword || newPassword.length < 6) {
+            return res.status(400).json({ message: "New password must be at least 6 characters long." });
+        }
+
+        const userId = req.user.id;
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+        // Update password and reset flag
+        await prisma.user.update({
+            where: { id: userId },
+            data: {
+                password_hash: hashedPassword,
+                must_reset_password: false
+            }
+        });
+
+        res.status(200).json({ message: "Password updated successfully!" });
+    } catch (error) {
+        next(error);
+    }
+};
