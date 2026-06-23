@@ -133,10 +133,10 @@ function LoginPage() {
             justifyContent: 'center',
             fontWeight: 'bold', fontSize: 22, color: THEME.colors.sidebarBg
           }}>
-            T
+            D
           </Box>
           <Typography variant="h5" fontWeight="bold" color="white" sx={{ letterSpacing: 0.5 }}>
-            MyTask
+            DoIT
           </Typography>
         </Box>
 
@@ -207,8 +207,8 @@ function LoginPage() {
               background: THEME.colors.sidebarBg,
               display: 'flex', alignItems: 'center',
               justifyContent: 'center', color: 'white', fontWeight: 'bold'
-            }}>T</Box>
-            <Typography variant="h6" fontWeight="bold" sx={{ color: THEME.colors.textMain }}>MyTask</Typography>
+            }}>D</Box>
+            <Typography variant="h6" fontWeight="bold" sx={{ color: THEME.colors.textMain }}>DoIT</Typography>
           </Box>
 
           <Typography variant="h4" fontWeight="bold" sx={{ color: THEME.colors.textMain }} mb={0.8}>
@@ -217,7 +217,7 @@ function LoginPage() {
           <Typography variant="body2" sx={{ color: THEME.colors.textMuted, mb: 4 }}>
             {mustReset 
               ? 'You are logging in with a temporary password. Please create a new password.'
-              : 'Sign in to continue to MyTask'}
+              : 'Sign in to continue to DoIT'}
           </Typography>
 
           {error && (
