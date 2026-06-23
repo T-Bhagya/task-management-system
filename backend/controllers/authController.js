@@ -20,15 +20,6 @@ exports.login = async (req, res, next) => {
         }
 
         // Find the user
-        try {
-            const tables = await prisma.$queryRaw`SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname != 'pg_catalog' AND schemaname != 'information_schema'`;
-            console.log("TABLES IN DB:", tables);
-        } catch (e) {
-            console.log("FAILED TO QUERY TABLES", e);
-        }
-        
-        console.log("USING DATABASE_URL:", process.env.DATABASE_URL);
-
         const user = await prisma.user.findUnique({
             where: { email: email }
         });
