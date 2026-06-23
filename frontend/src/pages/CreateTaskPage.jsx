@@ -132,6 +132,7 @@ function TeamAvailabilityPanel({ users }) {
   )
 }
 
+
 function CreateTaskPage() {
   const [form, setForm] = useState({
     title: '', description: '', priority: '',
@@ -328,5 +329,6 @@ function CreateTaskPage() {
     </Layout>
   )
 }
+
 
 export default CreateTaskPage
