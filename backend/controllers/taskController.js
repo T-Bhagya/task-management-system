@@ -65,7 +65,7 @@ async function getAllTasks(req, res) {
 // Create a new task
 async function createTask(req, res) {
   try {
-    const { title, description, assigned_to, due_date, priority } = req.body;
+    const { title, description, assigned_to, due_date, priority, status } = req.body;
     if (!title) return res.status(400).json({ message: 'Title is required' });
 
     const realUserId = req.user.id; // from authMiddleware verifyToken
@@ -76,6 +76,7 @@ async function createTask(req, res) {
         assigned_to: assigned_to ? parseInt(assigned_to) : null,
         due_date: due_date ? new Date(due_date) : null,
         priority: priority || 'MEDIUM',
+        status: status || 'TODO',
         created_by: realUserId
       }
     });

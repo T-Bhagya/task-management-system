@@ -156,30 +156,30 @@ function DashboardPage() {
 
         {/* Category Cards Row */}
         <Grid container spacing={3} sx={{ mb: 4 }}>
-          {/* Completed Card (Green) */}
+          {/* To Do Card (Purple) */}
           <Grid item xs={12} md={4}>
             <Paper elevation={0} sx={{
               p: 3, borderRadius: 4,
-              backgroundColor: THEME.colors.greenAccent,
+              backgroundColor: THEME.colors.purpleAccent,
               color: '#ffffff',
-              boxShadow: '0 8px 25px rgba(27,94,85,0.12)',
+              boxShadow: '0 8px 25px rgba(136,144,211,0.12)',
               position: 'relative'
             }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2.5 }}>
-                <Typography variant="body1" fontWeight="bold">Completed</Typography>
+                <Typography variant="body1" fontWeight="bold">To Do</Typography>
                 <IconButton size="small" sx={{ color: 'white' }}><MoreVertIcon fontSize="small" /></IconButton>
               </Box>
               <Typography variant="h5" fontWeight="bold" sx={{ mb: 1 }}>
-                Completed Progress
+                Planner Progress
               </Typography>
-              <LinearProgress variant="determinate" value={completedPercent} sx={{
+              <LinearProgress variant="determinate" value={todoPercent} sx={{
                 height: 8, borderRadius: 4,
                 backgroundColor: 'rgba(255,255,255,0.2)',
                 mb: 2,
                 '& .MuiLinearProgress-bar': { backgroundColor: 'white', borderRadius: 4 }
               }} />
               <Typography variant="body2" sx={{ opacity: 0.85, fontWeight: 500 }}>
-                {completedTasks} tasks ({completedPercent}%)
+                {todoTasks} tasks ({todoPercent}%)
               </Typography>
             </Paper>
           </Grid>
@@ -212,30 +212,30 @@ function DashboardPage() {
             </Paper>
           </Grid>
 
-          {/* To Do Card (Purple) */}
+          {/* Completed Card (Green) */}
           <Grid item xs={12} md={4}>
             <Paper elevation={0} sx={{
               p: 3, borderRadius: 4,
-              backgroundColor: THEME.colors.purpleAccent,
+              backgroundColor: THEME.colors.greenAccent,
               color: '#ffffff',
-              boxShadow: '0 8px 25px rgba(136,144,211,0.12)',
+              boxShadow: '0 8px 25px rgba(27,94,85,0.12)',
               position: 'relative'
             }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2.5 }}>
-                <Typography variant="body1" fontWeight="bold">To Do</Typography>
+                <Typography variant="body1" fontWeight="bold">Completed</Typography>
                 <IconButton size="small" sx={{ color: 'white' }}><MoreVertIcon fontSize="small" /></IconButton>
               </Box>
               <Typography variant="h5" fontWeight="bold" sx={{ mb: 1 }}>
-                Planner Progress
+                Completed Progress
               </Typography>
-              <LinearProgress variant="determinate" value={todoPercent} sx={{
+              <LinearProgress variant="determinate" value={completedPercent} sx={{
                 height: 8, borderRadius: 4,
                 backgroundColor: 'rgba(255,255,255,0.2)',
                 mb: 2,
                 '& .MuiLinearProgress-bar': { backgroundColor: 'white', borderRadius: 4 }
               }} />
               <Typography variant="body2" sx={{ opacity: 0.85, fontWeight: 500 }}>
-                {todoTasks} tasks ({todoPercent}%)
+                {completedTasks} tasks ({completedPercent}%)
               </Typography>
             </Paper>
           </Grid>

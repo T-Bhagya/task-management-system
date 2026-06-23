@@ -36,6 +36,12 @@ const menuProps = {
   }
 }
 
+const priorityOptions = [
+  { value: 'High',   label: 'High',   color: '#dc2626', bg: '#fef2f2' },
+  { value: 'Medium', label: 'Medium', color: '#d97706', bg: '#fffbeb' },
+  { value: 'Low',    label: 'Low',    color: '#16a34a', bg: '#f0fdf4' },
+]
+
 function getBusyLevel(taskCount) {
   if (taskCount <= 1) return { label: 'Available', color: '#16a34a', bg: '#f0fdf4', dot: '#16a34a' }
   if (taskCount <= 3) return { label: 'Moderate', color: '#d97706', bg: '#fffbeb', dot: '#f59e0b' }
@@ -105,7 +111,7 @@ function TeamAvailabilityPanel({ users }) {
                 </Box>
               </Box>
 
-              {/* Right: dot + status — fixed width so it never wraps */}
+              {/* Right: dot + status */}
               <Box sx={{
                 display: 'flex', alignItems: 'center', gap: 0.6,
                 flexShrink: 0, ml: 1, width: 72, justifyContent: 'flex-end'
@@ -122,67 +128,6 @@ function TeamAvailabilityPanel({ users }) {
           )
         })
       )}
-
-      {/* Legend */}
-      <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid rgba(27,94,85,0.08)' }}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.6 }}>
-          {[
-            { dot: '#16a34a', label: 'Available — 0 to 1 tasks' },
-            { dot: '#f59e0b', label: 'Moderate — 2 to 3 tasks' },
-            { dot: '#ef4444', label: 'Busy — 4 or more tasks' },
-          ].map((item) => (
-            <Box key={item.label} sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
-              <Box sx={{ width: 7, height: 7, borderRadius: '50%', backgroundColor: item.dot, flexShrink: 0 }} />
-              <Typography sx={{ fontSize: 11, color: THEME.colors.textMuted }}>{item.label}</Typography>
-            </Box>
-          ))}
-        </Box>
-      </Box>
-    </Paper>
-  )
-}
-
-function PriorityGuidePanel() {
-  const priorities = [
-    { label: 'High', desc: 'Urgent — needs immediate attention', color: '#dc2626', bg: '#fef2f2' },
-    { label: 'Medium', desc: 'Important but not urgent', color: '#d97706', bg: '#fffbeb' },
-    { label: 'Low', desc: 'Can be done when time allows', color: '#16a34a', bg: '#f0fdf4' },
-  ]
-  return (
-    <Paper elevation={0} sx={{
-      p: 3, borderRadius: 3.5,
-      backgroundColor: '#ffffff',
-      border: '1px solid rgba(27,94,85,0.08)',
-      boxShadow: '0 4px 25px rgba(27,94,85,0.04)',
-    }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-        <Box sx={{
-          width: 32, height: 32, borderRadius: '50%',
-          backgroundColor: 'rgba(27,94,85,0.08)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center'
-        }}>
-          <Typography sx={{ fontSize: 16 }}>🚦</Typography>
-        </Box>
-        <Typography fontWeight={600} sx={{ color: THEME.colors.textMain, fontSize: 15 }}>
-          Priority Guide
-        </Typography>
-      </Box>
-      {priorities.map((p) => (
-        <Box key={p.label} sx={{
-          display: 'flex', alignItems: 'center', gap: 1.5,
-          p: 1.2, mb: 1, borderRadius: 2,
-          backgroundColor: p.bg,
-        }}>
-          <Box sx={{
-            px: 1.2, py: 0.3, borderRadius: 1.5,
-            backgroundColor: p.color,
-            minWidth: 52, textAlign: 'center', flexShrink: 0
-          }}>
-            <Typography sx={{ color: '#fff', fontSize: 11, fontWeight: 600 }}>{p.label}</Typography>
-          </Box>
-          <Typography sx={{ fontSize: 11, color: THEME.colors.textMuted, lineHeight: 1.4 }}>{p.desc}</Typography>
-        </Box>
-      ))}
     </Paper>
   )
 }
@@ -191,7 +136,6 @@ function CreateTaskPage() {
   const [form, setForm] = useState({
     title: '', description: '', priority: '',
     assignee: '', dueDate: '', status: '',
-    category: '', estimatedHours: '',
   })
   const [users, setUsers] = useState([])
   const [usersWithTasks, setUsersWithTasks] = useState([])
@@ -261,6 +205,8 @@ function CreateTaskPage() {
     }
   }
 
+  const selectedPriority = priorityOptions.find(p => p.value === form.priority)
+
   return (
     <Layout>
       <Box sx={{ p: 4, backgroundColor: THEME.colors.mainBg, minHeight: '100vh' }}>
@@ -274,10 +220,10 @@ function CreateTaskPage() {
           </Typography>
         </Box>
 
-        {/* Two column layout — form smaller, panel larger */}
+        {/* Two column layout */}
         <Box sx={{ display: 'flex', gap: 3, alignItems: 'flex-start' }}>
 
-          {/* LEFT — form (smaller) */}
+          {/* LEFT — form */}
           <Box sx={{ flex: '0 0 55%', minWidth: 0 }}>
             <Paper elevation={0} sx={{
               p: 3, borderRadius: 3.5,
@@ -309,11 +255,30 @@ function CreateTaskPage() {
                 value={form.description} onChange={handleChange}
                 multiline rows={3} sx={fieldStyle} />
 
+              {/* Priority dropdown with color-coded items */}
               <TextField fullWidth select label="Priority *" name="priority"
                 value={form.priority} onChange={handleChange}
-                sx={fieldStyle} SelectProps={{ MenuProps: menuProps }}>
-                {['High', 'Medium', 'Low'].map((p) => (
-                  <MenuItem key={p} value={p}>{p}</MenuItem>
+                sx={{
+                  ...fieldStyle,
+                  '& .MuiOutlinedInput-root': {
+                    ...fieldStyle['& .MuiOutlinedInput-root'],
+                    backgroundColor: selectedPriority ? selectedPriority.bg : 'rgba(27,94,85,0.03)',
+                    '& fieldset': {
+                      borderColor: selectedPriority ? `${selectedPriority.color}55` : 'rgba(27,94,85,0.1)'
+                    },
+                  },
+                  '& .MuiSelect-select': {
+                    color: selectedPriority ? selectedPriority.color : THEME.colors.textMain,
+                    fontWeight: selectedPriority ? 700 : 400,
+                  }
+                }}
+                SelectProps={{ MenuProps: menuProps }}
+              >
+                {priorityOptions.map((p) => (
+                  <MenuItem key={p.value} value={p.value} sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <Box sx={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: p.color, flexShrink: 0 }} />
+                    <Typography sx={{ color: p.color, fontWeight: 600, fontSize: 14 }}>{p.label}</Typography>
+                  </MenuItem>
                 ))}
               </TextField>
 
@@ -338,26 +303,6 @@ function CreateTaskPage() {
                 type="date" value={form.dueDate} onChange={handleChange}
                 InputLabelProps={{ shrink: true }} sx={fieldStyle} />
 
-              <TextField fullWidth select label="Category / Tag" name="category"
-                value={form.category} onChange={handleChange}
-                sx={fieldStyle} SelectProps={{ MenuProps: menuProps }}>
-                <MenuItem value="">None</MenuItem>
-                {['Frontend', 'Backend', 'Testing', 'Design', 'Documentation', 'Database', 'DevOps'].map((c) => (
-                  <MenuItem key={c} value={c}>{c}</MenuItem>
-                ))}
-              </TextField>
-
-              <TextField fullWidth label="Estimated Hours" name="estimatedHours"
-                type="number" value={form.estimatedHours} onChange={handleChange}
-                placeholder="e.g. 4"
-                inputProps={{ min: 0.5, max: 999, step: 0.5 }}
-                InputProps={{
-                  endAdornment: (
-                    <Typography sx={{ color: THEME.colors.textMuted, fontSize: 13, pr: 1 }}>hrs</Typography>
-                  )
-                }}
-                sx={fieldStyle} />
-
               <Button fullWidth variant="contained" endIcon={<SendIcon />}
                 onClick={handleSubmit}
                 sx={{
@@ -373,10 +318,9 @@ function CreateTaskPage() {
             </Paper>
           </Box>
 
-          {/* RIGHT — panels (larger) */}
+          {/* RIGHT — Team Availability only */}
           <Box sx={{ flex: '0 0 42%', minWidth: 0 }}>
             <TeamAvailabilityPanel users={usersWithTasks} />
-            <PriorityGuidePanel />
           </Box>
 
         </Box>
