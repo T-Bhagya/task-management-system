@@ -4,9 +4,11 @@ import Layout from '../components/Layout'
 import { 
   Box, Typography, Paper, Avatar, Chip, 
   Button, Dialog, DialogTitle, DialogContent, 
-  DialogActions, TextField, Alert 
+  DialogContentText, DialogActions, TextField, Alert,
+  IconButton, Tooltip
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import { api } from '../services/api'
 import { THEME } from '../theme'
 
@@ -36,6 +38,12 @@ function UsersPage() {
   const [error, setError] = useState('')
   const [creating, setCreating] = useState(false)
   const [tempPassword, setTempPassword] = useState('')
+
+  // Delete dialog states
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [userToDelete, setUserToDelete] = useState(null)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
 
   const userStr = localStorage.getItem('user')
   const currentUser = userStr ? JSON.parse(userStr) : null
@@ -83,6 +91,31 @@ function UsersPage() {
       setError(err.message || 'Failed to create collaborator.');
     } finally {
       setCreating(false);
+    }
+  }
+
+  const openDeleteDialog = (e, user) => {
+    e.stopPropagation(); // prevent card navigation
+    setUserToDelete(user);
+    setDeleteError('');
+    setDeleteDialogOpen(true);
+  }
+
+  const handleDelete = async () => {
+    if (!userToDelete) return;
+    setDeleting(true);
+    setDeleteError('');
+    try {
+      await api.deleteUser(userToDelete.id);
+      setDeleteDialogOpen(false);
+      setUserToDelete(null);
+      // Refresh user list
+      const fetchedUsers = await api.getUsers();
+      setUsers(fetchedUsers);
+    } catch (err) {
+      setDeleteError(err.message || 'Failed to delete collaborator.');
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -179,9 +212,27 @@ function UsersPage() {
                         border: '1px solid rgba(27,94,85,0.15)'
                       }}
                     />
-                    <Typography variant="body2" sx={{ color: THEME.colors.textMuted, fontSize: 13, fontWeight: 500 }}>
-                      {assignedTasks} {assignedTasks === 1 ? 'task' : 'tasks'} assigned
-                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Typography variant="body2" sx={{ color: THEME.colors.textMuted, fontSize: 13, fontWeight: 500 }}>
+                        {assignedTasks} {assignedTasks === 1 ? 'task' : 'tasks'}
+                      </Typography>
+                      {isAdmin && user.role === 'COLLABORATOR' && (
+                        <Tooltip title="Delete collaborator">
+                          <IconButton
+                            size="small"
+                            onClick={(e) => openDeleteDialog(e, user)}
+                            sx={{
+                              color: '#ef4444',
+                              opacity: 0.6,
+                              '&:hover': { opacity: 1, backgroundColor: 'rgba(239,68,68,0.08)' },
+                              transition: 'opacity 0.2s'
+                            }}
+                          >
+                            <DeleteOutlineIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      )}
+                    </Box>
                   </Box>
                 </Paper>
               );
@@ -189,6 +240,49 @@ function UsersPage() {
           </Box>
         )}
       </Box>
+
+      {/* Delete Collaborator Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => !deleting && setDeleteDialogOpen(false)}
+        PaperProps={{ sx: { borderRadius: 3.5, p: 1, maxWidth: 400, width: '100%' } }}
+      >
+        <DialogTitle sx={{ fontWeight: 'bold', color: '#ef4444' }}>
+          Delete Collaborator
+        </DialogTitle>
+        <DialogContent>
+          {deleteError && (
+            <Alert severity="error" sx={{ borderRadius: 2.5, mb: 2 }}>{deleteError}</Alert>
+          )}
+          <DialogContentText sx={{ color: THEME.colors.textMain }}>
+            Are you sure you want to delete <strong>{userToDelete?.name}</strong>? 
+            Their task assignments will be cleared. This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button
+            onClick={() => setDeleteDialogOpen(false)}
+            disabled={deleting}
+            sx={{ textTransform: 'none', color: THEME.colors.textMuted }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleDelete}
+            disabled={deleting}
+            variant="contained"
+            sx={{
+              backgroundColor: '#ef4444',
+              borderRadius: 2.5,
+              textTransform: 'none',
+              fontWeight: 'bold',
+              '&:hover': { backgroundColor: '#dc2626' }
+            }}
+          >
+            {deleting ? 'Deleting...' : 'Delete'}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Add Collaborator Dialog */}
       <Dialog 

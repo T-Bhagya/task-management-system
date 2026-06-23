@@ -80,7 +80,7 @@ async function getAllTasks(req, res) {
 // Create a new task
 async function createTask(req, res) {
   try {
-    const { title, description, assigned_to, due_date, priority, project_id } = req.body;
+    const { title, description, assigned_to, due_date, priority, status, project_id } = req.body;
     if (!title) return res.status(400).json({ message: 'Title is required' });
     if (!project_id) return res.status(400).json({ message: 'Project ID is required' });
 
@@ -106,6 +106,7 @@ async function createTask(req, res) {
         assigned_to: assigned_to ? parseInt(assigned_to) : null,
         due_date: due_date ? new Date(due_date) : null,
         priority: priority || 'MEDIUM',
+        status: status || 'TODO',
         created_by: userId,
         project_id: projectId
       }

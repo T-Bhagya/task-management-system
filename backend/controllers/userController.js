@@ -158,3 +158,62 @@ exports.createUser = async (req, res, next) => {
         next(error);
     }
 };
+
+// Delete a collaborator (Admin only)
+exports.deleteUser = async (req, res, next) => {
+    try {
+        // Authorization check: Only Admin can delete users
+        if (req.user.role !== 'ADMIN') {
+            return res.status(403).json({ message: "Only administrators can delete team members." });
+        }
+
+        const targetId = parseInt(req.params.id);
+        if (isNaN(targetId)) {
+            return res.status(400).json({ message: "Invalid user ID." });
+        }
+
+        // Prevent admin from deleting themselves
+        if (targetId === req.user.id) {
+            return res.status(400).json({ message: "You cannot delete your own account." });
+        }
+
+        // Find the user to delete
+        const userToDelete = await prisma.user.findUnique({ where: { id: targetId } });
+        if (!userToDelete) {
+            return res.status(404).json({ message: "User not found." });
+        }
+
+        // Only allow deletion of COLLABORATORs
+        if (userToDelete.role !== 'COLLABORATOR') {
+            return res.status(403).json({ message: "Only collaborator accounts can be deleted." });
+        }
+
+        // Use a transaction to clear all foreign key relations before deleting
+        await prisma.$transaction(async (tx) => {
+            // 1. Delete this user's notifications
+            await tx.notification.deleteMany({ where: { user_id: targetId } });
+
+            // 2. Delete this user's comments
+            await tx.comment.deleteMany({ where: { user_id: targetId } });
+
+            // 3. Nullify tasks where this user is the assignee
+            await tx.task.updateMany({
+                where: { assigned_to: targetId },
+                data: { assigned_to: null }
+            });
+
+            // 4. Nullify tasks where this user is the creator (reassign to admin)
+            await tx.task.updateMany({
+                where: { created_by: targetId },
+                data: { created_by: req.user.id }
+            });
+
+            // 5. Now it is safe to delete the user
+            await tx.user.delete({ where: { id: targetId } });
+        });
+
+        res.status(200).json({ message: `Collaborator "${userToDelete.name}" has been deleted successfully.` });
+    } catch (error) {
+        next(error);
+    }
+};
