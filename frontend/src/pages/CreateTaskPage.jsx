@@ -136,9 +136,10 @@ function TeamAvailabilityPanel({ users }) {
 function CreateTaskPage() {
   const [form, setForm] = useState({
     title: '', description: '', priority: '',
-    assignee: '', dueDate: '', status: '',
+    assignee: '', dueDate: '', status: '', projectId: '',
   })
   const [users, setUsers] = useState([])
+  const [projects, setProjects] = useState([])
   const [usersWithTasks, setUsersWithTasks] = useState([])
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState('')
@@ -149,6 +150,8 @@ function CreateTaskPage() {
       try {
         const fetchedUsers = await api.getUsers()
         setUsers(fetchedUsers)
+        const fetchedProjects = await api.getProjects()
+        setProjects(fetchedProjects)
         const tasks = await api.getTasks()
         const countMap = {}
         tasks.forEach(t => {
@@ -170,8 +173,8 @@ function CreateTaskPage() {
   }
 
   const handleSubmit = async () => {
-    if (!form.title || !form.priority || !form.status) {
-      setError('Please fill in Title, Priority, and Status.')
+    if (!form.title || !form.priority || !form.status || !form.projectId) {
+      setError('Please fill in Title, Project, Priority, and Status.')
       return
     }
     setError('')
@@ -192,6 +195,7 @@ function CreateTaskPage() {
       status: mappedStatus,
       assigned_to: form.assignee ? parseInt(form.assignee) : null,
       due_date: form.dueDate ? new Date(form.dueDate).toISOString() : null,
+      project_id: parseInt(form.projectId),
     }
 
     try {
@@ -255,6 +259,15 @@ function CreateTaskPage() {
               <TextField fullWidth label="Description" name="description"
                 value={form.description} onChange={handleChange}
                 multiline rows={3} sx={fieldStyle} />
+
+              <TextField fullWidth select label="Project *" name="projectId"
+                value={form.projectId} onChange={handleChange}
+                sx={fieldStyle} SelectProps={{ MenuProps: menuProps }}>
+                <MenuItem value="" disabled>Select a Project</MenuItem>
+                {projects.map((p) => (
+                  <MenuItem key={p.id} value={p.id}>{p.name}</MenuItem>
+                ))}
+              </TextField>
 
               {/* Priority dropdown with color-coded items */}
               <TextField fullWidth select label="Priority *" name="priority"
