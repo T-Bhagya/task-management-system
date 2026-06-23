@@ -103,6 +103,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build-and-push-app, build-and-push-notifications]
     environment: production
+    permissions:
+      contents: write
 
     steps:
       - name: 📥 Checkout Code
@@ -117,12 +119,23 @@ jobs:
         run: |
           cd backend
           npm ci --omit=dev
-          npx prisma migrate deploy
+          echo "=== RUNNING BACKEND MIGRATIONS ===" > ../migration-debug.log
+          npx prisma migrate deploy >> ../migration-debug.log 2>&1 || { echo "Backend migration failed" >> ../migration-debug.log; exit 1; }
+          echo "=== RUNNING NOTIFICATION MIGRATIONS ===" >> ../migration-debug.log
           cd ../notification-service
-          npm ci
-          npx prisma db push --accept-data-loss
+          npm ci >> ../migration-debug.log 2>&1
+          npx prisma db push --accept-data-loss >> ../migration-debug.log 2>&1 || { echo "Notification db push failed" >> ../migration-debug.log; exit 1; }
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: 📤 Upload Debug Logs on Failure
+        if: failure()
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add migration-debug.log
+          git commit -m "chore: upload migration debug log [skip ci]"
+          git push origin HEAD:${{ github.ref }}
 
       - name: 🚀 Deploy Main App to Container Apps
         uses: azure/container-apps-deploy-action@v1
