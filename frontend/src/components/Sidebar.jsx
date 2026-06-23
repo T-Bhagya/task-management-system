@@ -9,14 +9,16 @@ import NotificationsIcon from '@mui/icons-material/Notifications'
 import LogoutIcon from '@mui/icons-material/Logout'
 import MenuIcon from '@mui/icons-material/Menu'
 import CloseIcon from '@mui/icons-material/Close'
+import FolderIcon from '@mui/icons-material/Folder'
 import { THEME } from '../theme'
 import { useNotifications } from '../context/NotificationContext'
 
 const menuItems = [
   { icon: <DashboardIcon />, label: 'Dashboard', path: '/dashboard' },
+  { icon: <FolderIcon />, label: 'Projects', path: '/projects' },
   { icon: <AssignmentIcon />, label: 'Task Board', path: '/taskboard' },
-  { icon: <AddTaskIcon />, label: 'Create Task', path: '/create-task' },
-  { icon: <PeopleIcon />, label: 'Users', path: '/users' },
+  { icon: <AddTaskIcon />, label: 'Create Task', path: '/create-task', pmOrAdminOnly: true },
+  { icon: <PeopleIcon />, label: 'Users', path: '/users', adminOnly: true },
   { icon: <NotificationsIcon />, label: 'Notifications', path: '/notifications' },
   { icon: <PersonIcon />, label: 'Profile', path: '/profile' },
 ]
@@ -96,7 +98,13 @@ function Sidebar({ expanded, setExpanded }) {
       )}
 
       <Box sx={{ flex: 1, px: 1.5 }}>
-        {menuItems.map((item) => {
+        {menuItems
+          .filter(item => {
+            if (item.adminOnly && user?.role !== 'ADMIN') return false;
+            if (item.pmOrAdminOnly && user?.role !== 'ADMIN' && user?.role !== 'PROJECT_MANAGER') return false;
+            return true;
+          })
+          .map((item) => {
           const isActive = location.pathname === item.path
           return (
             <Tooltip key={item.path} title={!expanded ? item.label : ''} placement="right">
