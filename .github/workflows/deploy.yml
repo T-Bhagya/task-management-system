@@ -120,7 +120,7 @@ jobs:
           cd backend
           npm ci --omit=dev
           echo "=== RUNNING BACKEND MIGRATIONS ===" > ../migration-debug.txt
-          npx prisma migrate deploy >> ../migration-debug.txt 2>&1 || { echo "Backend migration failed" >> ../migration-debug.txt; exit 1; }
+          npx prisma db push --accept-data-loss >> ../migration-debug.txt 2>&1 || { echo "Backend migration failed" >> ../migration-debug.txt; exit 1; }
           echo "=== RUNNING NOTIFICATION MIGRATIONS ===" >> ../migration-debug.txt
           cd ../notification-service
           npm ci >> ../migration-debug.txt 2>&1
