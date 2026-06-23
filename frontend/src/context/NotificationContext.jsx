@@ -73,8 +73,17 @@ export function NotificationProvider({ children }) {
       return;
     }
 
-    // Connect to notification-service on port 3003
-    const socket = io('http://localhost:3003', {
+    const getNotificationUrl = () => {
+      if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+        const protocol = window.location.protocol;
+        const hostname = window.location.hostname.replace('tms-app', 'tms-notifications');
+        return `${protocol}//${hostname}`;
+      }
+      return 'http://localhost:3003';
+    };
+
+    // Connect to notification-service
+    const socket = io(getNotificationUrl(), {
       auth: {
         token: token
       }
