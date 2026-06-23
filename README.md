@@ -1,8 +1,48 @@
-# TMS Real-Time Notification Service (Person 4)
+# TaskFlow - Task Management System
 
-This service manages real-time WebSocket connections via **Socket.io** and implements a persistent **Offline Notification Storage** system using **Prisma & SQLite**.
+TaskFlow is a collaborative task management application built using React + Vite on the frontend, Node.js + Express + Prisma on the backend, and a real-time notification service.
+
+## Features
+- **Kanban Board**: Drag and drop tasks across columns (To Do, In Progress, Completed).
+- **Comments System**: Write and view comments on tasks in real-time.
+- **Notifications**: Stay updated with task assignments and comment updates.
+- **Role-Based Views**: Support for Admins, Project Managers, and Collaborators.
+- **Secure Authentication**: JWT-based secure user log in and sign up.
+
+## Quick Start
+
+### 1. Database Setup
+Ensure PostgreSQL is running, then add a `.env` file inside `backend/` with your connection string:
+```env
+DATABASE_URL="postgresql://username:password@localhost:5432/taskflow_db"
+JWT_SECRET="your-secret-key"
+PORT=5000
+```
+Run Prisma migrations to initialize the database schema:
+```bash
+cd backend
+npx prisma migrate dev --name init
+node seed.js
+```
+
+### 2. Running the Backend
+From the root folder:
+```bash
+npm run backend
+```
+
+### 3. Running the Frontend
+From the root folder:
+```bash
+npm run frontend
+```
+The application will be available at `http://localhost:5173`.
 
 ---
+
+# TMS Real-Time Notification Service
+
+This service manages real-time WebSocket connections via **Socket.io** and implements a persistent **Offline Notification Storage** system using **Prisma & SQLite**.
 
 ## 🚀 How to Run Locally
 
@@ -21,7 +61,7 @@ This service manages real-time WebSocket connections via **Socket.io** and imple
 
 ## 🔗 Integration Guide for Team Members
 
-### 1. For Person 1 (Frontend Developer — React + TS)
+### 1. For Frontend Developer (React + TS)
 Install the Socket.io client library:
 ```bash
 npm install socket.io-client
@@ -68,7 +108,7 @@ export function useNotifications() {
 
 ---
 
-### 2. For Person 3 (Backend Tasks & Comments Developer)
+### 2. For Backend Tasks & Comments Developer
 Whenever a task is assigned, updated, or a comment is left, send a REST trigger request to the notification service:
 
 ```javascript
@@ -90,13 +130,13 @@ async function triggerNotification(userId, title, message, type) {
 
 ---
 
-### 3. For Person 2 (Auth Developer)
+### 3. For Auth Developer
 Ensure that the `JWT_SECRET` environment variable in the `notification-service/.env` matches the secret key used by your authentication service.
 * When a user authenticates, the notification service will decode the token to identify their `userId`.
 
 ---
 
-### 4. For Person 5 (DevOps & Testing Lead)
+### 4. For DevOps & Testing Lead
 Expose port `3003` inside the container:
 ```dockerfile
 # Dockerfile (inside notification-service)

@@ -29,9 +29,15 @@ export function initSocketServer(server: http.Server) {
           ? token.slice(7) 
           : token;
         
-        const decoded = jwt.verify(cleanToken as string, JWT_SECRET) as { userId: string; username?: string };
-        socket.data.userId = decoded.userId;
-        socket.data.username = decoded.username || 'Authenticated User';
+        const decoded = jwt.verify(cleanToken as string, JWT_SECRET) as { id?: number | string; userId?: string; username?: string };
+        const userId = decoded.id !== undefined ? String(decoded.id) : decoded.userId;
+        
+        if (!userId) {
+          throw new Error('No user identity found in token');
+        }
+        
+        socket.data.userId = userId;
+        socket.data.username = decoded.username || `User ${userId}`;
         return next();
       } catch (err) {
         console.warn(`JWT verification failed: ${(err as Error).message}`);
@@ -84,7 +90,7 @@ export function initSocketServer(server: http.Server) {
         await prisma.notification.updateMany({
           where: {
             id: {
-              in: offlineNotifications.map((n) => n.id),
+              in: offlineNotifications.map((n: any) => n.id),
             },
           },
           data: {
