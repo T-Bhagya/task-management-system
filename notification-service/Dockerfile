@@ -3,6 +3,8 @@
 # ─────────────────────────────────────────────
 FROM node:20-alpine AS builder
 
+RUN apk add --no-cache openssl libc6-compat
+
 WORKDIR /app
 
 COPY package*.json ./
@@ -15,6 +17,8 @@ RUN npm run build
 # Stage 2: Production
 # ─────────────────────────────────────────────
 FROM node:20-alpine AS production
+
+RUN apk add --no-cache openssl libc6-compat
 
 WORKDIR /app
 
