@@ -25,7 +25,7 @@ COPY --from=builder /app/dist ./dist
 
 # Copy prisma schema for client generation
 COPY prisma ./prisma
-RUN npx prisma generate
+RUN npx prisma generate && npx prisma db push
 
 EXPOSE 3001
 
