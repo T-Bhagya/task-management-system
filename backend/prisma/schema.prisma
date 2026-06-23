@@ -1,0 +1,59 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id                  Int            @id @default(autoincrement())
+  name                String
+  email               String         @unique
+  password_hash       String
+  role                String         @default("COLLABORATOR")
+  is_active           Boolean        @default(true)
+  must_reset_password Boolean        @default(false)
+  created_at          DateTime       @default(now())
+  tasks_assigned      Task[]         @relation("AssignedTo")
+  tasks_created       Task[]         @relation("CreatedBy")
+  comments            Comment[]
+  notifications       Notification[]
+}
+
+model Task {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String?
+  due_date    DateTime?
+  priority    String    @default("MEDIUM")
+  status      String    @default("TODO")
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+  assigned_to    Int?
+  created_by     Int
+  assignee       User?     @relation("AssignedTo", fields: [assigned_to], references: [id])
+  creator        User      @relation("CreatedBy", fields: [created_by], references: [id])
+  comments       Comment[]
+}
+
+model Comment {
+  id         Int      @id @default(autoincrement())
+  message    String
+  created_at DateTime @default(now())
+  task_id    Int
+  user_id    Int
+  task       Task     @relation(fields: [task_id], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [user_id], references: [id])
+}
+
+model Notification {
+  id         Int      @id @default(autoincrement())
+  message    String
+  type       String
+  is_read    Boolean  @default(false)
+  created_at DateTime @default(now())
+  user_id    Int
+  user       User     @relation(fields: [user_id], references: [id])
+}

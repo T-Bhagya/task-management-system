@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Comment {
+  id         Int      @id @default(autoincrement())
+  message    String
+  created_at DateTime @default(now())
+  task_id    Int
+  user_id    Int
+  Task       Task     @relation(fields: [task_id], references: [id], onDelete: Cascade)
+  User       User     @relation(fields: [user_id], references: [id])
+}
+
+model Notification {
+  id         Int      @id @default(autoincrement())
+  message    String
+  type       String
+  is_read    Boolean  @default(false)
+  created_at DateTime @default(now())
+  user_id    Int
+  User       User     @relation(fields: [user_id], references: [id])
+}
+
+model Task {
+  id                          Int       @id @default(autoincrement())
+  title                       String
+  description                 String?
+  due_date                    DateTime?
+  priority                    Priority  @default(MEDIUM)
+  status                      Status    @default(TODO)
+  created_at                  DateTime  @default(now())
+  updated_at                  DateTime
+  assigned_to                 Int?
+  created_by                  Int
+  Comment                     Comment[]
+  User_Task_assigned_toToUser User?     @relation("Task_assigned_toToUser", fields: [assigned_to], references: [id])
+  User_Task_created_byToUser  User      @relation("Task_created_byToUser", fields: [created_by], references: [id])
+}
+
+model User {
+  id                          Int            @id @default(autoincrement())
+  name                        String
+  email                       String         @unique
+  password_hash               String
+  role                        Role           @default(COLLABORATOR)
+  is_active                   Boolean        @default(true)
+  must_reset_password         Boolean        @default(false)
+  created_at                  DateTime       @default(now())
+  Comment                     Comment[]
+  Notification                Notification[]
+  Task_Task_assigned_toToUser Task[]         @relation("Task_assigned_toToUser")
+  Task_Task_created_byToUser  Task[]         @relation("Task_created_byToUser")
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum Role {
+  ADMIN
+  PROJECT_MANAGER
+  COLLABORATOR
+}
+
+enum Status {
+  TODO
+  IN_PROGRESS
+  COMPLETED
+}
