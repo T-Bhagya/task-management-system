@@ -113,6 +113,14 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+      - name: 🗄️ Run Database Migrations
+        run: |
+          cd backend
+          npm ci --omit=dev
+          npx prisma migrate deploy
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
       - name: 🚀 Deploy Main App to Container Apps
         uses: azure/container-apps-deploy-action@v1
         with:
@@ -152,3 +160,4 @@ jobs:
           echo "- **Notifications URL**: https://$NOTIF_URL" >> $GITHUB_STEP_SUMMARY
           echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Triggered by**: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+
