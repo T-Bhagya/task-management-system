@@ -110,7 +110,7 @@ exports.createUser = async (req, res, next) => {
             return res.status(403).json({ message: "Only administrators can create team members." });
         }
 
-        const { name, email } = req.body;
+        const { name, email, role } = req.body;
         if (!name || !email) {
             return res.status(400).json({ message: "Name and email are required." });
         }
@@ -126,13 +126,15 @@ exports.createUser = async (req, res, next) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(tempPassword, salt);
 
+        const userRole = (role === 'PROJECT_MANAGER' || role === 'COLLABORATOR') ? role : 'COLLABORATOR';
+
         // Create the user
         const newUser = await prisma.user.create({
             data: {
                 name,
                 email,
                 password_hash: hashedPassword,
-                role: 'COLLABORATOR',
+                role: userRole,
                 must_reset_password: true
             }
         });
@@ -183,9 +185,9 @@ exports.deleteUser = async (req, res, next) => {
             return res.status(404).json({ message: "User not found." });
         }
 
-        // Only allow deletion of COLLABORATORs
-        if (userToDelete.role !== 'COLLABORATOR') {
-            return res.status(403).json({ message: "Only collaborator accounts can be deleted." });
+        // Prevent deleting other ADMINs
+        if (userToDelete.role === 'ADMIN') {
+            return res.status(403).json({ message: "Administrator accounts cannot be deleted." });
         }
 
         // Use a transaction to clear all foreign key relations before deleting
