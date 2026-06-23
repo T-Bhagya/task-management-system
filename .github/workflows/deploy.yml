@@ -129,44 +129,39 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
+      - name: 🚀 Deploy Main App to Container Apps
+        run: |
+          echo "=== DEPLOYING MAIN APP ===" > ../deploy-debug.txt
+          az containerapp update \
+            --name ${{ env.APP_NAME }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --image ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }} \
+            --set-env-vars DATABASE_URL="${{ secrets.DATABASE_URL }}" JWT_SECRET="${{ secrets.JWT_SECRET }}" NODE_ENV=production PORT=5000 >> ../deploy-debug.txt 2>&1 || { echo "Main app deployment failed" >> ../deploy-debug.txt; exit 1; }
+
+      - name: 🔔 Deploy Notification Service to Container Apps
+        run: |
+          echo "=== DEPLOYING NOTIFICATION SERVICE ===" >> ../deploy-debug.txt
+          az containerapp update \
+            --name ${{ env.NOTIFICATIONS_APP_NAME }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --image ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ env.NOTIFICATIONS_IMAGE_NAME }}:sha-${{ github.sha }} \
+            --set-env-vars DATABASE_URL="${{ secrets.DATABASE_URL }}" JWT_SECRET="${{ secrets.JWT_SECRET }}" NODE_ENV=production PORT=3001 >> ../deploy-debug.txt 2>&1 || { echo "Notification service deployment failed" >> ../deploy-debug.txt; exit 1; }
+
       - name: 📤 Upload Debug Logs on Failure
         if: failure()
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add -f migration-debug.txt
-          git commit -m "chore: upload migration debug log [skip ci]"
+          if [ -f ../deploy-debug.txt ]; then
+            cp ../deploy-debug.txt ./deploy-debug.txt
+            git add -f deploy-debug.txt
+          fi
+          if [ -f ../migration-debug.txt ]; then
+            cp ../migration-debug.txt ./migration-debug.txt
+            git add -f migration-debug.txt
+          fi
+          git commit -m "chore: upload debug logs [skip ci]" || echo "No changes to commit"
           git push origin HEAD:${{ github.ref }}
-
-      - name: 🚀 Deploy Main App to Container Apps
-        uses: azure/container-apps-deploy-action@v1
-        with:
-          resourceGroup: ${{ env.RESOURCE_GROUP }}
-          containerAppName: ${{ env.APP_NAME }}
-          imageToDeploy: ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }}
-          registryUrl: ${{ secrets.REGISTRY_LOGIN_SERVER }}
-          registryUsername: ${{ secrets.REGISTRY_USERNAME }}
-          registryPassword: ${{ secrets.REGISTRY_PASSWORD }}
-          environmentVariables: |
-            DATABASE_URL=${{ secrets.DATABASE_URL }}
-            JWT_SECRET=${{ secrets.JWT_SECRET }}
-            NODE_ENV=production
-            PORT=5000
-
-      - name: 🔔 Deploy Notification Service to Container Apps
-        uses: azure/container-apps-deploy-action@v1
-        with:
-          resourceGroup: ${{ env.RESOURCE_GROUP }}
-          containerAppName: ${{ env.NOTIFICATIONS_APP_NAME }}
-          imageToDeploy: ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ env.NOTIFICATIONS_IMAGE_NAME }}:sha-${{ github.sha }}
-          registryUrl: ${{ secrets.REGISTRY_LOGIN_SERVER }}
-          registryUsername: ${{ secrets.REGISTRY_USERNAME }}
-          registryPassword: ${{ secrets.REGISTRY_PASSWORD }}
-          environmentVariables: |
-            DATABASE_URL=${{ secrets.DATABASE_URL }}
-            JWT_SECRET=${{ secrets.JWT_SECRET }}
-            NODE_ENV=production
-            PORT=3001
 
       - name: 📋 Get Deployment URLs
         run: |
