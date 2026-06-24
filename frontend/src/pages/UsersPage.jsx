@@ -9,6 +9,8 @@ import {
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
+import ToggleOnIcon from '@mui/icons-material/ToggleOn'
+import ToggleOffIcon from '@mui/icons-material/ToggleOff'
 import { api } from '../services/api'
 import { THEME } from '../theme'
 
@@ -92,6 +94,18 @@ function UsersPage() {
       setError(err.message || 'Failed to create collaborator.');
     } finally {
       setCreating(false);
+    }
+  }
+
+  const handleToggleStatus = async (e, userToToggle) => {
+    e.stopPropagation(); // prevent card navigation
+    try {
+      await api.toggleUserStatus(userToToggle.id, !userToToggle.is_active);
+      // Refresh user list
+      const fetchedUsers = await api.getUsers();
+      setUsers(fetchedUsers);
+    } catch (err) {
+      alert(err.message || 'Failed to update user status.');
     }
   }
 
@@ -205,19 +219,38 @@ function UsersPage() {
 
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Chip
-                      label="Active"
+                      label={user.is_active !== false ? "Active" : "Deactivated"}
                       size="small"
                       sx={{
-                        backgroundColor: 'rgba(27,94,85,0.08)',
-                        color: THEME.colors.sidebarBg,
+                        backgroundColor: user.is_active !== false ? 'rgba(27,94,85,0.08)' : 'rgba(239,68,68,0.08)',
+                        color: user.is_active !== false ? THEME.colors.sidebarBg : '#ef4444',
                         fontWeight: 700, fontSize: 11,
-                        border: '1px solid rgba(27,94,85,0.15)'
+                        border: user.is_active !== false ? '1px solid rgba(27,94,85,0.15)' : '1px solid rgba(239,68,68,0.15)'
                       }}
                     />
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <Typography variant="body2" sx={{ color: THEME.colors.textMuted, fontSize: 13, fontWeight: 500 }}>
                         {assignedTasks} {assignedTasks === 1 ? 'task' : 'tasks'}
                       </Typography>
+                      {currentUser?.id !== user.id && (
+                        (currentUser?.role === 'ADMIN' && user.role !== 'ADMIN') ||
+                        (currentUser?.role === 'PROJECT_MANAGER' && user.role === 'COLLABORATOR')
+                      ) && (
+                        <Tooltip title={user.is_active !== false ? "Deactivate member" : "Activate member"}>
+                          <IconButton
+                            size="small"
+                            onClick={(e) => handleToggleStatus(e, user)}
+                            sx={{
+                              color: user.is_active !== false ? '#eb5e43' : '#1b5e55',
+                              opacity: 0.8,
+                              '&:hover': { opacity: 1, backgroundColor: user.is_active !== false ? 'rgba(235,94,67,0.08)' : 'rgba(27,94,85,0.08)' },
+                              transition: 'opacity 0.2s'
+                            }}
+                          >
+                            {user.is_active !== false ? <ToggleOnIcon fontSize="medium" /> : <ToggleOffIcon fontSize="medium" />}
+                          </IconButton>
+                        </Tooltip>
+                      )}
                       {isAdmin && user.role === 'COLLABORATOR' && (
                         <Tooltip title="Delete collaborator">
                           <IconButton

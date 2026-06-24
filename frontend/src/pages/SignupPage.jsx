@@ -17,15 +17,23 @@ function SignupPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [role, setRole] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
 
+  const validatePassword = (pwd) => {
+    if (!pwd || pwd.length < 8) return 'Password must be at least 8 characters long.';
+    if (!/[A-Z]/.test(pwd)) return 'Password must contain at least one uppercase letter.';
+    if (!/[a-z]/.test(pwd)) return 'Password must contain at least one lowercase letter.';
+    if (!/\d/.test(pwd)) return 'Password must contain at least one number.';
+    if (!/[@$!%*?&#]/.test(pwd)) return 'Password must contain at least one special character (@$!%*?&#).';
+    return null;
+  };
+
   const handleSignup = async () => {
-    if (!name || !email || !password || !confirmPassword || !role) {
+    if (!name || !email || !password || !confirmPassword) {
       setError('Please fill in all fields')
       return
     }
@@ -33,9 +41,10 @@ function SignupPage() {
       setError('Please enter a valid email address')
       return
     }
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters')
-      return
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+      setError(passwordError);
+      return;
     }
     if (password !== confirmPassword) {
       setError('Passwords do not match')
@@ -44,7 +53,7 @@ function SignupPage() {
     setError('')
     setLoading(true)
     try {
-      await api.signup(name, email, password, role);
+      await api.signup(name, email, password, 'ADMIN');
       navigate('/');
     } catch (err) {
       setError(err.message || 'Registration failed. Please try again.');
@@ -222,45 +231,6 @@ function SignupPage() {
             }}
           />
 
-          {/* Role */}
-          <Typography variant="body2" fontWeight={500}
-            sx={{ color: THEME.colors.textMain, mb: 1 }}>
-            Role
-          </Typography>
-          <TextField fullWidth select value={role}
-            onChange={(e) => setRole(e.target.value)}
-            sx={{
-              mb: 2.5,
-              '& .MuiOutlinedInput-root': {
-                borderRadius: 2.5,
-                backgroundColor: 'rgba(27,94,85,0.03)',
-                color: THEME.colors.textMain,
-                '& fieldset': { borderColor: 'rgba(27,94,85,0.1)' },
-                '&:hover fieldset': { borderColor: THEME.colors.sidebarBg },
-                '&.Mui-focused fieldset': { borderColor: THEME.colors.sidebarBg },
-              },
-              '& .MuiSelect-select': { color: role ? THEME.colors.textMain : 'rgba(27,94,85,0.4)' },
-              '& .MuiSvgIcon-root': { color: THEME.colors.textMuted }
-            }}
-            SelectProps={{
-              MenuProps: {
-                PaperProps: {
-                  sx: {
-                    backgroundColor: '#ffffff',
-                    border: '1px solid rgba(27,94,85,0.1)',
-                    '& .MuiMenuItem-root': {
-                      color: THEME.colors.textMain,
-                      '&:hover': { backgroundColor: 'rgba(27,94,85,0.05)' }
-                    }
-                  }
-                }
-              }
-            }}
-          >
-            <MenuItem value="Administrator">Administrator</MenuItem>
-            <MenuItem value="Project Manager">Project Manager</MenuItem>
-            <MenuItem value="Collaborator">Collaborator</MenuItem>
-          </TextField>
 
           {/* Password */}
           <Typography variant="body2" fontWeight={500}

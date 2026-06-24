@@ -17,7 +17,6 @@ const menuItems = [
   { icon: <DashboardIcon />, label: 'Dashboard', path: '/dashboard' },
   { icon: <FolderIcon />, label: 'Projects', path: '/projects' },
   { icon: <AssignmentIcon />, label: 'Task Board', path: '/taskboard' },
-  { icon: <AddTaskIcon />, label: 'Create Task', path: '/create-task', pmOrAdminOnly: true },
   { icon: <PeopleIcon />, label: 'Users', path: '/users', adminOnly: true },
   { icon: <NotificationsIcon />, label: 'Notifications', path: '/notifications' },
   { icon: <PersonIcon />, label: 'Profile', path: '/profile' },
