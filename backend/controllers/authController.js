@@ -3,9 +3,25 @@ const bcrypt = require('bcryptjs');
 
 const prisma = require('../prismaClient');
 const { sendVerificationCodeEmail } = require('../utils/emailService');
-// 1. Fixed Mock Database
-// Why: Using hashSync ensures Node automatically generates a mathematically perfect 
-// bcrypt hash for "Password123" when the server starts up. No more hardcoded typos!
+
+const validatePassword = (password) => {
+    if (!password || password.length < 8) {
+        return "Password must be at least 8 characters long.";
+    }
+    if (!/[A-Z]/.test(password)) {
+        return "Password must contain at least one uppercase letter.";
+    }
+    if (!/[a-z]/.test(password)) {
+        return "Password must contain at least one lowercase letter.";
+    }
+    if (!/\d/.test(password)) {
+        return "Password must contain at least one number.";
+    }
+    if (!/[@$!%*?&#]/.test(password)) {
+        return "Password must contain at least one special character (@$!%*?&#).";
+    }
+    return null;
+};
 
 
 exports.login = async (req, res, next) => {
@@ -32,6 +48,14 @@ exports.login = async (req, res, next) => {
             return res.status(401).json({
                 errorCode: "AUTH_FAILED",
                 message: "Invalid email or password"
+            });
+        }
+
+        // Check active status
+        if (!user.is_active) {
+            return res.status(403).json({
+                errorCode: "ACCOUNT_DEACTIVATED",
+                message: "Your account has been deactivated. Please contact an administrator."
             });
         }
 
@@ -67,6 +91,11 @@ exports.register = async (req, res, next) => {
 
         if (!name || !email || !password) {
             return res.status(400).json({ message: "Name, email, and password are required" });
+        }
+
+        const passwordError = validatePassword(password);
+        if (passwordError) {
+            return res.status(400).json({ message: passwordError });
         }
 
         // 1. Check if a user with this email already exists in the Neon DB
@@ -122,9 +151,13 @@ exports.register = async (req, res, next) => {
 
 exports.changePassword = async (req, res, next) => {
     try {
-        const { newPassword } = req.body;
-        if (!newPassword || newPassword.length < 6) {
-            return res.status(400).json({ message: "New password must be at least 6 characters long." });
+        const { newPassword, name } = req.body;
+        if (!newPassword) {
+            return res.status(400).json({ message: "New password is required." });
+        }
+        const passwordError = validatePassword(newPassword);
+        if (passwordError) {
+            return res.status(400).json({ message: passwordError });
         }
 
         const userId = req.user.id;
@@ -155,13 +188,18 @@ exports.changePassword = async (req, res, next) => {
         const hashedPassword = await bcrypt.hash(newPassword, salt);
 
         // Update password, reset flag, and set last changed timestamp
+        const updateData = {
+            password_hash: hashedPassword,
+            must_reset_password: false,
+            password_last_changed: new Date()
+        };
+        if (name) {
+            updateData.name = name;
+        }
+
         await prisma.user.update({
             where: { id: userId },
-            data: {
-                password_hash: hashedPassword,
-                must_reset_password: false,
-                password_last_changed: new Date()
-            }
+            data: updateData
         });
 
         res.status(200).json({ message: "Password updated successfully!" });
@@ -233,8 +271,9 @@ exports.forgotPasswordReset = async (req, res, next) => {
         if (!email || !code || !newPassword) {
             return res.status(400).json({ message: "Email, verification code, and new password are required." });
         }
-        if (newPassword.length < 6) {
-            return res.status(400).json({ message: "Password must be at least 6 characters long." });
+        const passwordError = validatePassword(newPassword);
+        if (passwordError) {
+            return res.status(400).json({ message: passwordError });
         }
 
         const user = await prisma.user.findUnique({

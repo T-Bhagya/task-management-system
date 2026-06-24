@@ -7,6 +7,7 @@ const { verifyToken } = require('../middleware/authMiddleware'); // Import your 
 router.get('/', verifyToken, userController.getAllUsers);
 router.post('/', verifyToken, userController.createUser);
 router.delete('/:id', verifyToken, userController.deleteUser);
+router.put('/:id/status', verifyToken, userController.toggleUserStatus);
 router.get('/profile', verifyToken, userController.getProfile);
 router.get('/notifications', verifyToken, userController.getNotifications);
 router.put('/notifications/:id/read', verifyToken, userController.markNotificationAsRead);

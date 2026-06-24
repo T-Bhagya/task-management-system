@@ -46,8 +46,8 @@ export const api = {
   signup: (name, email, password, role) => 
     request('/auth/register', { method: 'POST', body: { name, email, password, role } }),
 
-  changePassword: (newPassword) =>
-    request('/auth/change-password', { method: 'PUT', body: { newPassword } }),
+  changePassword: (newPassword, name) =>
+    request('/auth/change-password', { method: 'PUT', body: { newPassword, name } }),
 
   forgotPasswordVerify: (email) =>
     request('/auth/forgot-password/verify', { method: 'POST', body: { email } }),
@@ -116,6 +116,9 @@ export const api = {
 
   deleteUser: (id) =>
     request(`/users/${id}`, { method: 'DELETE' }),
+
+  toggleUserStatus: (id, isActive) =>
+    request(`/users/${id}/status`, { method: 'PUT', body: { is_active: isActive } }),
 
   getProfile: () => 
     request('/users/profile', { method: 'GET' }),

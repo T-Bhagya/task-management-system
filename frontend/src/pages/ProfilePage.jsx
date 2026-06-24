@@ -90,6 +90,7 @@ function ProfilePage() {
   const totalTasks = myTasks.length;
   const completedTasks = myTasks.filter(t => t.status === 'COMPLETED').length;
   const inProgressTasks = myTasks.filter(t => t.status === 'IN_PROGRESS').length;
+  const todoTasks = myTasks.filter(t => t.status === 'TODO').length;
 
   const joinDate = profile.created_at
     ? new Date(profile.created_at).toLocaleDateString([], { year: 'numeric', month: 'short' })
@@ -164,8 +165,9 @@ function ProfilePage() {
             <Box sx={{ display: 'flex', gap: 3, mb: 3, flexWrap: 'wrap' }}>
               {[
                 { label: 'Total Tasks', value: totalTasks, icon: <AssignmentIcon />, color: THEME.colors.sidebarBg, bg: 'rgba(27,94,85,0.1)' },
-                { label: 'Completed', value: completedTasks, icon: <CheckCircleIcon />, color: THEME.colors.greenAccent, bg: 'rgba(27,94,85,0.1)' },
+                { label: 'To Do', value: todoTasks, icon: <AssignmentIcon />, color: '#627575', bg: 'rgba(98,117,117,0.1)' },
                 { label: 'In Progress', value: inProgressTasks, icon: <PendingIcon />, color: THEME.colors.purpleAccent, bg: 'rgba(136,144,211,0.1)' },
+                { label: 'Completed', value: completedTasks, icon: <CheckCircleIcon />, color: THEME.colors.greenAccent, bg: 'rgba(27,94,85,0.1)' },
               ].map((stat) => (
                 <Paper key={stat.label} elevation={0} sx={{
                   p: 3, borderRadius: 3.5, flex: 1, minWidth: 140,
