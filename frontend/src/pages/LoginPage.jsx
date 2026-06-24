@@ -28,6 +28,16 @@ function LoginPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showNewPassword, setShowNewPassword] = useState(false)
 
+  // Forgot password flow states
+  const [forgotMode, setForgotMode] = useState(false)
+  const [forgotEmail, setForgotEmail] = useState('')
+  const [forgotCode, setForgotCode] = useState('')
+  const [forgotEmailVerified, setForgotEmailVerified] = useState(false)
+  const [forgotNewPassword, setForgotNewPassword] = useState('')
+  const [forgotConfirmPassword, setForgotConfirmPassword] = useState('')
+  const [forgotShowPassword, setForgotShowPassword] = useState(false)
+  const [forgotSuccessMessage, setForgotSuccessMessage] = useState('')
+
   const handleLogin = async () => {
     if (!email || !password) {
       setError('Please enter both email and password')
@@ -88,6 +98,61 @@ function LoginPage() {
       setError(err.message || 'Failed to update password.');
     } finally {
       setLoading(false);
+    }
+  }
+
+  const handleForgotVerify = async () => {
+    if (!forgotEmail) {
+      setError('Please enter your email address')
+      return
+    }
+    if (!forgotEmail.includes('@')) {
+      setError('Please enter a valid email address')
+      return
+    }
+    setError('')
+    setForgotSuccessMessage('')
+    setLoading(true)
+    try {
+      const res = await api.forgotPasswordVerify(forgotEmail)
+      setForgotEmailVerified(true)
+      setForgotSuccessMessage(res.message || 'Email verified. Please set your new password.')
+    } catch (err) {
+      setError(err.message || 'Verification failed.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleForgotReset = async () => {
+    if (!forgotCode || !forgotNewPassword || !forgotConfirmPassword) {
+      setError('Please enter the verification code and fill in both password fields')
+      return
+    }
+    if (forgotNewPassword.length < 6) {
+      setError('Password must be at least 6 characters')
+      return
+    }
+    if (forgotNewPassword !== forgotConfirmPassword) {
+      setError('Passwords do not match')
+      return
+    }
+    setError('')
+    setForgotSuccessMessage('')
+    setLoading(true)
+    try {
+      await api.forgotPasswordReset(forgotEmail, forgotCode, forgotNewPassword)
+      setForgotSuccessMessage('Password reset successfully! You can now log in.')
+      setForgotMode(false)
+      setForgotEmailVerified(false)
+      setForgotEmail('')
+      setForgotCode('')
+      setForgotNewPassword('')
+      setForgotConfirmPassword('')
+    } catch (err) {
+      setError(err.message || 'Failed to reset password.')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -212,12 +277,14 @@ function LoginPage() {
           </Box>
 
           <Typography variant="h4" fontWeight="bold" sx={{ color: THEME.colors.textMain }} mb={0.8}>
-            {mustReset ? 'Reset Password' : 'Welcome back'}
+            {mustReset ? 'Reset Password' : (forgotMode ? 'Forgot Password' : 'Welcome back')}
           </Typography>
           <Typography variant="body2" sx={{ color: THEME.colors.textMuted, mb: 4 }}>
             {mustReset 
               ? 'You are logging in with a temporary password. Please create a new password.'
-              : 'Sign in to continue to DoIT'}
+              : (forgotMode 
+                ? (forgotEmailVerified ? 'Verify your identity and set a new password.' : 'Enter your registered email to reset your password.')
+                : 'Sign in to continue to DoIT')}
           </Typography>
 
           {error && (
@@ -227,6 +294,15 @@ function LoginPage() {
               border: '1px solid #fee2e2',
               color: '#ef4444'
             }}>{error}</Alert>
+          )}
+
+          {forgotSuccessMessage && (
+            <Alert severity="success" sx={{
+              mb: 3, borderRadius: 2.5,
+              backgroundColor: '#ecfdf5',
+              border: '1px solid #d1fae5',
+              color: '#059669'
+            }}>{forgotSuccessMessage}</Alert>
           )}
 
           {mustReset ? (
@@ -330,6 +406,215 @@ function LoginPage() {
                 {loading ? 'Updating...' : 'Update Password'}
               </Button>
             </>
+          ) : forgotMode ? (
+            <>
+              {!forgotEmailVerified ? (
+                <>
+                  {/* Forgot Password - Step 1: Email Input */}
+                  <Typography variant="body2" fontWeight={500}
+                    sx={{ color: THEME.colors.textMain, mb: 1 }}>
+                    Email address
+                  </Typography>
+                  <TextField
+                    fullWidth
+                    placeholder="you@example.com"
+                    type="email"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleForgotVerify()}
+                    sx={{
+                      mb: 3,
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: 2.5,
+                        backgroundColor: 'rgba(27,94,85,0.03)',
+                        color: THEME.colors.textMain,
+                        '& fieldset': { borderColor: 'rgba(27,94,85,0.1)' },
+                        '&:hover fieldset': { borderColor: THEME.colors.sidebarBg },
+                        '&.Mui-focused fieldset': { borderColor: THEME.colors.sidebarBg },
+                      },
+                      '& input::placeholder': { color: 'rgba(27,94,85,0.4)' },
+                      '& input': { color: THEME.colors.textMain }
+                    }}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <EmailIcon sx={{ color: THEME.colors.textMuted, fontSize: 20 }} />
+                        </InputAdornment>
+                      )
+                    }}
+                  />
+
+                  <Button
+                    fullWidth variant="contained" size="large"
+                    onClick={handleForgotVerify} disabled={loading}
+                    sx={{
+                      py: 1.6, fontSize: 15, fontWeight: 'bold',
+                      borderRadius: 2.5, textTransform: 'none',
+                      backgroundColor: THEME.colors.sidebarBg,
+                      boxShadow: '0 4px 14px rgba(27,94,85,0.15)',
+                      mb: 3,
+                      '&:hover': {
+                        backgroundColor: '#13463f',
+                        boxShadow: '0 6px 20px rgba(27,94,85,0.25)',
+                      },
+                      '&:disabled': {
+                        backgroundColor: 'rgba(27,94,85,0.4)',
+                        color: 'white'
+                      }
+                    }}
+                  >
+                    {loading ? 'Verifying...' : 'Verify Email'}
+                  </Button>
+
+                  <Box sx={{ textAlign: 'center' }}>
+                    <Typography variant="body2" sx={{ color: THEME.colors.textMuted }}>
+                      Remember your password?{' '}
+                      <span onClick={() => { setForgotMode(false); setError(''); setForgotSuccessMessage(''); }} style={{
+                        color: THEME.colors.sidebarBg, fontWeight: 600,
+                        textDecoration: 'none', cursor: 'pointer'
+                      }}>
+                        Back to Login
+                      </span>
+                    </Typography>
+                  </Box>
+                </>
+              ) : (
+                <>
+                  {/* Forgot Password - Step 2: Set New Password */}
+                  <Typography variant="body2" fontWeight={500}
+                    sx={{ color: THEME.colors.textMain, mb: 1 }}>
+                    Verification Code
+                  </Typography>
+                  <TextField
+                    fullWidth
+                    placeholder="123456"
+                    type="text"
+                    value={forgotCode}
+                    onChange={(e) => setForgotCode(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleForgotReset()}
+                    sx={{
+                      mb: 3,
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: 2.5,
+                        backgroundColor: 'rgba(27,94,85,0.03)',
+                        color: THEME.colors.textMain,
+                        '& fieldset': { borderColor: 'rgba(27,94,85,0.1)' },
+                        '&:hover fieldset': { borderColor: THEME.colors.sidebarBg },
+                        '&.Mui-focused fieldset': { borderColor: THEME.colors.sidebarBg },
+                      },
+                      '& input::placeholder': { color: 'rgba(27,94,85,0.4)' },
+                      '& input': { color: THEME.colors.textMain }
+                    }}
+                  />
+
+                  <Typography variant="body2" fontWeight={500}
+                    sx={{ color: THEME.colors.textMain, mb: 1 }}>
+                    New Password
+                  </Typography>
+                  <TextField
+                    fullWidth
+                    placeholder="••••••••"
+                    type={forgotShowPassword ? 'text' : 'password'}
+                    value={forgotNewPassword}
+                    onChange={(e) => setForgotNewPassword(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleForgotReset()}
+                    sx={{
+                      mb: 3,
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: 2.5,
+                        backgroundColor: 'rgba(27,94,85,0.03)',
+                        color: THEME.colors.textMain,
+                        '& fieldset': { borderColor: 'rgba(27,94,85,0.1)' },
+                        '&:hover fieldset': { borderColor: THEME.colors.sidebarBg },
+                        '&.Mui-focused fieldset': { borderColor: THEME.colors.sidebarBg },
+                      },
+                      '& input::placeholder': { color: 'rgba(27,94,85,0.4)' },
+                      '& input': { color: THEME.colors.textMain }
+                    }}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <LockIcon sx={{ color: THEME.colors.textMuted, fontSize: 20 }} />
+                        </InputAdornment>
+                      ),
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton onClick={() => setForgotShowPassword(!forgotShowPassword)} edge="end">
+                            {forgotShowPassword
+                              ? <VisibilityOffIcon sx={{ color: THEME.colors.textMuted, fontSize: 20 }} />
+                              : <VisibilityIcon sx={{ color: THEME.colors.textMuted, fontSize: 20 }} />}
+                          </IconButton>
+                        </InputAdornment>
+                      )
+                    }}
+                  />
+
+                  <Typography variant="body2" fontWeight={500}
+                    sx={{ color: THEME.colors.textMain, mb: 1 }}>
+                    Confirm New Password
+                  </Typography>
+                  <TextField
+                    fullWidth
+                    placeholder="••••••••"
+                    type={forgotShowPassword ? 'text' : 'password'}
+                    value={forgotConfirmPassword}
+                    onChange={(e) => setForgotConfirmPassword(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleForgotReset()}
+                    sx={{
+                      mb: 3,
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: 2.5,
+                        backgroundColor: 'rgba(27,94,85,0.03)',
+                        color: THEME.colors.textMain,
+                        '& fieldset': { borderColor: 'rgba(27,94,85,0.1)' },
+                        '&:hover fieldset': { borderColor: THEME.colors.sidebarBg },
+                        '&.Mui-focused fieldset': { borderColor: THEME.colors.sidebarBg },
+                      },
+                      '& input::placeholder': { color: 'rgba(27,94,85,0.4)' },
+                      '& input': { color: THEME.colors.textMain }
+                    }}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <LockIcon sx={{ color: THEME.colors.textMuted, fontSize: 20 }} />
+                        </InputAdornment>
+                      )
+                    }}
+                  />
+
+                  <Button
+                    fullWidth variant="contained" size="large"
+                    onClick={handleForgotReset} disabled={loading}
+                    sx={{
+                      py: 1.6, fontSize: 15, fontWeight: 'bold',
+                      borderRadius: 2.5, textTransform: 'none',
+                      backgroundColor: THEME.colors.sidebarBg,
+                      boxShadow: '0 4px 14px rgba(27,94,85,0.15)',
+                      mb: 3,
+                      '&:hover': {
+                        backgroundColor: '#13463f',
+                        boxShadow: '0 6px 20px rgba(27,94,85,0.25)',
+                      },
+                      '&:disabled': {
+                        backgroundColor: 'rgba(27,94,85,0.4)',
+                        color: 'white'
+                      }
+                    }}
+                  >
+                    {loading ? 'Resetting...' : 'Update Password'}
+                  </Button>
+
+                  <Box sx={{ textAlign: 'center' }}>
+                    <span onClick={() => { setForgotEmailVerified(false); setForgotConfirmPassword(''); setForgotNewPassword(''); setError(''); setForgotSuccessMessage(''); }} style={{
+                      color: THEME.colors.sidebarBg, fontWeight: 600,
+                      textDecoration: 'none', cursor: 'pointer', fontSize: 14
+                    }}>
+                      Back to Email Verification
+                    </span>
+                  </Box>
+                </>
+              )}
+            </>
           ) : (
             <>
               {/* Email */}
@@ -373,6 +658,7 @@ function LoginPage() {
                   Password
                 </Typography>
                 <Typography variant="body2"
+                  onClick={() => { setForgotMode(true); setForgotEmail(email); setError(''); setForgotSuccessMessage(''); }}
                   sx={{ color: THEME.colors.sidebarBg, cursor: 'pointer', fontWeight: 600,
                     '&:hover': { textDecoration: 'underline' }
                   }}>
