@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 
 const prisma = require('../prismaClient');
+const { sendVerificationCodeEmail } = require('../utils/emailService');
 // 1. Fixed Mock Database
 // Why: Using hashSync ensures Node automatically generates a mathematically perfect 
 // bcrypt hash for "Password123" when the server starts up. No more hardcoded typos!
@@ -127,19 +128,158 @@ exports.changePassword = async (req, res, next) => {
         }
 
         const userId = req.user.id;
+        const user = await prisma.user.findUnique({
+            where: { id: userId }
+        });
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // Only enforce the once-a-month restriction if the user is not in a forced reset flow
+        if (!user.must_reset_password && user.password_last_changed) {
+            const lastChanged = new Date(user.password_last_changed);
+            const nextAllowedDate = new Date(lastChanged);
+            nextAllowedDate.setDate(nextAllowedDate.getDate() + 30);
+            const now = new Date();
+            if (now < nextAllowedDate) {
+                const diffTime = Math.abs(nextAllowedDate - now);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                return res.status(400).json({
+                    message: `Password can only be changed once a month. You can change it again in ${diffDays} day(s).`
+                });
+            }
+        }
+
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(newPassword, salt);
 
-        // Update password and reset flag
+        // Update password, reset flag, and set last changed timestamp
         await prisma.user.update({
             where: { id: userId },
             data: {
                 password_hash: hashedPassword,
-                must_reset_password: false
+                must_reset_password: false,
+                password_last_changed: new Date()
             }
         });
 
         res.status(200).json({ message: "Password updated successfully!" });
+    } catch (error) {
+        next(error);
+    }
+};
+
+exports.forgotPasswordVerify = async (req, res, next) => {
+    try {
+        const { email } = req.body;
+        if (!email) {
+            return res.status(400).json({ message: "Email is required" });
+        }
+
+        const user = await prisma.user.findUnique({
+            where: { email: email }
+        });
+
+        if (!user) {
+            return res.status(404).json({ message: "Email is not registered." });
+        }
+
+        // Only enforce the once-a-month restriction if must_reset_password is false
+        if (!user.must_reset_password && user.password_last_changed) {
+            const lastChanged = new Date(user.password_last_changed);
+            const nextAllowedDate = new Date(lastChanged);
+            nextAllowedDate.setDate(nextAllowedDate.getDate() + 30);
+            const now = new Date();
+            if (now < nextAllowedDate) {
+                const diffTime = Math.abs(nextAllowedDate - now);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                return res.status(400).json({
+                    message: `Password can only be changed once a month. You can change it again in ${diffDays} day(s).`
+                });
+            }
+        }
+
+        // Generate a 6-digit verification code
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        const expires = new Date();
+        expires.setMinutes(expires.getMinutes() + 15); // Valid for 15 minutes
+
+        // Save code and expiration to DB
+        await prisma.user.update({
+            where: { email: email },
+            data: {
+                reset_code: code,
+                reset_code_expires: expires
+            }
+        });
+
+        // Send email (simulated or real)
+        await sendVerificationCodeEmail(user.email, user.name, code);
+
+        return res.status(200).json({
+            message: "Verification code sent to your email. Please check your inbox.",
+            email: user.email
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+exports.forgotPasswordReset = async (req, res, next) => {
+    try {
+        console.log("Backend received reset payload:", req.body);
+        const { email, code, newPassword } = req.body;
+        if (!email || !code || !newPassword) {
+            return res.status(400).json({ message: "Email, verification code, and new password are required." });
+        }
+        if (newPassword.length < 6) {
+            return res.status(400).json({ message: "Password must be at least 6 characters long." });
+        }
+
+        const user = await prisma.user.findUnique({
+            where: { email: email }
+        });
+
+        if (!user) {
+            return res.status(404).json({ message: "Email is not registered." });
+        }
+
+        // Verify code
+        if (!user.reset_code || user.reset_code !== code || !user.reset_code_expires || new Date() > user.reset_code_expires) {
+            return res.status(400).json({ message: "Invalid or expired verification code." });
+        }
+
+        // Re-check restriction on actual reset action (security best practice)
+        if (!user.must_reset_password && user.password_last_changed) {
+            const lastChanged = new Date(user.password_last_changed);
+            const nextAllowedDate = new Date(lastChanged);
+            nextAllowedDate.setDate(nextAllowedDate.getDate() + 30);
+            const now = new Date();
+            if (now < nextAllowedDate) {
+                const diffTime = Math.abs(nextAllowedDate - now);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                return res.status(400).json({
+                    message: `Password can only be changed once a month. You can change it again in ${diffDays} day(s).`
+                });
+            }
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+        await prisma.user.update({
+            where: { email: email },
+            data: {
+                password_hash: hashedPassword,
+                must_reset_password: false,
+                password_last_changed: new Date(),
+                reset_code: null, // Clear reset code info
+                reset_code_expires: null
+            }
+        });
+
+        return res.status(200).json({ message: "Password reset successfully!" });
     } catch (error) {
         next(error);
     }

@@ -49,6 +49,12 @@ export const api = {
   changePassword: (newPassword) =>
     request('/auth/change-password', { method: 'PUT', body: { newPassword } }),
 
+  forgotPasswordVerify: (email) =>
+    request('/auth/forgot-password/verify', { method: 'POST', body: { email } }),
+
+  forgotPasswordReset: (email, code, newPassword) =>
+    request('/auth/forgot-password/reset', { method: 'POST', body: { email, code, newPassword } }),
+
   // Tasks API
   getTasks: (filters = {}) => {
     const query = new URLSearchParams();
