@@ -42,3 +42,6 @@ out/
 
 # Vite cache
 .vite/
+
+# Temporary scripts
+check_users.cjs
