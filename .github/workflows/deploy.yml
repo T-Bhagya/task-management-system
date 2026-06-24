@@ -189,10 +189,17 @@ jobs:
           echo "=== MAIN APP REVISIONS ==="
           az containerapp revision list --name ${{ env.APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} -o table || echo "Failed to show revisions"
           
-          echo "=== MAIN APP RUNTIME LOGS ==="
-          az containerapp logs show --name ${{ env.APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --lines 150 || echo "No logs available or failed to fetch logs"
+          echo "=== MAIN APP SYSTEM LOGS ==="
+          az containerapp logs show --name ${{ env.APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --type system --tail 100 || echo "No system logs available"
           
-          echo "=== NOTIFICATIONS APP RUNTIME LOGS ==="
-          az containerapp logs show --name ${{ env.NOTIFICATIONS_APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --lines 150 || echo "No logs available or failed to fetch logs"
+          echo "=== MAIN APP CONSOLE LOGS ==="
+          az containerapp logs show --name ${{ env.APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --type console --tail 100 || echo "No console logs available"
+          
+          echo "=== NOTIFICATIONS APP SYSTEM LOGS ==="
+          az containerapp logs show --name ${{ env.NOTIFICATIONS_APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --type system --tail 100 || echo "No system logs available"
+          
+          echo "=== NOTIFICATIONS APP CONSOLE LOGS ==="
+          az containerapp logs show --name ${{ env.NOTIFICATIONS_APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --type console --tail 100 || echo "No console logs available"
+
 
 
