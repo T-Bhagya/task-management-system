@@ -8,6 +8,8 @@ const { verifyToken } = require('../middleware/authMiddleware');
 router.post('/login', authController.login);
 router.post('/register', authController.register);
 router.put('/change-password', verifyToken, authController.changePassword);
+router.post('/forgot-password/verify', authController.forgotPasswordVerify);
+router.post('/forgot-password/reset', authController.forgotPasswordReset);
 
 // Why: Export this router so our main server.js file can use it.
 module.exports = router;

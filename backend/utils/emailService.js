@@ -348,6 +348,69 @@ async function sendProjectMemberWelcomeEmail(to, memberName, projectName, projec
   }
 }
 
+/**
+ * Sends a password reset verification code email.
+ */
+async function sendVerificationCodeEmail(to, name, code) {
+  if (!hasAzureConfig || !emailClient) {
+    console.log('\n==================================================');
+    console.log(`✉️ [SIMULATED EMAIL] Password Reset Verification Code`);
+    console.log(`Body: Hello ${name}, your verification code is: ${code}`);
+    console.log('This code is valid for 15 minutes.');
+    console.log('==================================================\n');
+    return { message: 'Email logged to console (Azure Email not configured)' };
+  }
+
+  const emailMessage = {
+    senderAddress: senderAddress,
+    content: {
+      subject: 'TaskFlow - Password Reset Verification Code',
+      plainText: `Hello ${name},\n\nYour password reset verification code is: ${code}\n\nThis code is valid for 15 minutes. If you did not request a password reset, please ignore this email.\n\nBest regards,\nThe DoIT Team`,
+      html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff; color: #1e293b;">
+        <div style="text-align: center; margin-bottom: 24px;">
+          <h2 style="color: #1b5e55; font-size: 24px; margin: 0; font-weight: bold;">Password Reset Verification</h2>
+          <p style="color: #64748b; font-size: 14px; margin-top: 4px;">TaskFlow System</p>
+        </div>
+        <hr style="border: 0; border-top: 1px solid #e2e8f0; margin-bottom: 24px;" />
+        <p style="font-size: 16px; line-height: 1.6;">Hello <strong>${name}</strong>,</p>
+        <p style="font-size: 16px; line-height: 1.6;">We received a request to reset your password. Use the verification code below to proceed:</p>
+        
+        <div style="background-color: #f0fdf4; border: 1px solid #bfd4d1; border-radius: 8px; padding: 16px; text-align: center; margin: 24px 0;">
+          <span style="font-family: monospace; font-size: 32px; font-weight: bold; color: #1b5e55; letter-spacing: 4px;">${code}</span>
+        </div>
+        
+        <p style="font-size: 14px; line-height: 1.6; color: #64748b;">
+          This code is valid for <strong>15 minutes</strong>. If you did not make this request, you can safely ignore this email.
+        </p>
+        <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
+        <p style="font-size: 14px; line-height: 1.6; color: #64748b; margin: 0;">
+          Best regards,<br />
+          <strong>The DoIT Team</strong>
+        </p>
+      </div>
+      `,
+    },
+    recipients: {
+      to: [
+        {
+          address: to,
+        },
+      ],
+    },
+  };
+
+  try {
+    const poller = await emailClient.beginSend(emailMessage);
+    const response = await poller.pollUntilDone();
+    console.log(`🚀 Verification email sent to ${to} (Message ID: ${response.id})`);
+    return response;
+  } catch (error) {
+    console.error(`❌ Failed to send verification email to ${to}:`, error.message);
+    throw error;
+  }
+}
+
 module.exports = {
   sendTemporaryPasswordEmail,
   sendTaskStatusUpdateEmail,
@@ -355,4 +418,5 @@ module.exports = {
   sendCommentMentionEmail,
   sendTaskAssignedEmail,
   sendProjectMemberWelcomeEmail,
+  sendVerificationCodeEmail,
 };
