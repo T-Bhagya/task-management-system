@@ -173,7 +173,7 @@ jobs:
           git commit -m "chore: upload debug logs [skip ci]" || echo "No changes to commit"
           git push origin HEAD:${{ github.ref }}
 
-      - name: 📋 Get Deployment URLs
+      - name: 📋 Get Deployment URLs & Diagnostics
         run: |
           echo "## 🚀 Deployment Complete!" >> $GITHUB_STEP_SUMMARY
           APP_URL=$(az containerapp show --name ${{ env.APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --query "properties.configuration.ingress.fqdn" -o tsv)
@@ -182,4 +182,14 @@ jobs:
           echo "- **Notifications URL**: https://$NOTIF_URL" >> $GITHUB_STEP_SUMMARY
           echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Triggered by**: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          
+          echo "### 🔍 Main App Configuration" >> $GITHUB_STEP_SUMMARY
+          echo '```json' >> $GITHUB_STEP_SUMMARY
+          az containerapp show --name ${{ env.APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --query "{ingress:properties.configuration.ingress, provisioningState:properties.provisioningState}" -o json >> $GITHUB_STEP_SUMMARY || echo "Failed to show main app config"
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          
+          echo "### 📋 Main App Runtime Logs" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          az containerapp logs show --name ${{ env.APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --lines 100 >> $GITHUB_STEP_SUMMARY || echo "No logs available or failed to fetch logs"
+          echo '```' >> $GITHUB_STEP_SUMMARY
 
