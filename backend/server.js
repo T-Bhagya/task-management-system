@@ -3,10 +3,9 @@ require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 
 const express = require('express');
 const cors = require('cors');
-const { PrismaClient } = require('@prisma/client'); // Person 3's Database client instance
+const prisma = require('./prismaClient'); // Shared Prisma singleton used by all controllers
 
 const app = express();
-const prisma = new PrismaClient(); // Initializing the database connector
 
 // 1. Global Middleware
 const allowedOrigins = process.env.ALLOWED_ORIGINS
@@ -22,12 +21,6 @@ app.use(express.json());
 // Health check endpoint (used by Docker & Azure)
 app.get('/api/health', (req, res) => {
     res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
-// Attach prisma instance to the request object so your controllers can access it seamlessly
-app.use((req, res, next) => {
-    req.prisma = prisma;
-    next();
 });
 
 // 2. API Routes
