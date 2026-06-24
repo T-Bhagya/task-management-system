@@ -29,7 +29,8 @@ exports.getAllProjects = async (req, res, next) => {
         let where = {};
 
         if (role === 'PROJECT_MANAGER') {
-            where = { manager_id: userId };
+            // Project Managers can see all projects, just like Administrators
+            where = {};
         } else if (role === 'COLLABORATOR') {
             where = {
                 members: {
@@ -95,7 +96,8 @@ exports.getProjectById = async (req, res, next) => {
 
         // Authorization check
         if (role === 'PROJECT_MANAGER' && project.manager_id !== userId) {
-            return res.status(403).json({ message: 'Access denied. You do not manage this project.' });
+            // Can see the project details but cannot view its tasks
+            project.tasks = [];
         } else if (role === 'COLLABORATOR') {
             const isMember = project.members.some(m => m.user_id === userId);
             if (!isMember) {

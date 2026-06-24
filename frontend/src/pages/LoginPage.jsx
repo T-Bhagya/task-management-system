@@ -7,6 +7,7 @@ import {
 } from '@mui/material'
 import EmailIcon from '@mui/icons-material/Email'
 import LockIcon from '@mui/icons-material/Lock'
+import PersonIcon from '@mui/icons-material/Person'
 import VisibilityIcon from '@mui/icons-material/Visibility'
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
@@ -24,9 +25,19 @@ function LoginPage() {
 
   // Password reset flow states
   const [mustReset, setMustReset] = useState(false)
+  const [name, setName] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showNewPassword, setShowNewPassword] = useState(false)
+
+  const validatePassword = (pwd) => {
+    if (!pwd || pwd.length < 8) return 'Password must be at least 8 characters long.';
+    if (!/[A-Z]/.test(pwd)) return 'Password must contain at least one uppercase letter.';
+    if (!/[a-z]/.test(pwd)) return 'Password must contain at least one lowercase letter.';
+    if (!/\d/.test(pwd)) return 'Password must contain at least one number.';
+    if (!/[@$!%*?&#]/.test(pwd)) return 'Password must contain at least one special character (@$!%*?&#).';
+    return null;
+  };
 
   // Forgot password flow states
   const [forgotMode, setForgotMode] = useState(false)
@@ -59,6 +70,7 @@ function LoginPage() {
       localStorage.setItem('user', JSON.stringify(res.user));
       
       if (res.user.must_reset_password) {
+        setName(res.user.name || '');
         setMustReset(true);
       } else {
         navigate('/dashboard');
@@ -71,13 +83,18 @@ function LoginPage() {
   }
 
   const handlePasswordReset = async () => {
+    if (!name.trim()) {
+      setError('Full name is required')
+      return
+    }
     if (!newPassword || !confirmPassword) {
       setError('Please fill in both password fields')
       return
     }
-    if (newPassword.length < 6) {
-      setError('Password must be at least 6 characters')
-      return
+    const passwordError = validatePassword(newPassword);
+    if (passwordError) {
+      setError(passwordError);
+      return;
     }
     if (newPassword !== confirmPassword) {
       setError('Passwords do not match')
@@ -86,11 +103,12 @@ function LoginPage() {
     setError('')
     setLoading(true)
     try {
-      await api.changePassword(newPassword);
+      await api.changePassword(newPassword, name);
       
       // Update local storage user object
       const storedUser = JSON.parse(localStorage.getItem('user'));
       storedUser.must_reset_password = false;
+      storedUser.name = name;
       localStorage.setItem('user', JSON.stringify(storedUser));
       
       navigate('/dashboard');
@@ -129,9 +147,10 @@ function LoginPage() {
       setError('Please enter the verification code and fill in both password fields')
       return
     }
-    if (forgotNewPassword.length < 6) {
-      setError('Password must be at least 6 characters')
-      return
+    const passwordError = validatePassword(forgotNewPassword);
+    if (passwordError) {
+      setError(passwordError);
+      return;
     }
     if (forgotNewPassword !== forgotConfirmPassword) {
       setError('Passwords do not match')
@@ -307,6 +326,39 @@ function LoginPage() {
 
           {mustReset ? (
             <>
+              {/* Full Name */}
+              <Typography variant="body2" fontWeight={500}
+                sx={{ color: THEME.colors.textMain, mb: 1 }}>
+                Full Name
+              </Typography>
+              <TextField
+                fullWidth
+                placeholder="John Smith"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                sx={{
+                  mb: 3,
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2.5,
+                    backgroundColor: 'rgba(27,94,85,0.03)',
+                    color: THEME.colors.textMain,
+                    '& fieldset': { borderColor: 'rgba(27,94,85,0.1)' },
+                    '&:hover fieldset': { borderColor: THEME.colors.sidebarBg },
+                    '&.Mui-focused fieldset': { borderColor: THEME.colors.sidebarBg },
+                  },
+                  '& input::placeholder': { color: 'rgba(27,94,85,0.4)' },
+                  '& input': { color: THEME.colors.textMain }
+                }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <PersonIcon sx={{ color: THEME.colors.textMuted, fontSize: 20 }} />
+                    </InputAdornment>
+                  )
+                }}
+              />
+
               {/* New Password */}
               <Typography variant="body2" fontWeight={500}
                 sx={{ color: THEME.colors.textMain, mb: 1 }}>

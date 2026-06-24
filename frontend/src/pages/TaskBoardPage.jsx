@@ -67,7 +67,14 @@ function TaskBoardPage() {
   const loadTasks = async () => {
     setLoading(true);
     try {
-      const fetchedTasks = await api.getTasks();
+      const queryParams = new URLSearchParams(window.location.search);
+      const projectId = queryParams.get('projectId');
+      const filters = {};
+      if (projectId) {
+        filters.projectId = projectId;
+      }
+      
+      const fetchedTasks = await api.getTasks(filters);
       const categorized = { todo: [], inProgress: [], completed: [] };
       fetchedTasks.forEach(task => {
         const colKey = mapStatusToColKey(task.status);

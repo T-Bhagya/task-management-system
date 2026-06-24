@@ -5,7 +5,7 @@ const { sendTemporaryPasswordEmail } = require('../utils/emailService');
 exports.getAllUsers = async (req, res, next) => {
     try {
         const users = await prisma.user.findMany({
-            select: { id: true, name: true, email: true, role: true } // Never send the password_hash!
+            select: { id: true, name: true, email: true, role: true, is_active: true } // Never send the password_hash!
         });
         res.status(200).json(users);
     } catch (error) {
@@ -215,6 +215,60 @@ exports.deleteUser = async (req, res, next) => {
         });
 
         res.status(200).json({ message: `Collaborator "${userToDelete.name}" has been deleted successfully.` });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Toggle a user's active status
+exports.toggleUserStatus = async (req, res, next) => {
+    try {
+        const targetId = parseInt(req.params.id);
+        const { is_active } = req.body;
+        
+        if (isNaN(targetId)) {
+            return res.status(400).json({ message: "Invalid user ID." });
+        }
+        if (typeof is_active !== 'boolean') {
+            return res.status(400).json({ message: "is_active status must be a boolean." });
+        }
+        
+        const userToToggle = await prisma.user.findUnique({ where: { id: targetId } });
+        if (!userToToggle) {
+            return res.status(404).json({ message: "User not found." });
+        }
+        
+        if (req.user.id === targetId) {
+            return res.status(400).json({ message: "You cannot change your own status." });
+        }
+        
+        if (req.user.role === 'PROJECT_MANAGER' && userToToggle.role !== 'COLLABORATOR') {
+            return res.status(403).json({ message: "Project Managers can only toggle status of Collaborators." });
+        }
+        
+        if (req.user.role !== 'ADMIN' && req.user.role !== 'PROJECT_MANAGER') {
+            return res.status(403).json({ message: "Only Administrators and Project Managers can toggle user status." });
+        }
+        
+        if (userToToggle.role === 'ADMIN') {
+            return res.status(403).json({ message: "Administrator accounts cannot be deactivated." });
+        }
+        
+        const updatedUser = await prisma.user.update({
+            where: { id: targetId },
+            data: { is_active: is_active }
+        });
+        
+        res.status(200).json({
+            message: `User status updated successfully.`,
+            user: {
+                id: updatedUser.id,
+                name: updatedUser.name,
+                email: updatedUser.email,
+                role: updatedUser.role,
+                is_active: updatedUser.is_active
+            }
+        });
     } catch (error) {
         next(error);
     }

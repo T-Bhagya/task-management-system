@@ -46,17 +46,22 @@ async function getAllTasks(req, res) {
     if (assignedTo) where.assigned_to = parseInt(assignedTo);
     if (projectId) where.project_id = parseInt(projectId);
 
-    // Enforce role-based scoping if no specific project is requested
+    // Enforce role-based scoping
     const role = req.user.role;
     const userId = req.user.id;
 
-    if (role === 'PROJECT_MANAGER' && !projectId) {
-      where.project = { manager_id: userId };
-    } else if (role === 'COLLABORATOR' && !projectId) {
-      where.OR = [
-        { assigned_to: userId },
-        { project: { members: { some: { user_id: userId } } } }
-      ];
+    if (role === 'PROJECT_MANAGER') {
+      if (projectId) {
+        where.project = { id: parseInt(projectId), manager_id: userId };
+      } else {
+        where.project = { manager_id: userId };
+      }
+    } else if (role === 'COLLABORATOR') {
+      if (projectId) {
+        where.project = { id: parseInt(projectId), members: { some: { user_id: userId } } };
+      } else {
+        where.project = { members: { some: { user_id: userId } } };
+      }
     }
 
     const tasks = await prisma.task.findMany({
