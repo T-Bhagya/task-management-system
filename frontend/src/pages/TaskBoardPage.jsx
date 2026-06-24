@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
-import { Box, Typography, Paper, Chip, Avatar, Button, TextField, Divider, Modal } from '@mui/material'
+import { Box, Typography, Paper, Chip, Avatar, Button, TextField, Divider, Modal, ToggleButton, ToggleButtonGroup, Select, MenuItem, InputAdornment, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import CommentIcon from '@mui/icons-material/Comment'
 import CloseIcon from '@mui/icons-material/Close'
 import SendIcon from '@mui/icons-material/Send'
+import SearchIcon from '@mui/icons-material/Search'
+import ViewListIcon from '@mui/icons-material/ViewList'
+import ViewKanbanIcon from '@mui/icons-material/ViewKanban'
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
 import { api } from '../services/api'
 import { THEME } from '../theme'
@@ -21,6 +24,8 @@ const priorityColors = {
   Medium: { color: '#8890d3', bg: 'rgba(136,144,211,0.12)' },
   Low: { color: '#1b5e55', bg: 'rgba(27,94,85,0.12)' },
 }
+
+const priorityWeight = { HIGH: 3, MEDIUM: 2, LOW: 1 };
 
 const mapPriorityToUI = (priority) => {
   if (priority === 'HIGH') return 'High';
@@ -50,6 +55,9 @@ function TaskBoardPage() {
   const [commentText, setCommentText] = useState('')
   const [loading, setLoading] = useState(true)
   const [currentUser, setCurrentUser] = useState(null)
+  const [viewMode, setViewMode] = useState('kanban')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [filterPriority, setFilterPriority] = useState('ALL')
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -79,6 +87,9 @@ function TaskBoardPage() {
       fetchedTasks.forEach(task => {
         const colKey = mapStatusToColKey(task.status);
         categorized[colKey].push(task);
+      });
+      Object.keys(categorized).forEach(key => {
+        categorized[key].sort((a, b) => priorityWeight[b.priority] - priorityWeight[a.priority]);
       });
       setTasks(categorized);
     } catch (error) {
@@ -163,6 +174,15 @@ function TaskBoardPage() {
     }
   }
 
+  const getFilteredTasks = (taskList) => {
+    return taskList.filter(task => {
+      const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                            (task.description && task.description.toLowerCase().includes(searchQuery.toLowerCase()));
+      const matchesPriority = filterPriority === 'ALL' || task.priority === filterPriority;
+      return matchesSearch && matchesPriority;
+    });
+  };
+
   return (
     <Layout>
       <Box sx={{ p: 4, backgroundColor: THEME.colors.mainBg, minHeight: '100vh' }}>
@@ -197,10 +217,104 @@ function TaskBoardPage() {
           </Button>
         </Box>
 
+        <Box sx={{ display: 'flex', gap: 2, mb: 4, flexWrap: 'wrap' }}>
+          <TextField
+            placeholder="Search tasks..."
+            size="small"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon fontSize="small" sx={{ color: THEME.colors.textMuted }} />
+                </InputAdornment>
+              ),
+            }}
+            sx={{ flex: 1, minWidth: 200, backgroundColor: 'white', borderRadius: 1 }}
+          />
+          <Select
+            size="small"
+            value={filterPriority}
+            onChange={(e) => setFilterPriority(e.target.value)}
+            sx={{ minWidth: 150, backgroundColor: 'white', borderRadius: 1 }}
+          >
+            <MenuItem value="ALL">All Priorities</MenuItem>
+            <MenuItem value="HIGH">High</MenuItem>
+            <MenuItem value="MEDIUM">Medium</MenuItem>
+            <MenuItem value="LOW">Low</MenuItem>
+          </Select>
+          <ToggleButtonGroup
+            value={viewMode}
+            exclusive
+            onChange={(e, val) => { if (val) setViewMode(val) }}
+            size="small"
+            sx={{ backgroundColor: 'white' }}
+          >
+            <ToggleButton value="kanban"><ViewKanbanIcon fontSize="small" /></ToggleButton>
+            <ToggleButton value="table"><ViewListIcon fontSize="small" /></ToggleButton>
+          </ToggleButtonGroup>
+        </Box>
+
         {loading && Object.keys(tasks).every(k => tasks[k].length === 0) ? (
           <Typography sx={{ color: THEME.colors.textMuted, textAlign: 'center', py: 8 }}>
             Loading board tasks...
           </Typography>
+        ) : viewMode === 'table' ? (
+          <TableContainer component={Paper} elevation={0} sx={{ borderRadius: 3, border: '1px solid rgba(27,94,85,0.05)' }}>
+            <Table>
+              <TableHead sx={{ backgroundColor: 'rgba(27,94,85,0.03)' }}>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 'bold', color: THEME.colors.textMain }}>Task Name</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', color: THEME.colors.textMain }}>Status</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', color: THEME.colors.textMain }}>Priority</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', color: THEME.colors.textMain }}>Assignee</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 'bold', color: THEME.colors.textMain }}>Comments</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {getFilteredTasks([...tasks.todo, ...tasks.inProgress, ...tasks.completed])
+                  .sort((a, b) => priorityWeight[b.priority] - priorityWeight[a.priority])
+                  .map((task) => {
+                    const uiPriority = mapPriorityToUI(task.priority);
+                    return (
+                      <TableRow key={task.id} hover onClick={() => openTask(task)} sx={{ cursor: 'pointer', '&:last-child td, &:last-child th': { border: 0 } }}>
+                        <TableCell sx={{ color: THEME.colors.textMain }}>{task.title}</TableCell>
+                        <TableCell>
+                          <Chip label={mapPriorityToUI(task.status === 'IN_PROGRESS' ? 'In Progress' : task.status === 'TODO' ? 'To Do' : 'Completed')} size="small" sx={{
+                            backgroundColor: columns.find(c => c.dbStatus === task.status)?.bg || 'rgba(0,0,0,0.05)',
+                            color: columns.find(c => c.dbStatus === task.status)?.color || THEME.colors.textMuted,
+                            fontWeight: 600, fontSize: 11
+                          }} />
+                        </TableCell>
+                        <TableCell>
+                          <Chip label={uiPriority} size="small" sx={{
+                            backgroundColor: priorityColors[uiPriority]?.bg || 'rgba(0,0,0,0.05)',
+                            color: priorityColors[uiPriority]?.color || THEME.colors.textMuted,
+                            fontWeight: 700, fontSize: 11, height: 22,
+                          }} />
+                        </TableCell>
+                        <TableCell>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Avatar sx={{ width: 24, height: 24, fontSize: 11, backgroundColor: THEME.colors.sidebarBg }}>
+                              {(task.assignee?.name || 'U')[0].toUpperCase()}
+                            </Avatar>
+                            <Typography variant="body2">{task.assignee?.name || 'Unassigned'}</Typography>
+                          </Box>
+                        </TableCell>
+                        <TableCell align="right">
+                          {task.comments?.length || 0}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                {getFilteredTasks([...tasks.todo, ...tasks.inProgress, ...tasks.completed]).length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={5} align="center" sx={{ py: 4, color: THEME.colors.textMuted }}>No tasks found matching filters.</TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
         ) : (
           <DragDropContext onDragEnd={onDragEnd}>
             <Box sx={{ display: 'flex', gap: 3, alignItems: 'flex-start', flexWrap: { xs: 'wrap', md: 'nowrap' } }}>
@@ -212,7 +326,7 @@ function TaskBoardPage() {
                     <Typography fontWeight="bold" sx={{ color: THEME.colors.textMain }}>
                       {col.label}
                     </Typography>
-                    <Chip label={tasks[col.key]?.length || 0} size="small" sx={{
+                    <Chip label={getFilteredTasks(tasks[col.key] || []).length} size="small" sx={{
                       backgroundColor: col.bg, color: col.color,
                       fontWeight: 700, height: 22, fontSize: 12
                     }} />
@@ -232,7 +346,7 @@ function TaskBoardPage() {
                           p: 0.5
                         }}
                       >
-                        {tasks[col.key]?.map((task, index) => {
+                        {getFilteredTasks(tasks[col.key] || []).map((task, index) => {
                           const uiPriority = mapPriorityToUI(task.priority);
                           const commentsCount = task.comments?.length || 0;
                           const assigneeName = task.assignee?.name || 'Unassigned';
