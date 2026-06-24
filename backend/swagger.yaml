@@ -1,0 +1,176 @@
+openapi: 3.0.0
+info:
+  title: Task Management System API
+  description: API documentation for the Task Management System
+  version: 1.0.0
+servers:
+  - url: http://localhost:5000
+    description: Development server
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+security:
+  - bearerAuth: []
+paths:
+  /api/auth/login:
+    post:
+      summary: Login user
+      tags:
+        - Auth
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Successful login
+  /api/auth/register:
+    post:
+      summary: Register new user
+      tags:
+        - Auth
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                password:
+                  type: string
+                role:
+                  type: string
+      responses:
+        '200':
+          description: Successful registration
+  /api/auth/change-password:
+    put:
+      summary: Change password for authenticated user
+      tags:
+        - Auth
+      responses:
+        '200':
+          description: Password changed
+  /api/users:
+    get:
+      summary: Get all users
+      tags:
+        - Users
+      responses:
+        '200':
+          description: List of users
+    post:
+      summary: Create a user
+      tags:
+        - Users
+      responses:
+        '200':
+          description: User created
+  /api/users/profile:
+    get:
+      summary: Get current user profile
+      tags:
+        - Users
+      responses:
+        '200':
+          description: User profile
+  /api/tasks:
+    get:
+      summary: Get all tasks
+      tags:
+        - Tasks
+      responses:
+        '200':
+          description: List of tasks
+    post:
+      summary: Create a new task
+      tags:
+        - Tasks
+      responses:
+        '200':
+          description: Task created
+  /api/tasks/{id}:
+    get:
+      summary: Get a task by ID
+      tags:
+        - Tasks
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Task details
+    put:
+      summary: Update a task
+      tags:
+        - Tasks
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Task updated
+    delete:
+      summary: Delete a task
+      tags:
+        - Tasks
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Task deleted
+  /api/projects:
+    get:
+      summary: Get all projects
+      tags:
+        - Projects
+      responses:
+        '200':
+          description: List of projects
+    post:
+      summary: Create a new project
+      tags:
+        - Projects
+      responses:
+        '200':
+          description: Project created
+  /api/projects/{id}:
+    get:
+      summary: Get a project by ID
+      tags:
+        - Projects
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Project details
