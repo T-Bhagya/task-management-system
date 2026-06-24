@@ -183,13 +183,16 @@ jobs:
           echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Triggered by**: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
           
-          echo "### 🔍 Main App Configuration" >> $GITHUB_STEP_SUMMARY
-          echo '```json' >> $GITHUB_STEP_SUMMARY
-          az containerapp show --name ${{ env.APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --query "{ingress:properties.configuration.ingress, provisioningState:properties.provisioningState}" -o json >> $GITHUB_STEP_SUMMARY || echo "Failed to show main app config"
-          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "=== MAIN APP CONFIG ==="
+          az containerapp show --name ${{ env.APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} -o json || echo "Failed to show main app config"
           
-          echo "### 📋 Main App Runtime Logs" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          az containerapp logs show --name ${{ env.APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --lines 100 >> $GITHUB_STEP_SUMMARY || echo "No logs available or failed to fetch logs"
-          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "=== MAIN APP REVISIONS ==="
+          az containerapp revision list --name ${{ env.APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} -o table || echo "Failed to show revisions"
+          
+          echo "=== MAIN APP RUNTIME LOGS ==="
+          az containerapp logs show --name ${{ env.APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --lines 150 || echo "No logs available or failed to fetch logs"
+          
+          echo "=== NOTIFICATIONS APP RUNTIME LOGS ==="
+          az containerapp logs show --name ${{ env.NOTIFICATIONS_APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --lines 150 || echo "No logs available or failed to fetch logs"
+
 
