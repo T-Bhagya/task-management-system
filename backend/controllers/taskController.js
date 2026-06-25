@@ -57,10 +57,20 @@ async function getAllTasks(req, res) {
         where.project = { manager_id: userId };
       }
     } else if (role === 'COLLABORATOR') {
+      const collabCondition = {
+        OR: [
+          { project: { members: { some: { user_id: userId } } } },
+          { assigned_to: userId }
+        ]
+      };
       if (projectId) {
-        where.project = { id: parseInt(projectId), members: { some: { user_id: userId } } };
+        // If projectId is specifically filtered, we still only return it if they are a member or assigned
+        where.AND = [
+          { project_id: parseInt(projectId) },
+          collabCondition
+        ];
       } else {
-        where.project = { members: { some: { user_id: userId } } };
+        where.AND = [collabCondition];
       }
     }
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
-import { Box, Typography, Paper, Chip, Avatar, Button, TextField, Divider, Modal, ToggleButton, ToggleButtonGroup, Select, MenuItem, InputAdornment, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton } from '@mui/material'
+import { Box, Typography, Paper, Chip, Avatar, Button, TextField, Divider, Modal, ToggleButton, ToggleButtonGroup, Select, MenuItem, InputAdornment, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton, FormControlLabel, Switch } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import CommentIcon from '@mui/icons-material/Comment'
 import CloseIcon from '@mui/icons-material/Close'
@@ -25,6 +25,25 @@ const priorityColors = {
   Medium: { color: '#8890d3', bg: 'rgba(136,144,211,0.12)' },
   Low: { color: '#1b5e55', bg: 'rgba(27,94,85,0.12)' },
 }
+
+const assigneeShades = [
+  '#f0f7f6',
+  '#e2efed',
+  '#d4e7e4',
+  '#c6dfdc',
+  '#b8d7d3',
+  '#aacceb',
+];
+
+const getAssigneeColor = (name) => {
+  if (!name || name === 'Unassigned') return '#ffffff';
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash) % assigneeShades.length;
+  return assigneeShades[index];
+};
 
 const priorityWeight = { HIGH: 3, MEDIUM: 2, LOW: 1 };
 
@@ -59,6 +78,7 @@ function TaskBoardPage() {
   const [viewMode, setViewMode] = useState('kanban')
   const [searchQuery, setSearchQuery] = useState('')
   const [filterPriority, setFilterPriority] = useState('ALL')
+  const [showMyTasksOnly, setShowMyTasksOnly] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -176,15 +196,27 @@ function TaskBoardPage() {
   }
 
   const getFilteredTasks = (taskList) => {
-    return taskList.filter(task => {
+    let filtered = taskList.filter(task => {
       const query = searchQuery.toLowerCase();
       const matchesSearch = task.title.toLowerCase().includes(query) || 
                             (task.description && task.description.toLowerCase().includes(query)) ||
                             (task.project?.name && task.project.name.toLowerCase().includes(query)) ||
                             (task.assignee?.name && task.assignee.name.toLowerCase().includes(query));
       const matchesPriority = filterPriority === 'ALL' || task.priority === filterPriority;
-      return matchesSearch && matchesPriority;
+      const matchesMyTasks = !showMyTasksOnly || (task.assignee && task.assignee.id === currentUser?.id);
+      return matchesSearch && matchesPriority && matchesMyTasks;
     });
+
+    filtered.sort((a, b) => {
+      if (currentUser?.role === 'COLLABORATOR') {
+        const aIsMine = a.assignee?.id === currentUser.id ? 1 : 0;
+        const bIsMine = b.assignee?.id === currentUser.id ? 1 : 0;
+        if (aIsMine !== bIsMine) return bIsMine - aIsMine;
+      }
+      return priorityWeight[b.priority] - priorityWeight[a.priority];
+    });
+
+    return filtered;
   };
 
   const handleDeleteTask = async (e, taskId, colKey) => {
@@ -264,6 +296,31 @@ function TaskBoardPage() {
             <MenuItem value="MEDIUM">Medium</MenuItem>
             <MenuItem value="LOW">Low</MenuItem>
           </Select>
+
+          {currentUser?.role === 'COLLABORATOR' && (
+            <FormControlLabel
+              control={
+                <Switch 
+                  checked={showMyTasksOnly} 
+                  onChange={(e) => setShowMyTasksOnly(e.target.checked)} 
+                  sx={{
+                    '& .MuiSwitch-switchBase.Mui-checked': {
+                      color: THEME.colors.sidebarBg,
+                      '& + .MuiSwitch-track': {
+                        backgroundColor: THEME.colors.sidebarBg,
+                      },
+                    },
+                  }}
+                />
+              }
+              label={
+                <Typography variant="body2" sx={{ fontWeight: 600, color: THEME.colors.textMain }}>
+                  Show My Tasks
+                </Typography>
+              }
+              sx={{ ml: 1, mr: 2, userSelect: 'none' }}
+            />
+          )}
 
           <ToggleButtonGroup
             value={viewMode}
@@ -397,8 +454,10 @@ function TaskBoardPage() {
                           const assigneeName = task.assignee?.name || 'Unassigned';
                           const avatarLetter = assigneeName[0].toUpperCase();
 
+                          const isDragDisabled = currentUser?.role === 'COLLABORATOR' && task.assignee?.id !== currentUser?.id;
+
                           return (
-                            <Draggable key={task.id.toString()} draggableId={task.id.toString()} index={index}>
+                            <Draggable key={task.id.toString()} draggableId={task.id.toString()} index={index} isDragDisabled={isDragDisabled}>
                               {(provided, snapshot) => (
                                 <Paper
                                   ref={provided.innerRef}
@@ -408,7 +467,7 @@ function TaskBoardPage() {
                                   onClick={() => openTask(task)}
                                   sx={{
                                     p: 2.5, mb: 2, borderRadius: 3,
-                                    backgroundColor: '#ffffff',
+                                    backgroundColor: getAssigneeColor(assigneeName),
                                     border: snapshot.isDragging
                                       ? `1px solid ${THEME.colors.sidebarBg}`
                                       : '1px solid rgba(27,94,85,0.08)',
@@ -423,6 +482,11 @@ function TaskBoardPage() {
                                   }}
                                 >
                                   <Box sx={{ position: 'relative' }}>
+                                    {task.project?.name && (
+                                      <Typography variant="caption" sx={{ color: THEME.colors.textMuted, display: 'block', mb: 0.5, fontWeight: 500, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                                        {task.project.name}
+                                      </Typography>
+                                    )}
                                     <Typography variant="body2" sx={{
                                       color: THEME.colors.textMain, fontWeight: 600, mb: 1, pr: 3
                                     }}>
@@ -460,12 +524,17 @@ function TaskBoardPage() {
                                           </Typography>
                                         </Box>
                                       )}
-                                      <Avatar sx={{
-                                        width: 28, height: 28, fontSize: 12, fontWeight: 'bold',
-                                        background: THEME.colors.sidebarBg, color: 'white'
-                                      }} title={assigneeName}>
-                                        {avatarLetter}
-                                      </Avatar>
+                                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                                        <Avatar sx={{
+                                          width: 24, height: 24, fontSize: 11, fontWeight: 'bold',
+                                          background: THEME.colors.sidebarBg, color: 'white'
+                                        }} title={assigneeName}>
+                                          {avatarLetter}
+                                        </Avatar>
+                                        <Typography variant="caption" sx={{ color: THEME.colors.textMain, fontWeight: 500, fontSize: 11 }}>
+                                          {assigneeName}
+                                        </Typography>
+                                      </Box>
                                     </Box>
                                   </Box>
                                 </Paper>
