@@ -123,7 +123,7 @@ function TaskBoardPage() {
   const onDragEnd = async (result) => {
     const { source, destination, draggableId } = result
     if (!destination) return
-    if (source.droppableId === destination.droppableId && source.index === destination.index) return
+    if (source.droppableId === destination.droppableId) return
 
     const taskId = parseInt(draggableId);
     const fromColKey = source.droppableId;
@@ -131,11 +131,16 @@ function TaskBoardPage() {
     const newStatus = mapColKeyToStatus(toColKey);
 
     const sourceCol = [...tasks[fromColKey]]
-    const destCol = fromColKey === toColKey ? sourceCol : [...tasks[toColKey]]
+    const destCol = [...tasks[toColKey]]
 
-    const [moved] = sourceCol.splice(source.index, 1)
+    const taskIndex = sourceCol.findIndex(t => t.id === taskId);
+    if (taskIndex === -1) return;
+
+    const [moved] = sourceCol.splice(taskIndex, 1)
     moved.status = newStatus;
-    destCol.splice(destination.index, 0, moved)
+    
+    destCol.push(moved);
+    destCol.sort((a, b) => priorityWeight[b.priority] - priorityWeight[a.priority]);
 
     setTasks({
       ...tasks,

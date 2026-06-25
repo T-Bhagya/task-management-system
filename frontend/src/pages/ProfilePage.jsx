@@ -158,85 +158,107 @@ function ProfilePage() {
             ))}
           </Paper>
 
-          {/* Right side */}
+          {/* Right side - Edit Profile */}
           <Box sx={{ flex: 1, minWidth: 280 }}>
-
-            {/* Stats */}
-            <Box sx={{ display: 'flex', gap: 3, mb: 3, flexWrap: 'wrap' }}>
-              {[
-                { label: 'Total Tasks', value: totalTasks, icon: <AssignmentIcon />, color: THEME.colors.sidebarBg, bg: 'rgba(27,94,85,0.1)' },
-                { label: 'To Do', value: todoTasks, icon: <AssignmentIcon />, color: '#627575', bg: 'rgba(98,117,117,0.1)' },
-                { label: 'In Progress', value: inProgressTasks, icon: <PendingIcon />, color: THEME.colors.purpleAccent, bg: 'rgba(136,144,211,0.1)' },
-                { label: 'Completed', value: completedTasks, icon: <CheckCircleIcon />, color: THEME.colors.greenAccent, bg: 'rgba(27,94,85,0.1)' },
-              ].map((stat) => (
-                <Paper key={stat.label} elevation={0} sx={{
-                  p: 3, borderRadius: 3.5, flex: 1, minWidth: 140,
-                  backgroundColor: '#ffffff',
-                  border: '1px solid rgba(27,94,85,0.08)',
-                  display: 'flex', alignItems: 'center', gap: 2,
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.02)'
-                }}>
-                  <Box sx={{
-                    width: 46, height: 46, borderRadius: 2.5,
-                    backgroundColor: stat.bg,
-                    display: 'flex', alignItems: 'center',
-                    justifyContent: 'center', color: stat.color
-                  }}>
-                    {stat.icon}
-                  </Box>
-                  <Box>
-                    <Typography variant="h5" fontWeight="bold" sx={{ color: THEME.colors.textMain }}>
-                      {stat.value}
-                    </Typography>
-                    <Typography variant="caption" sx={{ color: THEME.colors.textMuted, fontWeight: 500 }}>
-                      {stat.label}
-                    </Typography>
-                  </Box>
-                </Paper>
-              ))}
-            </Box>
-
-            {/* My Tasks List */}
             <Paper elevation={0} sx={{
-              p: 3, borderRadius: 3.5,
+              p: 4, borderRadius: 3.5,
               backgroundColor: '#ffffff',
               border: '1px solid rgba(27,94,85,0.08)',
               boxShadow: '0 4px 20px rgba(0,0,0,0.02)'
             }}>
               <Typography variant="h6" fontWeight="bold" sx={{ color: THEME.colors.textMain, mb: 3 }}>
-                My Assigned Tasks
+                Edit Profile
               </Typography>
 
-              {myTasks.length === 0 ? (
-                <Typography variant="body2" sx={{ color: THEME.colors.textMuted, py: 3, textAlign: 'center' }}>
-                  No tasks assigned to you.
-                </Typography>
-              ) : (
-                myTasks.map((task, i, arr) => (
-                  <Box key={task.id} sx={{
-                    display: 'flex', alignItems: 'center',
-                    justifyContent: 'space-between', py: 1.8,
-                    borderBottom: i < arr.length - 1
-                      ? '1px solid rgba(27,94,85,0.08)' : 'none'
+              <Box component="form" onSubmit={async (e) => {
+                e.preventDefault();
+                const newName = e.target.name.value;
+                try {
+                  const updated = await api.updateProfile({ name: newName });
+                  setProfile(updated.user);
+                  alert('Profile updated successfully!');
+                  // Update local storage user name
+                  const userStr = localStorage.getItem('user');
+                  if (userStr) {
+                    const userObj = JSON.parse(userStr);
+                    userObj.name = newName;
+                    localStorage.setItem('user', JSON.stringify(userObj));
+                  }
+                } catch (err) {
+                  alert(err.message || 'Failed to update profile.');
+                }
+              }}>
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant="body2" sx={{ color: THEME.colors.textMuted, mb: 1, fontWeight: 500 }}>
+                    Full Name
+                  </Typography>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    border: '1px solid rgba(27,94,85,0.1)', 
+                    borderRadius: 2.5,
+                    p: 1.5,
+                    backgroundColor: 'rgba(27,94,85,0.02)'
                   }}>
-                    <Typography variant="body2" sx={{ color: THEME.colors.textMain, fontWeight: 600 }}>
-                      {task.title}
-                    </Typography>
-                    <Box sx={{ display: 'flex', gap: 1 }}>
-                      <Chip label={mapPriorityToUI(task.priority)} size="small" sx={{
-                        height: 22, fontSize: 11, fontWeight: 700,
-                        backgroundColor: priorityColors[mapPriorityToUI(task.priority)]?.bg || 'rgba(0,0,0,0.05)',
-                        color: priorityColors[mapPriorityToUI(task.priority)]?.color || THEME.colors.textMuted,
-                      }} />
-                      <Chip label={mapStatusToUI(task.status)} size="small" sx={{
-                        height: 22, fontSize: 11, fontWeight: 700,
-                        backgroundColor: statusColors[mapStatusToUI(task.status)]?.bg || 'rgba(0,0,0,0.05)',
-                        color: statusColors[mapStatusToUI(task.status)]?.color || THEME.colors.textMuted,
-                      }} />
-                    </Box>
+                    <input 
+                      name="name"
+                      defaultValue={profile.name}
+                      style={{ 
+                        border: 'none', 
+                        outline: 'none', 
+                        background: 'transparent', 
+                        width: '100%', 
+                        fontSize: 15,
+                        color: THEME.colors.textMain
+                      }} 
+                    />
                   </Box>
-                ))
-              )}
+                </Box>
+
+                <Box sx={{ mb: 4 }}>
+                  <Typography variant="body2" sx={{ color: THEME.colors.textMuted, mb: 1, fontWeight: 500 }}>
+                    Email Address
+                  </Typography>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    border: '1px solid rgba(27,94,85,0.1)', 
+                    borderRadius: 2.5,
+                    p: 1.5,
+                    backgroundColor: 'rgba(27,94,85,0.05)'
+                  }}>
+                    <input 
+                      value={profile.email}
+                      disabled
+                      style={{ 
+                        border: 'none', 
+                        outline: 'none', 
+                        background: 'transparent', 
+                        width: '100%', 
+                        fontSize: 15,
+                        color: THEME.colors.textMuted
+                      }} 
+                    />
+                  </Box>
+                  <Typography variant="caption" sx={{ color: THEME.colors.textMuted, mt: 0.5, display: 'block' }}>
+                    Email address cannot be changed.
+                  </Typography>
+                </Box>
+
+                <button type="submit" style={{
+                  backgroundColor: THEME.colors.sidebarBg,
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: 20,
+                  padding: '10px 24px',
+                  fontSize: 14,
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 14px rgba(27,94,85,0.15)'
+                }}>
+                  Save Changes
+                </button>
+              </Box>
             </Paper>
           </Box>
         </Box>

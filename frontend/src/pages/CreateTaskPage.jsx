@@ -315,7 +315,9 @@ function CreateTaskPage() {
 
               <TextField fullWidth label="Due Date" name="dueDate"
                 type="date" value={form.dueDate} onChange={handleChange}
-                InputLabelProps={{ shrink: true }} sx={fieldStyle} />
+                InputLabelProps={{ shrink: true }} 
+                inputProps={{ min: new Date().toISOString().split('T')[0] }}
+                sx={fieldStyle} />
 
               <Button fullWidth variant="contained" endIcon={<SendIcon />}
                 onClick={handleSubmit}

@@ -120,8 +120,14 @@ export const api = {
   toggleUserStatus: (id, isActive) =>
     request(`/users/${id}/status`, { method: 'PUT', body: { is_active: isActive } }),
 
+  updateUserRole: (id, role) =>
+    request(`/users/${id}/role`, { method: 'PUT', body: { role } }),
+
   getProfile: () => 
     request('/users/profile', { method: 'GET' }),
+
+  updateProfile: (profileData) =>
+    request('/users/profile', { method: 'PUT', body: profileData }),
 
   // Notifications API
   getNotifications: () => 
