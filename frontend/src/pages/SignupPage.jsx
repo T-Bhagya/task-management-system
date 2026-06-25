@@ -11,6 +11,7 @@ import VisibilityIcon from '@mui/icons-material/Visibility'
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff'
 import { api } from '../services/api'
 import { THEME } from '../theme'
+import meetingImg from '../assets/meeting.png'
 
 function SignupPage() {
   const [name, setName] = useState('')
@@ -70,76 +71,34 @@ function SignupPage() {
     }}>
       {/* Left side */}
       <Box sx={{
-        flex: 1.2,
+        flex: 1,
         display: { xs: 'none', md: 'flex' },
-        flexDirection: 'column',
-        justifyContent: 'center',
-        p: 8,
         position: 'relative',
         overflow: 'hidden',
         background: THEME.colors.sidebarBg,
         borderRight: '1px solid rgba(255,255,255,0.06)'
       }}>
+        <Box
+          component="img"
+          src={meetingImg}
+          alt="Team Meeting"
+          sx={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+          }}
+        />
+        {/* Dark green overlay to match the theme */}
         <Box sx={{
-          position: 'absolute', top: '10%', left: '60%',
-          width: 300, height: 300, borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%)',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(27, 94, 85, 0.45)',
+          mixBlendMode: 'multiply',
+          pointerEvents: 'none'
         }} />
-
-        {/* Logo */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 8 }}>
-          <Box sx={{
-            width: 44, height: 44, borderRadius: 2,
-            background: '#ffffff',
-            display: 'flex', alignItems: 'center',
-            justifyContent: 'center',
-            fontWeight: 'bold', fontSize: 22, color: THEME.colors.sidebarBg
-          }}>D</Box>
-          <Typography variant="h5" fontWeight="bold" color="white" sx={{ letterSpacing: 0.5 }}>DoIT</Typography>
-        </Box>
-
-        <Typography variant="h2" fontWeight="bold" color="white"
-          lineHeight={1.15} mb={3} sx={{ fontSize: { md: 38, lg: 46 } }}>
-          Join your team<br />
-          <Box component="span" sx={{ color: '#ffffff', opacity: 0.95 }}>
-            today.
-          </Box>
-        </Typography>
-
-        <Typography variant="body1" sx={{
-          color: 'rgba(255,255,255,0.7)', mb: 6,
-          lineHeight: 1.8, maxWidth: 380, fontSize: 16
-        }}>
-          Create your account and start collaborating with your team right away.
-        </Typography>
-
-        {/* Steps */}
-        {[
-          ['01', 'Create your account'],
-          ['02', 'Verify your email'],
-          ['03', 'Start managing tasks'],
-        ].map(([num, text]) => (
-          <Box key={num} sx={{
-            display: 'flex', alignItems: 'center',
-            gap: 3, mb: 3
-          }}>
-            <Box sx={{
-              width: 36, height: 36, borderRadius: '50%',
-              border: '2px solid rgba(255,255,255,0.6)',
-              display: 'flex', alignItems: 'center',
-              justifyContent: 'center', flexShrink: 0
-            }}>
-              <Typography variant="caption"
-                sx={{ color: 'white', fontWeight: 'bold' }}>
-                {num}
-              </Typography>
-            </Box>
-            <Typography variant="body2"
-              sx={{ color: 'rgba(255,255,255,0.8)' }}>
-              {text}
-            </Typography>
-          </Box>
-        ))}
       </Box>
 
       {/* Right side — form */}
@@ -154,6 +113,20 @@ function SignupPage() {
         overflowY: 'auto'
       }}>
         <Box sx={{ width: '100%', maxWidth: 400 }}>
+
+          {/* Logo and Name */}
+          <Box sx={{
+            display: 'flex',
+            alignItems: 'center', gap: 1.5, mb: 4
+          }}>
+            <Box sx={{
+              width: 36, height: 36, borderRadius: 2,
+              background: THEME.colors.sidebarBg,
+              display: 'flex', alignItems: 'center',
+              justifyContent: 'center', color: 'white', fontWeight: 'bold'
+            }}>D</Box>
+            <Typography variant="h6" fontWeight="bold" sx={{ color: THEME.colors.textMain }}>DoIT</Typography>
+          </Box>
 
           <Typography variant="h4" fontWeight="bold" sx={{ color: THEME.colors.textMain }} mb={0.8}>
             Create account
