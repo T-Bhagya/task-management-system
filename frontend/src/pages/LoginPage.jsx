@@ -13,6 +13,7 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOff'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import { api } from '../services/api'
 import { THEME } from '../theme'
+import meetingImg from '../assets/meeting.png'
 
 function LoginPage() {
   const [email, setEmail] = useState('')
@@ -183,90 +184,34 @@ function LoginPage() {
     }}>
       {/* Left side */}
       <Box sx={{
-        flex: 1.2,
+        flex: 1,
         display: { xs: 'none', md: 'flex' },
-        flexDirection: 'column',
-        justifyContent: 'center',
-        p: 8,
         position: 'relative',
         overflow: 'hidden',
         background: THEME.colors.sidebarBg,
         borderRight: '1px solid rgba(255,255,255,0.06)'
       }}>
-        {/* Decorative blobs */}
+        <Box
+          component="img"
+          src={meetingImg}
+          alt="Team Meeting"
+          sx={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+          }}
+        />
+        {/* Dark green overlay to match the theme */}
         <Box sx={{
-          position: 'absolute', top: '10%', left: '60%',
-          width: 300, height: 300, borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%)',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(27, 94, 85, 0.45)',
+          mixBlendMode: 'multiply',
           pointerEvents: 'none'
         }} />
-        <Box sx={{
-          position: 'absolute', bottom: '15%', left: '20%',
-          width: 250, height: 250, borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%)',
-          pointerEvents: 'none'
-        }} />
-
-        {/* Logo */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 8 }}>
-          <Box sx={{
-            width: 44, height: 44,
-            borderRadius: 2,
-            background: '#ffffff',
-            display: 'flex', alignItems: 'center',
-            justifyContent: 'center',
-            fontWeight: 'bold', fontSize: 22, color: THEME.colors.sidebarBg
-          }}>
-            D
-          </Box>
-          <Typography variant="h5" fontWeight="bold" color="white" sx={{ letterSpacing: 0.5 }}>
-            DoIT
-          </Typography>
-        </Box>
-
-        <Typography variant="h2" fontWeight="bold" color="white"
-          lineHeight={1.15} mb={3} sx={{ fontSize: { md: 38, lg: 46 } }}>
-          Your team's<br />
-          <Box component="span" sx={{ color: '#ffffff', opacity: 0.95 }}>
-            work hub.
-          </Box>
-        </Typography>
-
-        <Typography variant="body1" sx={{
-          color: 'rgba(255,255,255,0.7)', mb: 6,
-          lineHeight: 1.8, maxWidth: 380, fontSize: 16
-        }}>
-          Plan, track and manage your team's work in one place. Stay aligned, move fast.
-        </Typography>
-
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {[
-            'Kanban boards for visual task tracking',
-            'Real-time notifications and updates',
-            'Role-based access for your team',
-            'Powerful dashboard and analytics'
-          ].map((item, i) => (
-            <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-              <CheckCircleIcon sx={{ color: '#ffffff', fontSize: 20, opacity: 0.9 }} />
-              <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.85)', fontSize: 14 }}>
-                {item}
-              </Typography>
-            </Box>
-          ))}
-        </Box>
-
-        {/* Stats row */}
-        <Box sx={{
-          display: 'flex', gap: 4, mt: 8,
-          pt: 4, borderTop: '1px solid rgba(255,255,255,0.1)'
-        }}>
-          {[['500+', 'Teams'], ['10k+', 'Tasks done'], ['99%', 'Uptime']].map(([num, label]) => (
-            <Box key={label}>
-              <Typography variant="h5" fontWeight="bold" color="white">{num}</Typography>
-              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)' }}>{label}</Typography>
-            </Box>
-          ))}
-        </Box>
       </Box>
 
       {/* Right side — form */}
@@ -281,9 +226,9 @@ function LoginPage() {
       }}>
         <Box sx={{ width: '100%', maxWidth: 400 }}>
 
-          {/* Mobile logo */}
+          {/* Logo and Name */}
           <Box sx={{
-            display: { xs: 'flex', md: 'none' },
+            display: 'flex',
             alignItems: 'center', gap: 1.5, mb: 4
           }}>
             <Box sx={{
