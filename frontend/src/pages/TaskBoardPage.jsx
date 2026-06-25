@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
-import { Box, Typography, Paper, Chip, Avatar, Button, TextField, Divider, Modal, ToggleButton, ToggleButtonGroup, Select, MenuItem, InputAdornment, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material'
+import { Box, Typography, Paper, Chip, Avatar, Button, TextField, Divider, Modal, ToggleButton, ToggleButtonGroup, Select, MenuItem, InputAdornment, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import CommentIcon from '@mui/icons-material/Comment'
 import CloseIcon from '@mui/icons-material/Close'
@@ -9,6 +9,7 @@ import SendIcon from '@mui/icons-material/Send'
 import SearchIcon from '@mui/icons-material/Search'
 import ViewListIcon from '@mui/icons-material/ViewList'
 import ViewKanbanIcon from '@mui/icons-material/ViewKanban'
+import DeleteIcon from '@mui/icons-material/Delete'
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
 import { api } from '../services/api'
 import { THEME } from '../theme'
@@ -176,11 +177,31 @@ function TaskBoardPage() {
 
   const getFilteredTasks = (taskList) => {
     return taskList.filter(task => {
-      const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                            (task.description && task.description.toLowerCase().includes(searchQuery.toLowerCase()));
+      const query = searchQuery.toLowerCase();
+      const matchesSearch = task.title.toLowerCase().includes(query) || 
+                            (task.description && task.description.toLowerCase().includes(query)) ||
+                            (task.project?.name && task.project.name.toLowerCase().includes(query)) ||
+                            (task.assignee?.name && task.assignee.name.toLowerCase().includes(query));
       const matchesPriority = filterPriority === 'ALL' || task.priority === filterPriority;
       return matchesSearch && matchesPriority;
     });
+  };
+
+  const handleDeleteTask = async (e, taskId, colKey) => {
+    e.stopPropagation(); // Prevent opening the task modal
+    if (!window.confirm('Are you sure you want to delete this task?')) return;
+    
+    try {
+      await api.deleteTask(taskId);
+      // Update local state
+      setTasks(prev => ({
+        ...prev,
+        [colKey]: prev[colKey].filter(t => t.id !== taskId)
+      }));
+    } catch (error) {
+      console.error('Failed to delete task:', error.message);
+      alert('Failed to delete task. You might not have permission.');
+    }
   };
 
   return (
@@ -243,6 +264,7 @@ function TaskBoardPage() {
             <MenuItem value="MEDIUM">Medium</MenuItem>
             <MenuItem value="LOW">Low</MenuItem>
           </Select>
+
           <ToggleButtonGroup
             value={viewMode}
             exclusive
@@ -265,10 +287,15 @@ function TaskBoardPage() {
               <TableHead sx={{ backgroundColor: 'rgba(27,94,85,0.03)' }}>
                 <TableRow>
                   <TableCell sx={{ fontWeight: 'bold', color: THEME.colors.textMain }}>Task Name</TableCell>
+                  {currentUser?.role === 'ADMIN' && (
+                    <TableCell sx={{ fontWeight: 'bold', color: THEME.colors.textMain }}>Project</TableCell>
+                  )}
                   <TableCell sx={{ fontWeight: 'bold', color: THEME.colors.textMain }}>Status</TableCell>
                   <TableCell sx={{ fontWeight: 'bold', color: THEME.colors.textMain }}>Priority</TableCell>
                   <TableCell sx={{ fontWeight: 'bold', color: THEME.colors.textMain }}>Assignee</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', color: THEME.colors.textMain }}>Due Date</TableCell>
                   <TableCell align="right" sx={{ fontWeight: 'bold', color: THEME.colors.textMain }}>Comments</TableCell>
+                  <TableCell align="center" sx={{ fontWeight: 'bold', color: THEME.colors.textMain }}>Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -279,6 +306,9 @@ function TaskBoardPage() {
                     return (
                       <TableRow key={task.id} hover onClick={() => openTask(task)} sx={{ cursor: 'pointer', '&:last-child td, &:last-child th': { border: 0 } }}>
                         <TableCell sx={{ color: THEME.colors.textMain }}>{task.title}</TableCell>
+                        {currentUser?.role === 'ADMIN' && (
+                          <TableCell sx={{ color: THEME.colors.textMain }}>{task.project?.name || 'N/A'}</TableCell>
+                        )}
                         <TableCell>
                           <Chip label={mapPriorityToUI(task.status === 'IN_PROGRESS' ? 'In Progress' : task.status === 'TODO' ? 'To Do' : 'Completed')} size="small" sx={{
                             backgroundColor: columns.find(c => c.dbStatus === task.status)?.bg || 'rgba(0,0,0,0.05)',
@@ -301,15 +331,30 @@ function TaskBoardPage() {
                             <Typography variant="body2">{task.assignee?.name || 'Unassigned'}</Typography>
                           </Box>
                         </TableCell>
+                        <TableCell sx={{ color: THEME.colors.textMain }}>
+                          {task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No Deadline'}
+                        </TableCell>
                         <TableCell align="right">
                           {task.comments?.length || 0}
+                        </TableCell>
+                        <TableCell align="center">
+                          {(currentUser?.role === 'ADMIN' || 
+                           (currentUser?.role === 'PROJECT_MANAGER' && task.project?.manager_id === currentUser.id)) && (
+                            <IconButton 
+                              size="small" 
+                              color="error" 
+                              onClick={(e) => handleDeleteTask(e, task.id, mapStatusToColKey(task.status))}
+                            >
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          )}
                         </TableCell>
                       </TableRow>
                     );
                   })}
                 {getFilteredTasks([...tasks.todo, ...tasks.inProgress, ...tasks.completed]).length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={5} align="center" sx={{ py: 4, color: THEME.colors.textMuted }}>No tasks found matching filters.</TableCell>
+                    <TableCell colSpan={currentUser?.role === 'ADMIN' ? 8 : 7} align="center" sx={{ py: 4, color: THEME.colors.textMuted }}>No tasks found matching filters.</TableCell>
                   </TableRow>
                 )}
               </TableBody>
@@ -377,11 +422,29 @@ function TaskBoardPage() {
                                     }
                                   }}
                                 >
-                                  <Typography variant="body2" sx={{
-                                    color: THEME.colors.textMain, fontWeight: 600, mb: 2
-                                  }}>
-                                    {task.title}
-                                  </Typography>
+                                  <Box sx={{ position: 'relative' }}>
+                                    <Typography variant="body2" sx={{
+                                      color: THEME.colors.textMain, fontWeight: 600, mb: 1, pr: 3
+                                    }}>
+                                      {task.title}
+                                    </Typography>
+                                    {(currentUser?.role === 'ADMIN' || 
+                                     (currentUser?.role === 'PROJECT_MANAGER' && task.project?.manager_id === currentUser.id)) && (
+                                      <IconButton 
+                                        size="small" 
+                                        color="error" 
+                                        onClick={(e) => handleDeleteTask(e, task.id, mapStatusToColKey(task.status))}
+                                        sx={{ position: 'absolute', top: -8, right: -8 }}
+                                      >
+                                        <DeleteIcon sx={{ fontSize: 18 }} />
+                                      </IconButton>
+                                    )}
+                                  </Box>
+                                  {task.due_date && (
+                                    <Typography variant="caption" sx={{ display: 'block', color: THEME.colors.textMuted, mb: 1.5, fontWeight: 500 }}>
+                                      Due: {new Date(task.due_date).toLocaleDateString()}
+                                    </Typography>
+                                  )}
                                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <Chip label={uiPriority} size="small" sx={{
                                       backgroundColor: priorityColors[uiPriority]?.bg || 'rgba(0,0,0,0.05)',
