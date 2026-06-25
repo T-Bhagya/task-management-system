@@ -1,11 +1,18 @@
 const prisma = require('../prismaClient');
 const { sendTemporaryPasswordEmail } = require('../utils/emailService');
 
-// Get all users
+// Get all users in the current workspace
 exports.getAllUsers = async (req, res, next) => {
     try {
+        const currentWorkspaceId = req.user.role === 'ADMIN' ? req.user.id : req.user.admin_id;
         const users = await prisma.user.findMany({
-            select: { id: true, name: true, email: true, role: true, is_active: true } // Never send the password_hash!
+            where: {
+                OR: [
+                    { id: currentWorkspaceId },
+                    { admin_id: currentWorkspaceId }
+                ]
+            },
+            select: { id: true, name: true, email: true, role: true, is_active: true }
         });
         res.status(200).json(users);
     } catch (error) {
@@ -126,7 +133,8 @@ exports.createUser = async (req, res, next) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(tempPassword, salt);
 
-        const userRole = (role === 'PROJECT_MANAGER' || role === 'COLLABORATOR') ? role : 'COLLABORATOR';
+        const userRole = (role === 'PROJECT_MANAGER' || role === 'COLLABORATOR' || role === 'ADMIN') ? role : 'COLLABORATOR';
+        const newAdminId = userRole === 'ADMIN' ? null : req.user.id;
 
         // Create the user
         const newUser = await prisma.user.create({
@@ -135,7 +143,8 @@ exports.createUser = async (req, res, next) => {
                 email,
                 password_hash: hashedPassword,
                 role: userRole,
-                must_reset_password: true
+                must_reset_password: true,
+                admin_id: newAdminId
             }
         });
 
@@ -268,6 +277,82 @@ exports.toggleUserStatus = async (req, res, next) => {
                 role: updatedUser.role,
                 is_active: updatedUser.is_active
             }
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Update user role (Promote to PM or Admin)
+exports.updateUserRole = async (req, res, next) => {
+    try {
+        if (req.user.role !== 'ADMIN') {
+            return res.status(403).json({ message: "Only administrators can change user roles." });
+        }
+
+        const targetId = parseInt(req.params.id);
+        const { role } = req.body;
+
+        if (isNaN(targetId)) {
+            return res.status(400).json({ message: "Invalid user ID." });
+        }
+
+        if (!role || !['COLLABORATOR', 'PROJECT_MANAGER', 'ADMIN'].includes(role)) {
+            return res.status(400).json({ message: "Invalid role specified." });
+        }
+
+        const userToUpdate = await prisma.user.findUnique({ where: { id: targetId } });
+        if (!userToUpdate) {
+            return res.status(404).json({ message: "User not found." });
+        }
+
+        // Only allow updating users within the admin's workspace, or self
+        if (userToUpdate.admin_id !== req.user.id && userToUpdate.id !== req.user.id) {
+            return res.status(403).json({ message: "User does not belong to your workspace." });
+        }
+
+        const updateData = { role: role };
+        // If they become an ADMIN, their admin_id is set to null so they have their own workspace
+        if (role === 'ADMIN') {
+            updateData.admin_id = null;
+        }
+
+        const updatedUser = await prisma.user.update({
+            where: { id: targetId },
+            data: updateData
+        });
+
+        res.status(200).json({
+            message: `User role updated to ${role} successfully.`,
+            user: {
+                id: updatedUser.id,
+                name: updatedUser.name,
+                email: updatedUser.email,
+                role: updatedUser.role
+            }
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Update the logged-in user's profile
+exports.updateProfile = async (req, res, next) => {
+    try {
+        const { name } = req.body;
+        if (!name) {
+            return res.status(400).json({ message: "Name is required." });
+        }
+
+        const updatedUser = await prisma.user.update({
+            where: { id: req.user.id },
+            data: { name: name },
+            select: { id: true, name: true, email: true, role: true, created_at: true }
+        });
+
+        res.status(200).json({
+            message: "Profile updated successfully",
+            user: updatedUser
         });
     } catch (error) {
         next(error);

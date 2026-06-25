@@ -49,6 +49,15 @@ async function getAllTasks(req, res) {
     // Enforce role-based scoping
     const role = req.user.role;
     const userId = req.user.id;
+    const currentWorkspaceId = role === 'ADMIN' ? userId : req.user.admin_id;
+
+    // Isolate by workspace
+    where.creator = {
+      OR: [
+        { id: currentWorkspaceId },
+        { admin_id: currentWorkspaceId }
+      ]
+    };
 
     if (role === 'PROJECT_MANAGER') {
       if (projectId) {
@@ -99,6 +108,16 @@ async function createTask(req, res) {
     const { title, description, assigned_to, due_date, priority, status, project_id } = req.body;
     if (!title) return res.status(400).json({ message: 'Title is required' });
     if (!project_id) return res.status(400).json({ message: 'Project ID is required' });
+
+    if (due_date) {
+      const selectedDate = new Date(due_date);
+      selectedDate.setHours(0, 0, 0, 0);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (selectedDate < today) {
+        return res.status(400).json({ message: 'Due date cannot be in the past' });
+      }
+    }
 
     const role = req.user.role;
     const userId = req.user.id;
@@ -206,7 +225,7 @@ async function getTaskById(req, res) {
       where: { id: parseInt(req.params.id) },
       include: {
         assignee: { select: { id: true, name: true, email: true, role: true } },
-        creator: { select: { id: true, name: true, email: true, role: true } },
+        creator: { select: { id: true, name: true, email: true, role: true, admin_id: true } },
         project: {
           include: {
             members: true
@@ -223,6 +242,13 @@ async function getTaskById(req, res) {
 
     const role = req.user.role;
     const userId = req.user.id;
+    const currentWorkspaceId = role === 'ADMIN' ? userId : req.user.admin_id;
+
+    // Workspace isolation check
+    const taskCreatorWorkspaceId = task.creator.role === 'ADMIN' ? task.creator.id : task.creator.admin_id;
+    if (taskCreatorWorkspaceId !== currentWorkspaceId) {
+      return res.status(403).json({ message: 'Access denied. Task belongs to another workspace.' });
+    }
 
     if (role === 'PROJECT_MANAGER' && task.project && task.project.manager_id !== userId) {
       return res.status(403).json({ message: 'Access denied' });
@@ -247,14 +273,33 @@ async function updateTask(req, res) {
     const role = req.user.role;
     const userId = req.user.id;
 
-    // Fetch current task state to compare assignee and check project management
     const currentTask = await prisma.task.findUnique({
       where: { id: taskId },
-      include: { project: true }
+      include: { 
+        project: true,
+        creator: { select: { id: true, role: true, admin_id: true } }
+      }
     });
 
     if (!currentTask) {
       return res.status(404).json({ message: 'Task not found' });
+    }
+
+    // Workspace isolation check
+    const currentWorkspaceId = role === 'ADMIN' ? userId : req.user.admin_id;
+    const taskCreatorWorkspaceId = currentTask.creator.role === 'ADMIN' ? currentTask.creator.id : currentTask.creator.admin_id;
+    if (taskCreatorWorkspaceId !== currentWorkspaceId) {
+      return res.status(403).json({ message: 'Access denied. Task belongs to another workspace.' });
+    }
+
+    if (due_date) {
+      const selectedDate = new Date(due_date);
+      selectedDate.setHours(0, 0, 0, 0);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (selectedDate < today) {
+        return res.status(400).json({ message: 'Due date cannot be in the past' });
+      }
     }
 
     // 1. Role-based restrictions on general fields
@@ -460,11 +505,21 @@ async function deleteTask(req, res) {
 
     const currentTask = await prisma.task.findUnique({
       where: { id: taskId },
-      include: { project: true }
+      include: { 
+        project: true,
+        creator: { select: { id: true, role: true, admin_id: true } }
+      }
     });
 
     if (!currentTask) {
       return res.status(404).json({ message: 'Task not found' });
+    }
+
+    // Workspace isolation check
+    const currentWorkspaceId = role === 'ADMIN' ? userId : req.user.admin_id;
+    const taskCreatorWorkspaceId = currentTask.creator.role === 'ADMIN' ? currentTask.creator.id : currentTask.creator.admin_id;
+    if (taskCreatorWorkspaceId !== currentWorkspaceId) {
+      return res.status(403).json({ message: 'Access denied. Task belongs to another workspace.' });
     }
 
     if (role === 'COLLABORATOR') {

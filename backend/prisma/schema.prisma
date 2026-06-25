@@ -21,6 +21,9 @@ model User {
   password_last_changed DateTime?
   reset_code           String?
   reset_code_expires   DateTime?
+  admin_id            Int?
+  admin               User?           @relation("UserAdmin", fields: [admin_id], references: [id])
+  created_users       User[]          @relation("UserAdmin")
   tasks_assigned      Task[]          @relation("AssignedTo")
   tasks_created       Task[]          @relation("CreatedBy")
   comments            Comment[]

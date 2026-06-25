@@ -4,8 +4,16 @@ require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const express = require('express');
 const cors = require('cors');
 const prisma = require('./prismaClient'); // Shared Prisma singleton used by all controllers
+const swaggerUi = require('swagger-ui-express');
+const YAML = require('yamljs');
 
 const app = express();
+
+// Load Swagger document
+const swaggerDocument = YAML.load(path.join(__dirname, 'swagger.yaml'));
+
+// Setup Swagger UI
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // 1. Global Middleware
 const allowedOrigins = process.env.ALLOWED_ORIGINS

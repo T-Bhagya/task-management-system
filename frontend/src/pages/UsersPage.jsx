@@ -134,6 +134,18 @@ function UsersPage() {
     }
   }
 
+  const handleRoleChange = async (e, userToUpdate) => {
+    e.stopPropagation();
+    const newRole = e.target.value;
+    try {
+      await api.updateUserRole(userToUpdate.id, newRole);
+      const fetchedUsers = await api.getUsers();
+      setUsers(fetchedUsers);
+    } catch (err) {
+      alert(err.message || 'Failed to update user role.');
+    }
+  }
+
   return (
     <Layout>
       <Box sx={{ p: 4, backgroundColor: THEME.colors.mainBg, minHeight: '100vh' }}>
@@ -211,9 +223,31 @@ function UsersPage() {
                       <Typography variant="body1" fontWeight="bold" sx={{ color: THEME.colors.textMain }} noWrap title={user.name}>
                         {user.name}
                       </Typography>
-                      <Typography variant="caption" sx={{ color: THEME.colors.textMuted }}>
-                        {uiRole}
-                      </Typography>
+                      {isAdmin && currentUser?.id !== user.id ? (
+                        <Select
+                          size="small"
+                          value={user.role}
+                          onChange={(e) => handleRoleChange(e, user)}
+                          onClick={(e) => e.stopPropagation()}
+                          sx={{ 
+                            fontSize: '0.75rem', 
+                            height: 24, 
+                            mt: 0.5,
+                            color: THEME.colors.textMuted,
+                            '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
+                            '&:hover .MuiOutlinedInput-notchedOutline': { border: '1px solid rgba(27,94,85,0.2)' },
+                            '& .MuiSelect-select': { py: 0, pl: 0 }
+                          }}
+                        >
+                          <MenuItem value="COLLABORATOR" sx={{ fontSize: '0.8rem' }}>Collaborator</MenuItem>
+                          <MenuItem value="PROJECT_MANAGER" sx={{ fontSize: '0.8rem' }}>Project Manager</MenuItem>
+                          <MenuItem value="ADMIN" sx={{ fontSize: '0.8rem' }}>Administrator</MenuItem>
+                        </Select>
+                      ) : (
+                        <Typography variant="caption" sx={{ color: THEME.colors.textMuted, display: 'block', mt: 0.5 }}>
+                          {uiRole}
+                        </Typography>
+                      )}
                     </Box>
                   </Box>
 

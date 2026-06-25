@@ -26,13 +26,15 @@ exports.getAllProjects = async (req, res, next) => {
     try {
         const userId = req.user.id;
         const role = req.user.role;
+        const currentWorkspaceId = role === 'ADMIN' ? userId : req.user.admin_id;
         let where = {};
 
-        if (role === 'PROJECT_MANAGER') {
-            // Project Managers can see all projects, just like Administrators
-            where = {};
+        if (role === 'PROJECT_MANAGER' || role === 'ADMIN') {
+            // Project Managers and Admins can see all projects in the workspace
+            where = { created_by: currentWorkspaceId };
         } else if (role === 'COLLABORATOR') {
             where = {
+                created_by: currentWorkspaceId,
                 members: {
                     some: {
                         user_id: userId
@@ -92,6 +94,12 @@ exports.getProjectById = async (req, res, next) => {
 
         if (!project) {
             return res.status(404).json({ message: 'Project not found' });
+        }
+
+        // Workspace authorization check
+        const currentWorkspaceId = role === 'ADMIN' ? userId : req.user.admin_id;
+        if (project.created_by !== currentWorkspaceId) {
+            return res.status(403).json({ message: 'Access denied. Project belongs to another workspace.' });
         }
 
         // Authorization check

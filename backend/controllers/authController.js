@@ -62,7 +62,7 @@ exports.login = async (req, res, next) => {
         // Why: If the password is correct, generate a signed JWT token.
         // We pack the user's ID and Role inside the token payload.
         const token = jwt.sign(
-            { id: user.id, role: user.role },
+            { id: user.id, role: user.role, admin_id: user.admin_id },
             process.env.JWT_SECRET,
             { expiresIn: '8h' } // Token automatically expires in 8 hours
         );
@@ -76,6 +76,7 @@ exports.login = async (req, res, next) => {
                 name: user.name,
                 email: user.email,
                 role: user.role,
+                admin_id: user.admin_id,
                 must_reset_password: user.must_reset_password  // ← required for forced reset flow
             }
         });
