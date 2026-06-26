@@ -315,10 +315,11 @@ async function updateTask(req, res) {
       }
     }
 
-    // 2. Status update specific restrictions: only the assignee or an Admin can change the status (not even PM)
+    // 2. Status update specific restrictions: only the assignee, Admin, or Project Manager of the project can change the status
     if (status && status !== currentTask.status) {
-      if (role !== 'ADMIN' && currentTask.assigned_to !== userId) {
-        return res.status(403).json({ message: 'Access denied. Only the task assignee or an Admin can update the task status.' });
+      const isPMOfTask = role === 'PROJECT_MANAGER' && currentTask.project && currentTask.project.manager_id === userId;
+      if (role !== 'ADMIN' && !isPMOfTask && currentTask.assigned_to !== userId) {
+        return res.status(403).json({ message: 'Access denied. Only the task assignee, Admin, or Project Manager of this project can update the task status.' });
       }
     }
 

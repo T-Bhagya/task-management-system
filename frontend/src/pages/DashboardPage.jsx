@@ -83,7 +83,9 @@ function DashboardPage() {
   const inProgressTasks = tasks.filter(t => t.status === 'IN_PROGRESS').length;
   const completedTasks = tasks.filter(t => t.status === 'COMPLETED').length;
   const todoTasks = tasks.filter(t => t.status === 'TODO').length;
-  const totalUsers = users.length;
+  const totalUsers = (currentUser?.role === 'PROJECT_MANAGER' || currentUser?.role === 'COLLABORATOR')
+    ? users.filter(u => u.role !== 'ADMIN').length
+    : users.length;
 
   const completedPercent = totalTasks ? Math.round((completedTasks / totalTasks) * 100) : 0;
   const inProgressPercent = totalTasks ? Math.round((inProgressTasks / totalTasks) * 100) : 0;
@@ -135,22 +137,24 @@ function DashboardPage() {
             </Paper>
 
             {/* Add New Task Button */}
-            <Box onClick={() => navigate('/create-task')} sx={{
-              display: 'flex', alignItems: 'center', gap: 1,
-              backgroundColor: THEME.colors.darkBtnBg,
-              color: 'white', px: 2.5, py: 1.2,
-              borderRadius: 2.5, cursor: 'pointer',
-              fontWeight: 600, fontSize: 13,
-              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-              transition: 'transform 0.15s, opacity 0.15s',
-              '&:hover': {
-                opacity: 0.9,
-                transform: 'translateY(-1px)'
-              }
-            }}>
-              <AddIcon fontSize="small" />
-              Add New Task
-            </Box>
+            {currentUser?.role !== 'COLLABORATOR' && (
+              <Box onClick={() => navigate('/create-task')} sx={{
+                display: 'flex', alignItems: 'center', gap: 1,
+                backgroundColor: THEME.colors.darkBtnBg,
+                color: 'white', px: 2.5, py: 1.2,
+                borderRadius: 2.5, cursor: 'pointer',
+                fontWeight: 600, fontSize: 13,
+                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                transition: 'transform 0.15s, opacity 0.15s',
+                '&:hover': {
+                  opacity: 0.9,
+                  transform: 'translateY(-1px)'
+                }
+              }}>
+                <AddIcon fontSize="small" />
+                Add New Task
+              </Box>
+            )}
           </Box>
         </Box>
 
@@ -286,30 +290,32 @@ function DashboardPage() {
                   ))}
 
                   {/* Add New Data Card styled matching mockup */}
-                  <Grid item xs={6} sm={4}>
-                    <Paper elevation={0} onClick={() => navigate('/create-task')} sx={{
-                      p: 2.5, borderRadius: 3.5,
-                      backgroundColor: 'rgba(27,94,85,0.06)',
-                      border: '1px dashed rgba(27,94,85,0.3)',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      minHeight: 110,
-                      gap: 1,
-                      '&:hover': {
-                        backgroundColor: 'rgba(27,94,85,0.1)',
-                        transform: 'translateY(-2px)'
-                      }
-                    }}>
-                      <AddIcon sx={{ color: THEME.colors.sidebarBg }} />
-                      <Typography variant="body2" sx={{ color: THEME.colors.sidebarBg, fontWeight: 700, fontSize: 13 }}>
-                        New Task
-                      </Typography>
-                    </Paper>
-                  </Grid>
+                  {currentUser?.role !== 'COLLABORATOR' && (
+                    <Grid item xs={6} sm={4}>
+                      <Paper elevation={0} onClick={() => navigate('/create-task')} sx={{
+                        p: 2.5, borderRadius: 3.5,
+                        backgroundColor: 'rgba(27,94,85,0.06)',
+                        border: '1px dashed rgba(27,94,85,0.3)',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        minHeight: 110,
+                        gap: 1,
+                        '&:hover': {
+                          backgroundColor: 'rgba(27,94,85,0.1)',
+                          transform: 'translateY(-2px)'
+                        }
+                      }}>
+                        <AddIcon sx={{ color: THEME.colors.sidebarBg }} />
+                        <Typography variant="body2" sx={{ color: THEME.colors.sidebarBg, fontWeight: 700, fontSize: 13 }}>
+                          New Task
+                        </Typography>
+                      </Paper>
+                    </Grid>
+                  )}
                 </Grid>
               </Grid>
 

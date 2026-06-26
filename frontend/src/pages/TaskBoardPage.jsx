@@ -79,6 +79,7 @@ function TaskBoardPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [filterPriority, setFilterPriority] = useState('ALL')
   const [showMyTasksOnly, setShowMyTasksOnly] = useState(false)
+  const [users, setUsers] = useState([])
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -91,6 +92,14 @@ function TaskBoardPage() {
       }
     }
     loadTasks();
+    async function loadUsers() {
+      try {
+        setUsers(await api.getUsers());
+      } catch (err) {
+        console.error('Failed to load users for task board:', err.message);
+      }
+    }
+    loadUsers();
   }, [])
 
   const loadTasks = async () => {
@@ -254,29 +263,31 @@ function TaskBoardPage() {
               Drag and drop tasks • Click to view comments
             </Typography>
           </Box>
-          <Button
-            startIcon={<AddIcon />}
-            variant="contained"
-            onClick={() => {
-              const queryParams = new URLSearchParams(window.location.search);
-              const projectId = queryParams.get('projectId');
-              navigate(projectId ? `/create-task?projectId=${projectId}` : '/create-task');
-            }}
-            sx={{
-              backgroundColor: THEME.colors.darkBtnBg,
-              color: 'white',
-              borderRadius: 2.5,
-              textTransform: 'none',
-              fontWeight: 600,
-              px: 3,
-              boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
-              '&:hover': {
-                backgroundColor: '#272936'
-              }
-            }}
-          >
-            Add Task
-          </Button>
+          {currentUser?.role !== 'COLLABORATOR' && (
+            <Button
+              startIcon={<AddIcon />}
+              variant="contained"
+              onClick={() => {
+                const queryParams = new URLSearchParams(window.location.search);
+                const projectId = queryParams.get('projectId');
+                navigate(projectId ? `/create-task?projectId=${projectId}` : '/create-task');
+              }}
+              sx={{
+                backgroundColor: THEME.colors.darkBtnBg,
+                color: 'white',
+                borderRadius: 2.5,
+                textTransform: 'none',
+                fontWeight: 600,
+                px: 3,
+                boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+                '&:hover': {
+                  backgroundColor: '#272936'
+                }
+              }}
+            >
+              Add Task
+            </Button>
+          )}
         </Box>
 
         <Box sx={{ display: 'flex', gap: 2, mb: 4, flexWrap: 'wrap' }}>
@@ -594,12 +605,93 @@ function TaskBoardPage() {
                   </Typography>
                 )}
 
-                <Chip label={mapPriorityToUI(selectedTask.priority)} size="small" sx={{
-                  alignSelf: 'flex-start', mb: 2,
-                  backgroundColor: priorityColors[mapPriorityToUI(selectedTask.priority)]?.bg || 'rgba(0,0,0,0.05)',
-                  color: priorityColors[mapPriorityToUI(selectedTask.priority)]?.color || THEME.colors.textMuted,
-                  fontWeight: 700, fontSize: 11,
-                }} />
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                  <Chip label={mapPriorityToUI(selectedTask.priority)} size="small" sx={{
+                    backgroundColor: priorityColors[mapPriorityToUI(selectedTask.priority)]?.bg || 'rgba(0,0,0,0.05)',
+                    color: priorityColors[mapPriorityToUI(selectedTask.priority)]?.color || THEME.colors.textMuted,
+                    fontWeight: 700, fontSize: 11,
+                  }} />
+                </Box>
+
+                <Box sx={{ display: 'flex', gap: 2.5, mb: 2, flexWrap: 'wrap' }}>
+                  {/* Assignee Field */}
+                  <Box sx={{ flex: '1 1 180px' }}>
+                    <Typography variant="caption" sx={{ color: THEME.colors.textMuted, display: 'block', mb: 0.5, fontWeight: 600 }}>
+                      Assignee
+                    </Typography>
+                    {currentUser?.role === 'ADMIN' || (currentUser?.role === 'PROJECT_MANAGER' && selectedTask.project?.manager_id === currentUser.id) ? (
+                      <Select
+                        size="small"
+                        fullWidth
+                        value={selectedTask.assigned_to || ''}
+                        onChange={async (e) => {
+                          const val = e.target.value;
+                          const assigned_to = val ? parseInt(val) : null;
+                          try {
+                            await api.updateTask(selectedTask.id, { assigned_to });
+                            setSelectedTask(prev => ({ 
+                              ...prev, 
+                              assigned_to, 
+                              assignee: users.find(u => u.id === assigned_to) || null 
+                            }));
+                            loadTasks();
+                          } catch (err) {
+                            alert(err.message || 'Failed to update assignee.');
+                          }
+                        }}
+                        displayEmpty
+                        sx={{ fontSize: 13, borderRadius: 2 }}
+                      >
+                        <MenuItem value="">Unassigned</MenuItem>
+                        {users
+                          .filter(u => !(((currentUser?.role === 'PROJECT_MANAGER' || currentUser?.role === 'COLLABORATOR') && u.role === 'ADMIN')))
+                          .map(u => (
+                            <MenuItem key={u.id} value={u.id} sx={{ fontSize: 13 }}>
+                              {u.name}
+                            </MenuItem>
+                          ))}
+                      </Select>
+                    ) : (
+                      <Typography variant="body2" sx={{ color: THEME.colors.textMain, fontWeight: 500 }}>
+                        {selectedTask.assignee?.name || 'Unassigned'}
+                      </Typography>
+                    )}
+                  </Box>
+
+                  {/* Due Date Field */}
+                  <Box sx={{ flex: '1 1 180px' }}>
+                    <Typography variant="caption" sx={{ color: THEME.colors.textMuted, display: 'block', mb: 0.5, fontWeight: 600 }}>
+                      Due Date
+                    </Typography>
+                    {currentUser?.role === 'ADMIN' || (currentUser?.role === 'PROJECT_MANAGER' && selectedTask.project?.manager_id === currentUser.id) ? (
+                      <TextField
+                        type="date"
+                        size="small"
+                        fullWidth
+                        value={selectedTask.due_date ? new Date(selectedTask.due_date).toISOString().split('T')[0] : ''}
+                        onChange={async (e) => {
+                          const due_date = e.target.value ? new Date(e.target.value).toISOString() : null;
+                          try {
+                            await api.updateTask(selectedTask.id, { due_date });
+                            setSelectedTask(prev => ({ ...prev, due_date }));
+                            loadTasks();
+                          } catch (err) {
+                            alert(err.message || 'Failed to update due date.');
+                          }
+                        }}
+                        InputLabelProps={{ shrink: true }}
+                        sx={{
+                          '& .MuiOutlinedInput-root': { borderRadius: 2 },
+                          '& input': { fontSize: 13, py: 1.0 }
+                        }}
+                      />
+                    ) : (
+                      <Typography variant="body2" sx={{ color: THEME.colors.textMain, fontWeight: 500 }}>
+                        {selectedTask.due_date ? new Date(selectedTask.due_date).toLocaleDateString() : 'No Deadline'}
+                      </Typography>
+                    )}
+                  </Box>
+                </Box>
 
                 <Divider sx={{ borderColor: 'rgba(27,94,85,0.1)', mb: 2 }} />
 
