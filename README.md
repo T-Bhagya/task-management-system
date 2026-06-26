@@ -1,152 +1,179 @@
 # TaskFlow - Task Management System
 
-TaskFlow is a collaborative task management application built using React + Vite on the frontend, Node.js + Express + Prisma on the backend, and a real-time notification service.
+TaskFlow is a state-of-the-art collaborative task management application built to help teams plan, organize, track, and complete tasks efficiently in real time. Designed for modern productivity, it features a fluid Kanban board interface, role-based workflows, robust security protocols, and instant real-time notification push services.
 
-## Features
-- **Kanban Board**: Drag and drop tasks across columns (To Do, In Progress, Completed).
-- **Comments System**: Write and view comments on tasks in real-time.
-- **Notifications**: Stay updated with task assignments and comment updates.
-- **Role-Based Views**: Support for Admins, Project Managers, and Collaborators.
-- **Secure Authentication**: JWT-based secure user log in and sign up.
+For complete requirements and compliance details, see the project [SRS.md](file:///c:/Users/Tharu/OneDrive%20-%20apiit.lk/Documents/UOK/Web%20-%20TMS/SRS.md).
 
-## Quick Start
+---
 
-### 1. Database Setup
-Ensure PostgreSQL is running, then add a `.env` file inside `backend/` with your connection string:
+## 🌟 Key Features
+
+* **Interactive Kanban Board**: Dynamic drag-and-drop task tracking across *To Do*, *In Progress*, and *Completed* stages powered by fluid transitions.
+* **Role-Based Access Control (RBAC)**: Distinct workspace capabilities and view permissions defined for **Administrators**, **Project Managers**, and **Collaborators**.
+* **Real-Time Notification Service**: Microservice-based WebSocket architecture pushing instant alerts for task assignments, comment additions, and state updates.
+* **Offline Notification Delivery**: Automatic client reconnection checks and delivery of pending notifications queued in the service database.
+* **Secure Authentication**: Sealed JWT-based session tokens with strict password validation, password change tracking, and mandatory first-login password reset.
+* **Forgot Password Flow**: Secure recovery with a 6-digit email verification code, built-in frequency throttling, and automated email dispatching.
+* **Collaborative Commenting**: Real-time context comments linked directly to tasks for seamless team synchronization.
+
+---
+
+## 🛠️ Technologies Used
+
+### Frontend Dashboard
+* **React 18 & Vite**: Fast SPA generation and development environment.
+* **Material UI (MUI)**: Premium UI components, responsive layout grid, and modern icon packages.
+* **React Router DOM**: Client-side routing.
+* **@hello-pangea/dnd**: Premium drag-and-drop interaction library for the Kanban board.
+* **Socket.io Client**: Dedicated real-time WebSocket connection listener.
+
+### Backend REST API
+* **Node.js & Express**: High-performance backend routing structure.
+* **Prisma ORM**: High-efficiency database schema querying and migrations.
+* **PostgreSQL (Neon Cloud)**: Scalable relational database cloud engine.
+* **Swagger UI / OpenAPI**: Interactive live API documentation engine.
+* **Azure Communication Services**: Automated security email delivery handler.
+* **Bcryptjs & JWT**: Industry-standard encryption hashing and session signing.
+
+### Real-Time Notification Microservice
+* **TypeScript & TS-Node**: Typed backend runtime.
+* **Socket.io Server**: Real-time event transport layer.
+* **Prisma & PostgreSQL**: Dedicated database storage for offline notification queuing.
+
+### DevOps & Cloud Infrastructure
+* **Docker & Multi-stage Containers**: Standardized local and staging environment builds.
+* **GitHub Actions**: Fully automated CI/CD deployment pipelines.
+* **Azure Container Registry (ACR) & Azure Container Apps**: Scalable serverless cloud hosting.
+
+---
+
+## 📂 Project Structure
+
+* **[frontend/](file:///c:/Users/Tharu/OneDrive%20-%20apiit.lk/Documents/UOK/Web%20-%20TMS/frontend)**: React SPA client dashboard code.
+* **[backend/](file:///c:/Users/Tharu/OneDrive%20-%20apiit.lk/Documents/UOK/Web%20-%20TMS/backend)**: REST API controllers, router, and database schema config.
+* **[notification-service/](file:///c:/Users/Tharu/OneDrive%20-%20apiit.lk/Documents/UOK/Web%20-%20TMS/notification-service)**: Socket.io real-time and offline notifications microservice.
+
+---
+
+## ⚙️ Setup & Installation Instructions
+
+### Prerequisites
+* **Node.js** (v18 or higher)
+* **npm** (v9 or higher)
+* **PostgreSQL** instance (or a Neon Cloud connection string)
+
+### 1. Database & Environment Configuration
+
+Create a `.env` file inside the [backend/](file:///c:/Users/Tharu/OneDrive%20-%20apiit.lk/Documents/UOK/Web%20-%20TMS/backend) directory:
 ```env
+# Database connection (PostgreSQL)
 DATABASE_URL="postgresql://username:password@localhost:5432/taskflow_db"
-JWT_SECRET="your-secret-key"
+
+# JWT Secret for security
+JWT_SECRET="your_secure_jwt_secret_phrase"
+
+# Server configuration
 PORT=5000
+NODE_ENV=development
+
+# Azure Communication Services (for emails)
+AZURE_COMMUNICATION_CONNECTION_STRING="your_azure_comms_string"
+SENDER_EMAIL="DoNotReply@yourdomain.com"
 ```
-Run Prisma migrations to initialize the database schema:
+
+Create a `.env` file inside the [notification-service/](file:///c:/Users/Tharu/OneDrive%20-%20apiit.lk/Documents/UOK/Web%20-%20TMS/notification-service) directory:
+```env
+# Database connection for notifications
+DATABASE_URL="postgresql://username:password@localhost:5432/taskflow_notif_db"
+
+# JWT Secret (must match the backend's secret for token decoding)
+JWT_SECRET="your_secure_jwt_secret_phrase"
+
+# Service Port
+PORT=3003
+```
+
+### 2. Install Dependencies & Build Schemas
+
+From the root directory of the project, run:
+```bash
+# Install dependencies for all services
+npm install
+cd backend && npm install
+cd ../frontend && npm install
+cd ../notification-service && npm install
+cd ..
+```
+
+Run migrations and seed the main database from the backend folder:
 ```bash
 cd backend
+# Generate client and run schema migrations
 npx prisma migrate dev --name init
+# Seed initial users (including default Admin) and demo tasks
 node seed.js
+cd ..
 ```
 
-### 2. Running the Backend
-From the root folder:
+Generate the Prisma client for the notification service:
 ```bash
-npm run backend
+cd notification-service
+npx prisma generate
+npx prisma migrate dev --name init
+cd ..
 ```
 
-### 3. Running the Frontend
-From the root folder:
+### 3. Running the Application
+
+You can start all three modules concurrently with a single command from the root directory:
 ```bash
-npm run frontend
+npm run dev
 ```
-The application will be available at `http://localhost:5173`.
+
+This runs:
+* **Frontend client** at `http://localhost:5173`
+* **Backend REST API** at `http://localhost:5000`
+* **Notification microservice** at `http://localhost:3003`
+
+To run services individually:
+* **Backend**: `npm run backend`
+* **Frontend**: `npm run frontend`
+* **Notifications**: `npm run notifications`
 
 ---
 
-# TMS Real-Time Notification Service
+## 🔌 API Usage & Swagger Documentation
 
-This service manages real-time WebSocket connections via **Socket.io** and implements a persistent **Offline Notification Storage** system using **Prisma & SQLite**.
+The backend REST API is fully documented using the OpenAPI Specification and integrates Swagger UI. 
 
-## 🚀 How to Run Locally
+* **Swagger UI URL (Local)**: [http://localhost:5000/api-docs](http://localhost:5000/api-docs)
+* **API Documentation Source Code**: [swagger.yaml](file:///c:/Users/Tharu/OneDrive%20-%20apiit.lk/Documents/UOK/Web%20-%20TMS/backend/swagger.yaml)
 
-1. Navigate to the folder:
-   ```bash
-   cd notification-service
-   ```
-2. Start the development server:
-   ```bash
-   npm run dev
-   ```
-3. Open the interactive testing dashboard in your browser:
-   * **`http://localhost:3003`**
+### Core Endpoints Overview
 
----
-
-## 🔗 Integration Guide for Team Members
-
-### 1. For Frontend Developer (React + TS)
-Install the Socket.io client library:
-```bash
-npm install socket.io-client
-```
-
-Connect to the WebSocket server in React:
-```typescript
-import { useEffect, useState } from 'react';
-import { io, Socket } from 'socket.io-client';
-
-const socket: Socket = io('http://localhost:3003', {
-  auth: {
-    // Option A: Send the real JWT token received during login
-    token: localStorage.getItem('token'),
-    // Option B (For local dev before Auth is ready): Pass userId directly
-    userId: 'alice'
-  }
-});
-
-export function useNotifications() {
-  const [notifications, setNotifications] = useState<any[]>([]);
-
-  useEffect(() => {
-    // 1. Listen for new real-time notifications
-    socket.on('notification', (newNotif) => {
-      setNotifications((prev) => [newNotif, ...prev]);
-      alert(`[${newNotif.title}] ${newNotif.message}`);
-    });
-
-    // 2. Receive notifications sent while you were offline
-    socket.on('offline-notifications', (queuedNotifs) => {
-      setNotifications((prev) => [...queuedNotifs, ...prev]);
-    });
-
-    return () => {
-      socket.off('notification');
-      socket.off('offline-notifications');
-    };
-  }, []);
-
-  return notifications;
-}
-```
+| Service | HTTP Method | Endpoint | Description | Auth Required |
+| :--- | :--- | :--- | :--- | :--- |
+| **Auth** | `POST` | `/api/auth/login` | Authenticate user and issue JWT token | No |
+| **Auth** | `POST` | `/api/auth/register` | Register a new user | No |
+| **Auth** | `PUT` | `/api/auth/change-password` | Update current user password | Yes (JWT) |
+| **Users** | `GET` | `/api/users` | List all system users (searchable/filterable) | Yes (Admin) |
+| **Users** | `POST` | `/api/users` | Create user profile and send onboarding email | Yes (Admin) |
+| **Users** | `GET` | `/api/users/profile` | Retrieve current authenticated user profile | Yes (JWT) |
+| **Tasks** | `GET` | `/api/tasks` | Get all tasks scoped to user/role | Yes (JWT) |
+| **Tasks** | `POST` | `/api/tasks` | Create a new project task | Yes (PM / Admin) |
+| **Tasks** | `PUT` | `/api/tasks/{id}` | Update task status, assignee, or priority | Yes (JWT) |
+| **Tasks** | `DELETE` | `/api/tasks/{id}` | Remove a task permanently | Yes (PM / Admin) |
+| **Projects** | `GET` | `/api/projects` | List all projects | Yes (JWT) |
+| **Projects** | `POST` | `/api/projects` | Create a project and assign a Project Manager | Yes (Admin / PM) |
 
 ---
 
-### 2. For Backend Tasks & Comments Developer
-Whenever a task is assigned, updated, or a comment is left, send a REST trigger request to the notification service:
+## 👥 Team Member Contributions
 
-```javascript
-const axios = require('axios');
-
-async function triggerNotification(userId, title, message, type) {
-  try {
-    await axios.post('http://localhost:3003/api/notifications', {
-      userId,        // The recipient's user ID
-      title,         // e.g. "New Comment Added"
-      message,       // e.g. "John left a comment on Task #42"
-      type           // e.g. "comment_added", "task_assigned", "task_overdue"
-    });
-  } catch (error) {
-    console.error("Failed to trigger real-time notification:", error.message);
-  }
-}
-```
-
----
-
-### 3. For Auth Developer
-Ensure that the `JWT_SECRET` environment variable in the `notification-service/.env` matches the secret key used by your authentication service.
-* When a user authenticates, the notification service will decode the token to identify their `userId`.
-
----
-
-### 4. For DevOps & Testing Lead
-Expose port `3003` inside the container:
-```dockerfile
-# Dockerfile (inside notification-service)
-FROM node:24-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm install
-COPY . .
-RUN npx prisma generate
-RUN npm run build
-EXPOSE 3003
-CMD ["npm", "start"]
-```
+| Member | Primary Role | Key Accomplishments & Deliverables |
+| :--- | :--- | :--- |
+| **Thilini Bhagya** *(Group Leader)* | Full-Stack Integration & Security | <ul><li>Authored and structured the system Software Requirements Specification ([SRS.md](file:///c:/Users/Tharu/OneDrive%20-%20apiit.lk/Documents/UOK/Web%20-%20TMS/SRS.md)).</li><li>Designed and implemented the secure **Forgot Password flow** using 6-digit email verification codes and once-a-month frequency limits.</li><li>Optimized the task board with workspace isolation, custom Project Manager roles, and collaborator-specific Kanban features.</li><li>Managed project builds, merged pull requests, and resolved version control conflicts.</li></ul> |
+| **Tharushi** | DevOps & Cloud Architect | <ul><li>Containerized the entire platform (Frontend, Backend, and Notification service) using multi-stage **Docker** files.</li><li>Designed automated **GitHub Actions CI/CD pipelines** for build validation and image delivery.</li><li>Deployed systems on **Azure Container Apps** and configured Azure Container Registries, ingress routing, target ports, and network secrets.</li><li>Configured PostgreSQL production staging databases.</li><li>Integrated interactive API documents via Swagger UI.</li></ul> |
+| **Nipuni Uppala** | Database & Backend Developer | <ul><li>Architected the relational **database schema** (Users, Projects, Tasks, Comments, and Notifications) and generated the project ER diagram.</li><li>Configured **Prisma ORM** engines, initialized migrations, and successfully integrated the backend with the **Neon PostgreSQL Cloud** database.</li><li>Developed clean backend REST API endpoints for comment systems and task management.</li><li>Configured token validation routes by injecting security middleware (`authMiddleware`).</li></ul> |
+| **Nadeesha Kavindi** | Frontend & User Experience | <ul><li>Built the advanced **User Management UI** featuring role-based user tables, deactivation rules, and profile details modal popups.</li><li>Implemented custom password validation logic, secure change password routes, and forced resets on initial user login.</li><li>Structured Project Manager views allowing PMs to assign tasks, define priorities, set deadlines, and manage team members.</li><li>Designed layouts for authentication pages using premium modern illustrations.</li></ul> |
+| **Muhammad Aadhil** | Real-Time Systems Engineer | <ul><li>Created the real-time **Notification Microservice** using **Socket.io** to push events instantly.</li><li>Developed a persistent **Offline Notification storage queue** using Prisma and SQLite/PostgreSQL.</li><li>Implemented event-trigger endpoints enabling other backend controllers to notify users dynamically about status changes and comments.</li></ul> |
