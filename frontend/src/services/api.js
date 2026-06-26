@@ -46,7 +46,7 @@ export const api = {
   signup: (name, email, password, role) => 
     request('/auth/register', { method: 'POST', body: { name, email, password, role } }),
 
-  changePassword: (newPassword, name) =>
+  firstLoginChangePassword: (newPassword, name) =>
     request('/auth/change-password', { method: 'PUT', body: { newPassword, name } }),
 
   forgotPasswordVerify: (email) =>

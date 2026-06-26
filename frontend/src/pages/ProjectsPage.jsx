@@ -69,6 +69,8 @@ function ProjectsPage() {
   const userStr = localStorage.getItem('user')
   const currentUser = userStr ? JSON.parse(userStr) : null
   const isAdmin = currentUser?.role === 'ADMIN'
+  const isProjectManager = currentUser?.role === 'PROJECT_MANAGER'
+  const canManageProjects = isAdmin || isProjectManager
 
   const loadData = async () => {
     try {
@@ -166,7 +168,7 @@ function ProjectsPage() {
               Assign, manage, and track projects across teams
             </Typography>
           </Box>
-          {isAdmin && (
+          {canManageProjects && (
             <Button
               variant="contained"
               startIcon={<AddIcon />}
@@ -196,9 +198,9 @@ function ProjectsPage() {
           <Paper sx={{ p: 5, textAlign: 'center', borderRadius: 3, backgroundColor: THEME.colors.cardBg }}>
             <Typography variant="h6" sx={{ color: THEME.colors.textMain, mb: 1 }}>No Projects Found</Typography>
             <Typography variant="body2" sx={{ color: THEME.colors.textMuted, mb: 3 }}>
-              {isAdmin ? 'Get started by creating your first project.' : 'You are not assigned to any projects yet.'}
+              {canManageProjects ? 'Get started by creating your first project.' : 'You are not assigned to any projects yet.'}
             </Typography>
-            {isAdmin && (
+            {canManageProjects && (
               <Button
                 variant="outlined"
                 startIcon={<AddIcon />}
@@ -241,7 +243,7 @@ function ProjectsPage() {
                       <Typography variant="h6" fontWeight="bold" sx={{ color: THEME.colors.textMain }}>
                         {project.name}
                       </Typography>
-                      {isAdmin && (
+                      {canManageProjects && (
                         <Box sx={{ display: 'flex', gap: 0.5 }}>
                           <IconButton size="small" onClick={() => handleOpenEdit(project)} sx={{ color: THEME.colors.textMuted }}>
                             <EditIcon fontSize="small" />

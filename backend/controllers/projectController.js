@@ -138,7 +138,7 @@ exports.createProject = async (req, res, next) => {
             return res.status(400).json({ message: 'Assigned user must be a Project Manager' });
         }
 
-        const creatorId = req.user.id;
+        const creatorId = req.user.role === 'ADMIN' ? req.user.id : req.user.admin_id;
 
         // Create the project
         const project = await prisma.project.create({
