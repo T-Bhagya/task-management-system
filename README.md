@@ -64,19 +64,16 @@ For complete requirements and compliance details, see the project [SRS.md](file:
 
 ### 1. Database & Environment Configuration
 
-Create a `.env` file inside the [backend/](file:///c:/Users/Tharu/OneDrive%20-%20apiit.lk/Documents/UOK/Web%20-%20TMS/backend) directory:
+## ⚙️ Database Configuration & Initialization
+
+This project utilizes **Prisma ORM** coupled with a **PostgreSQL** instance (hosted on Neon Cloud) across multiple microservices. Follow these steps to configure and initialize your database environment.
+
+### 1. Set Up Environment Connection Strings
+Do not hardcode database credentials. Create a `.env` file in **both** the `backend/` and `notification-service/` directories, following this production-safe template:
+
 ```env
-
-# Database connection (PostgreSQL) inside the backend folder.
-DATABASE_URL="postgresql://neondb_owner:npg_CUlVkcR1OJp6@ep-lively-moon-aoltsifv-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
-
-Create a `.env` file inside the main folder
-DATABASE_URL="postgresql://neondb_owner:npg_CUlVkcR1OJp6@ep-lively-moon-aoltsifv-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
-
-JWT_SECRET=853b8021d9fbf5efc0f78b5b11212427b6178ba0cebd8c5273a51d0ad4389149005eb4075af9ce9c62ec7f5b57a70629d1cf329b6489f965c70e8455779a840a
-
-PORT=5000
-```
+# Connection template for Prisma & Neon PostgreSQL
+DATABASE_URL="postgresql://<username>:<password>@<host-pooler>.<region>.aws.neon.tech/<database_name>?sslmode=require"
 
 ### 2. Install Dependencies & Build Schemas
 
