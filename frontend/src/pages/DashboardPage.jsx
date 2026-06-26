@@ -103,7 +103,7 @@ function DashboardPage() {
 
   return (
     <Layout>
-      <Box sx={{ p: 4, backgroundColor: THEME.colors.mainBg, minHeight: '100vh' }}>
+      <Box sx={{ p: { xs: 2, sm: 3, md: 4 }, backgroundColor: THEME.colors.mainBg, minHeight: '100vh' }}>
         
         {/* Main Banner Heading */}
         <Typography variant="h3" fontWeight="bold" sx={{ color: THEME.colors.sidebarBg, mb: 4, fontFamily: 'Outfit, sans-serif', letterSpacing: -0.8 }}>
@@ -111,7 +111,7 @@ function DashboardPage() {
         </Typography>
 
         {/* Hello Banner row */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2, mb: 4 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, flexDirection: { xs: 'column', sm: 'row' }, gap: 2, mb: 4 }}>
           <Box>
             <Typography variant="h5" fontWeight="bold" sx={{ color: THEME.colors.textMain }}>
               Hello, {currentUser?.name?.split(' ')[0] || 'James'}
@@ -121,7 +121,7 @@ function DashboardPage() {
             </Typography>
           </Box>
 
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap', width: { xs: '100%', sm: 'auto' } }}>
             {/* Search Input Button */}
             <Paper component="div" sx={{ p: '2px 4px', display: 'flex', alignItems: 'center', width: 240, borderRadius: 2.5, boxShadow: 'none', border: '1px solid rgba(27,94,85,0.12)' }}>
               <InputBase

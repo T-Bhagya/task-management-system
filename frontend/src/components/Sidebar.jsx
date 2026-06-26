@@ -22,7 +22,7 @@ const menuItems = [
   { icon: <PersonIcon />, label: 'Profile', path: '/profile' },
 ]
 
-function Sidebar({ expanded, setExpanded }) {
+function Sidebar({ expanded, setExpanded, isMobile = false, onMobileClose }) {
   const navigate = useNavigate()
   const location = useLocation()
   const { unreadCount } = useNotifications()
@@ -43,9 +43,12 @@ function Sidebar({ expanded, setExpanded }) {
       display: 'flex',
       flexDirection: 'column',
       transition: 'width 0.3s ease',
-      position: 'fixed',
-      left: 0, top: 0,
-      zIndex: 100,
+      // On mobile the parent wrapper (Layout) controls position/z-index
+      ...(isMobile ? {} : {
+        position: 'fixed',
+        left: 0, top: 0,
+        zIndex: 100,
+      }),
       overflowX: 'hidden'
     }}>
       <Box sx={{
@@ -68,12 +71,12 @@ function Sidebar({ expanded, setExpanded }) {
             </Typography>
           </Box>
         )}
-        <Box onClick={() => setExpanded(!expanded)} sx={{
+        <Box onClick={() => { if (isMobile && onMobileClose) { onMobileClose(); } else { setExpanded(!expanded); } }} sx={{
           cursor: 'pointer', color: 'rgba(255,255,255,0.7)',
           display: 'flex', alignItems: 'center', p: 0.8, borderRadius: 1.5,
           '&:hover': { color: 'white', backgroundColor: 'rgba(255,255,255,0.1)' }
         }}>
-          {expanded ? <CloseIcon fontSize="small" /> : <MenuIcon fontSize="small" />}
+          {(isMobile || expanded) ? <CloseIcon fontSize="small" /> : <MenuIcon fontSize="small" />}
         </Box>
       </Box>
 
@@ -107,7 +110,7 @@ function Sidebar({ expanded, setExpanded }) {
           const isActive = location.pathname === item.path
           return (
             <Tooltip key={item.path} title={!expanded ? item.label : ''} placement="right">
-              <Box onClick={() => navigate(item.path)} sx={{
+              <Box onClick={() => { navigate(item.path); if (isMobile && onMobileClose) onMobileClose(); }} sx={{
                 display: 'flex', alignItems: 'center', gap: 2,
                 px: expanded ? 2 : 0, py: 1.2, mb: 0.5,
                 borderRadius: 2, cursor: 'pointer',
@@ -185,7 +188,7 @@ function Sidebar({ expanded, setExpanded }) {
           </Box>
         )}
         <Tooltip title={!expanded ? 'Logout' : ''} placement="right">
-          <Box onClick={() => { localStorage.removeItem('token'); navigate('/') }} sx={{
+          <Box onClick={() => { localStorage.removeItem('token'); if (isMobile && onMobileClose) onMobileClose(); navigate('/'); }} sx={{
             display: 'flex', alignItems: 'center', gap: 2,
             px: expanded ? 2 : 0, py: 1.1, borderRadius: 2,
             cursor: 'pointer', justifyContent: expanded ? 'flex-start' : 'center',

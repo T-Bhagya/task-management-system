@@ -243,9 +243,9 @@ function TaskBoardPage() {
 
   return (
     <Layout>
-      <Box sx={{ p: 4, backgroundColor: THEME.colors.mainBg, minHeight: '100vh' }}>
+      <Box sx={{ p: { xs: 2, sm: 3, md: 4 }, backgroundColor: THEME.colors.mainBg, minHeight: '100vh' }}>
 
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, flexDirection: { xs: 'column', sm: 'row' }, gap: 2, mb: 4 }}>
           <Box>
             <Typography variant="h4" fontWeight="bold" sx={{ color: THEME.colors.textMain }}>
               Task Board
@@ -344,7 +344,7 @@ function TaskBoardPage() {
             Loading board tasks...
           </Typography>
         ) : viewMode === 'table' ? (
-          <TableContainer component={Paper} elevation={0} sx={{ borderRadius: 3, border: '1px solid rgba(27,94,85,0.05)' }}>
+          <TableContainer component={Paper} elevation={0} sx={{ borderRadius: 3, border: '1px solid rgba(27,94,85,0.05)', overflowX: 'auto' }}>
             <Table>
               <TableHead sx={{ backgroundColor: 'rgba(27,94,85,0.03)' }}>
                 <TableRow>
@@ -426,7 +426,7 @@ function TaskBoardPage() {
           <DragDropContext onDragEnd={onDragEnd}>
             <Box sx={{ display: 'flex', gap: 3, alignItems: 'flex-start', flexWrap: { xs: 'wrap', md: 'nowrap' } }}>
               {columns.map((col) => (
-                <Box key={col.key} sx={{ flex: 1, minWidth: 280, width: '100%', backgroundColor: 'rgba(27,94,85,0.03)', p: 2, borderRadius: 4, border: '1px solid rgba(27,94,85,0.05)' }}>
+                <Box key={col.key} sx={{ flex: 1, minWidth: { xs: '100%', sm: 280 }, width: '100%', backgroundColor: 'rgba(27,94,85,0.03)', p: 2, borderRadius: 4, border: '1px solid rgba(27,94,85,0.05)' }}>
 
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
                     <Box sx={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: col.color }} />
