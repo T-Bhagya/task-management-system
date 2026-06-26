@@ -214,7 +214,7 @@ function CreateTaskPage() {
 
   return (
     <Layout>
-      <Box sx={{ p: 4, backgroundColor: THEME.colors.mainBg, minHeight: '100vh' }}>
+      <Box sx={{ p: { xs: 2, sm: 3, md: 4 }, backgroundColor: THEME.colors.mainBg, minHeight: '100vh' }}>
 
         <Box sx={{ mb: 4 }}>
           <Typography variant="h4" fontWeight="bold" sx={{ color: THEME.colors.textMain }}>
@@ -226,10 +226,10 @@ function CreateTaskPage() {
         </Box>
 
         {/* Two column layout */}
-        <Box sx={{ display: 'flex', gap: 3, alignItems: 'flex-start' }}>
+        <Box sx={{ display: 'flex', gap: 3, alignItems: 'flex-start', flexDirection: { xs: 'column', md: 'row' } }}>
 
           {/* LEFT — form */}
-          <Box sx={{ flex: '0 0 55%', minWidth: 0 }}>
+          <Box sx={{ flex: { xs: '1 1 100%', md: '0 0 55%' }, minWidth: 0, width: { xs: '100%', md: 'auto' } }}>
             <Paper elevation={0} sx={{
               p: 3, borderRadius: 3.5,
               backgroundColor: '#ffffff',
@@ -335,7 +335,7 @@ function CreateTaskPage() {
           </Box>
 
           {/* RIGHT — Team Availability only */}
-          <Box sx={{ flex: '0 0 42%', minWidth: 0 }}>
+          <Box sx={{ flex: { xs: '1 1 100%', md: '0 0 42%' }, minWidth: 0, width: { xs: '100%', md: 'auto' } }}>
             <TeamAvailabilityPanel users={usersWithTasks} />
           </Box>
 

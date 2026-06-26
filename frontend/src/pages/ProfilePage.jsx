@@ -4,44 +4,15 @@ import { Box, Typography, Paper, Avatar, Chip, Divider, Alert, CircularProgress 
 import EmailIcon from '@mui/icons-material/Email'
 import WorkIcon from '@mui/icons-material/Work'
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday'
-import AssignmentIcon from '@mui/icons-material/Assignment'
-import CheckCircleIcon from '@mui/icons-material/CheckCircle'
-import PendingIcon from '@mui/icons-material/Pending'
 import LockIcon from '@mui/icons-material/Lock'
 import { api } from '../services/api'
 import { THEME } from '../theme'
-
-const priorityColors = {
-  High: { color: '#eb5e43', bg: 'rgba(235,94,67,0.12)' },
-  Medium: { color: '#8890d3', bg: 'rgba(136,144,211,0.12)' },
-  Low: { color: '#1b5e55', bg: 'rgba(27,94,85,0.12)' },
-}
-
-const statusColors = {
-  'In Progress': { color: '#8890d3', bg: 'rgba(136,144,211,0.12)' },
-  'To Do': { color: '#627575', bg: 'rgba(98,117,117,0.12)' },
-  'Completed': { color: '#1b5e55', bg: 'rgba(27,94,85,0.12)' },
-}
 
 const mapRoleToUI = (role) => {
   if (role === 'ADMIN') return 'Administrator';
   if (role === 'PROJECT_MANAGER') return 'Project Manager';
   if (role === 'COLLABORATOR') return 'Collaborator';
   return role;
-};
-
-const mapStatusToUI = (status) => {
-  if (status === 'TODO') return 'To Do';
-  if (status === 'IN_PROGRESS') return 'In Progress';
-  if (status === 'COMPLETED') return 'Completed';
-  return status;
-};
-
-const mapPriorityToUI = (priority) => {
-  if (priority === 'HIGH') return 'High';
-  if (priority === 'MEDIUM') return 'Medium';
-  if (priority === 'LOW') return 'Low';
-  return priority;
 };
 
 function ProfilePage() {
@@ -123,7 +94,7 @@ function ProfilePage() {
   if (loading) {
     return (
       <Layout>
-        <Box sx={{ p: 4, backgroundColor: THEME.colors.mainBg, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Box sx={{ p: { xs: 2, sm: 3, md: 4 }, backgroundColor: THEME.colors.mainBg, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Typography sx={{ color: THEME.colors.textMain }}>Loading profile...</Typography>
         </Box>
       </Layout>
@@ -133,17 +104,12 @@ function ProfilePage() {
   if (!profile) {
     return (
       <Layout>
-        <Box sx={{ p: 4, backgroundColor: THEME.colors.mainBg, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Box sx={{ p: { xs: 2, sm: 3, md: 4 }, backgroundColor: THEME.colors.mainBg, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Typography sx={{ color: THEME.colors.textMain }}>Profile not found. Please log in again.</Typography>
         </Box>
       </Layout>
     );
   }
-
-  const totalTasks = myTasks.length;
-  const completedTasks = myTasks.filter(t => t.status === 'COMPLETED').length;
-  const inProgressTasks = myTasks.filter(t => t.status === 'IN_PROGRESS').length;
-  const todoTasks = myTasks.filter(t => t.status === 'TODO').length;
 
   const joinDate = profile.created_at
     ? new Date(profile.created_at).toLocaleDateString([], { year: 'numeric', month: 'short' })
@@ -153,7 +119,7 @@ function ProfilePage() {
 
   return (
     <Layout>
-      <Box sx={{ p: 4, backgroundColor: THEME.colors.mainBg, minHeight: '100vh' }}>
+      <Box sx={{ p: { xs: 2, sm: 3, md: 4 }, backgroundColor: THEME.colors.mainBg, minHeight: '100vh' }}>
 
         <Box sx={{ mb: 4 }}>
           <Typography variant="h4" fontWeight="bold" sx={{ color: THEME.colors.textMain }}>
@@ -164,11 +130,11 @@ function ProfilePage() {
           </Typography>
         </Box>
 
-        <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+        <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap', flexDirection: { xs: 'column', md: 'row' } }}>
 
           {/* Left card */}
           <Paper elevation={0} sx={{
-            p: 4, borderRadius: 3.5, width: 280, flexShrink: 0,
+            p: 4, borderRadius: 3.5, width: { xs: '100%', md: 280 }, flexShrink: 0,
             backgroundColor: '#ffffff',
             border: '1px solid rgba(27,94,85,0.08)',
             display: 'flex', flexDirection: 'column', alignItems: 'center',
@@ -361,4 +327,4 @@ function ProfilePage() {
   )
 }
 
-export default ProfilePage
+export default ProfilePage
