@@ -1,20 +1,125 @@
 const prisma = require('../prismaClient');
 const { sendTemporaryPasswordEmail } = require('../utils/emailService');
 
-// Get all users in the current workspace
+// Get all users in the current workspace filtered by role visibility rules
 exports.getAllUsers = async (req, res, next) => {
     try {
         const currentWorkspaceId = req.user.role === 'ADMIN' ? req.user.id : req.user.admin_id;
-        const users = await prisma.user.findMany({
-            where: {
-                OR: [
-                    { id: currentWorkspaceId },
-                    { admin_id: currentWorkspaceId }
-                ]
-            },
-            select: { id: true, name: true, email: true, role: true, is_active: true }
-        });
-        res.status(200).json(users);
+        
+        const userSelect = {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+            is_active: true,
+            _count: {
+                select: {
+                    tasks_assigned: true,
+                    project_memberships: true
+                }
+            }
+        };
+
+        if (req.user.role === 'ADMIN') {
+            const users = await prisma.user.findMany({
+                where: {
+                    OR: [
+                        { id: currentWorkspaceId },
+                        { admin_id: currentWorkspaceId }
+                    ]
+                },
+                select: userSelect
+            });
+            return res.status(200).json(users);
+        }
+
+        if (req.user.role === 'PROJECT_MANAGER') {
+            // View admin and all collaborators in their managed projects
+            const myManagedProjects = await prisma.project.findMany({
+                where: { manager_id: req.user.id },
+                select: { id: true }
+            });
+            const projectIds = myManagedProjects.map(p => p.id);
+            const collaborators = await prisma.user.findMany({
+                where: {
+                    role: 'COLLABORATOR',
+                    project_memberships: {
+                        some: {
+                            project_id: { in: projectIds }
+                        }
+                    }
+                },
+                select: userSelect
+            });
+            // Get admin
+            const admins = await prisma.user.findMany({
+                where: {
+                    OR: [
+                        { id: currentWorkspaceId || -1 },
+                        { role: 'ADMIN' }
+                    ]
+                },
+                select: userSelect
+            });
+            // Get self
+            const self = await prisma.user.findUnique({
+                where: { id: req.user.id },
+                select: userSelect
+            });
+            const allUsers = [...admins, self, ...collaborators].filter(Boolean);
+            const uniqueUsers = Array.from(new Map(allUsers.map(u => [u.id, u])).values());
+            return res.status(200).json(uniqueUsers);
+        }
+
+        if (req.user.role === 'COLLABORATOR') {
+            // View admin, project managers and collaborators in their assigned projects
+            const myMemberships = await prisma.projectMember.findMany({
+                where: { user_id: req.user.id },
+                select: { project_id: true }
+            });
+            const projectIds = myMemberships.map(m => m.project_id);
+            const myProjects = await prisma.project.findMany({
+                where: { id: { in: projectIds } },
+                select: { manager_id: true }
+            });
+            const managerIds = myProjects.map(p => p.manager_id);
+            
+            const collaborators = await prisma.user.findMany({
+                where: {
+                    role: 'COLLABORATOR',
+                    project_memberships: {
+                        some: {
+                            project_id: { in: projectIds }
+                        }
+                    }
+                },
+                select: userSelect
+            });
+            const managers = await prisma.user.findMany({
+                where: {
+                    id: { in: managerIds }
+                },
+                select: userSelect
+            });
+            const admins = await prisma.user.findMany({
+                where: {
+                    OR: [
+                        { id: currentWorkspaceId || -1 },
+                        { role: 'ADMIN' }
+                    ]
+                },
+                select: userSelect
+            });
+            const self = await prisma.user.findUnique({
+                where: { id: req.user.id },
+                select: userSelect
+            });
+            const allUsers = [...admins, ...managers, ...collaborators, self].filter(Boolean);
+            const uniqueUsers = Array.from(new Map(allUsers.map(u => [u.id, u])).values());
+            return res.status(200).json(uniqueUsers);
+        }
+
+        return res.status(200).json([]);
     } catch (error) {
         next(error);
     }
@@ -251,8 +356,25 @@ exports.toggleUserStatus = async (req, res, next) => {
             return res.status(400).json({ message: "You cannot change your own status." });
         }
         
-        if (req.user.role === 'PROJECT_MANAGER' && userToToggle.role !== 'COLLABORATOR') {
-            return res.status(403).json({ message: "Project Managers can only toggle status of Collaborators." });
+        if (req.user.role === 'PROJECT_MANAGER') {
+            if (userToToggle.role !== 'COLLABORATOR') {
+                return res.status(403).json({ message: "Project Managers can only toggle status of Collaborators." });
+            }
+            // Check if this collaborator belongs to one of PM's projects
+            const pmProjects = await prisma.project.findMany({
+                where: { manager_id: req.user.id },
+                select: { id: true }
+            });
+            const pmProjectIds = pmProjects.map(p => p.id);
+            const isMemberOfPmProject = await prisma.projectMember.findFirst({
+                where: {
+                    user_id: targetId,
+                    project_id: { in: pmProjectIds }
+                }
+            });
+            if (!isMemberOfPmProject) {
+                return res.status(403).json({ message: "You can only toggle status of collaborators in your assigned projects." });
+            }
         }
         
         if (req.user.role !== 'ADMIN' && req.user.role !== 'PROJECT_MANAGER') {
@@ -359,12 +481,9 @@ exports.updateProfile = async (req, res, next) => {
     }
 };
 
-// Get assigned task & project counts for a specific user (Admin only)
+// Get assigned task & project counts for a specific user
 exports.getUserStats = async (req, res, next) => {
     try {
-        if (req.user.role !== 'ADMIN' && req.user.role !== 'PROJECT_MANAGER') {
-            return res.status(403).json({ message: 'Access denied.' });
-        }
         const targetId = parseInt(req.params.id);
         if (isNaN(targetId)) return res.status(400).json({ message: 'Invalid user ID.' });
 

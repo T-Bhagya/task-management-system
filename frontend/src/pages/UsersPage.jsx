@@ -1,11 +1,12 @@
-﻿import { useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import Layout from "../components/Layout"
 import {
   Box, Typography, Paper, Avatar, Chip,
   Button, Dialog, DialogTitle, DialogContent,
   DialogContentText, DialogActions, TextField, Alert,
   IconButton, Tooltip, FormControl, InputLabel, Select, MenuItem,
-  Divider, CircularProgress, List, ListItem, ListItemText
+  Divider, CircularProgress, List, ListItem, ListItemText,
+  TableContainer, Table, TableHead, TableRow, TableCell, TableBody
 } from "@mui/material"
 import AddIcon from "@mui/icons-material/Add"
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline"
@@ -150,6 +151,30 @@ function UsersPage() {
   const canDeleteUser = (u) =>
     isAdmin && currentUser?.id !== u.id && u.role !== "ADMIN"
 
+  const renderRoleCell = (user) => {
+    const color = roleColors[user.role] || THEME.colors.sidebarBg
+    if (isAdmin && currentUser?.id !== user.id) {
+      return (
+        <Select size="small" value={user.role} onChange={(e) => handleRoleChange(e, user)} onClick={(e) => e.stopPropagation()}
+          sx={{ fontSize: "0.8rem", height: 30, color: color, fontWeight: 600, borderRadius: 1.5,
+            "& .MuiOutlinedInput-notchedOutline": { borderColor: "rgba(0,0,0,0.12)" },
+            "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: color } }}>
+          <MenuItem value="COLLABORATOR" sx={{ fontSize: "0.8rem" }}>Collaborator</MenuItem>
+          <MenuItem value="PROJECT_MANAGER" sx={{ fontSize: "0.8rem" }}>Project Manager</MenuItem>
+          <MenuItem value="ADMIN" sx={{ fontSize: "0.8rem" }}>Administrator</MenuItem>
+        </Select>
+      )
+    }
+    return (
+      <Chip label={mapRoleToUI(user.role)} size="small" sx={{
+        backgroundColor: `${color}15`,
+        color: color,
+        fontWeight: 700, fontSize: 11,
+        border: `1px solid ${color}30`
+      }} />
+    )
+  }
+
   const tabs = [
     { key: "tasks", label: "Assigned Tasks", icon: <AssignmentIcon sx={{ fontSize: 14 }} />, color: "#8890d3" },
     { key: "projects", label: "Projects", icon: <FolderIcon sx={{ fontSize: 14 }} />, color: THEME.colors.sidebarBg },
@@ -174,97 +199,188 @@ function UsersPage() {
         </Box>
 
         {loading ? (
-          <Typography sx={{ color: THEME.colors.textMuted, textAlign: "center", py: 8 }}>Loading team members...</Typography>
-        ) : (
-          <Box sx={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 3 }}>
-            {users.map((user) => {
-              const color = roleColors[user.role] || THEME.colors.sidebarBg
-              const letter = user.name ? user.name[0].toUpperCase() : "U"
-              const isActive = user.is_active !== false
-              return (
-                <Paper key={user.id} elevation={0} sx={{
-                  p: 3, borderRadius: 3.5, backgroundColor: "#ffffff",
-                  border: "1px solid rgba(27,94,85,0.08)", transition: "all 0.2s",
-                  boxShadow: "0 4px 20px rgba(0,0,0,0.02)", opacity: isActive ? 1 : 0.78,
-                  "&:hover": { border: `1px solid ${color}30`, transform: "translateY(-2px)", boxShadow: `0 8px 28px ${color}12`, opacity: 1 }
-                }}>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
-                    <Avatar sx={{ width: 50, height: 50, fontSize: 20, fontWeight: "bold", background: isActive ? color : "#bbb", color: "white", flexShrink: 0 }}>
-                      {letter}
-                    </Avatar>
-                    <Box sx={{ minWidth: 0, flex: 1 }}>
-                      <Typography variant="body1" fontWeight="bold" sx={{ color: THEME.colors.textMain }} noWrap title={user.name}>{user.name}</Typography>
-                      {isAdmin && currentUser?.id !== user.id ? (
-                        <Select size="small" value={user.role} onChange={(e) => handleRoleChange(e, user)} onClick={(e) => e.stopPropagation()}
-                          sx={{ fontSize: "0.75rem", height: 22, mt: 0.3, color: color, fontWeight: 600,
-                            "& .MuiOutlinedInput-notchedOutline": { border: "none" },
-                            "&:hover .MuiOutlinedInput-notchedOutline": { border: "1px solid rgba(27,94,85,0.2)" },
-                            "& .MuiSelect-select": { py: 0, pl: 0 } }}>
-                          <MenuItem value="COLLABORATOR" sx={{ fontSize: "0.8rem" }}>Collaborator</MenuItem>
-                          <MenuItem value="PROJECT_MANAGER" sx={{ fontSize: "0.8rem" }}>Project Manager</MenuItem>
-                          <MenuItem value="ADMIN" sx={{ fontSize: "0.8rem" }}>Administrator</MenuItem>
-                        </Select>
-                      ) : (
-                        <Typography variant="caption" sx={{ color: color, fontWeight: 600, display: "block", mt: 0.3 }}>{mapRoleToUI(user.role)}</Typography>
-                      )}
-                    </Box>
-                    <Chip label={isActive ? "Active" : "Inactive"} size="small" sx={{
-                      backgroundColor: isActive ? "rgba(27,94,85,0.08)" : "rgba(239,68,68,0.08)",
-                      color: isActive ? THEME.colors.sidebarBg : "#ef4444",
-                      fontWeight: 700, fontSize: 10,
-                      border: isActive ? "1px solid rgba(27,94,85,0.15)" : "1px solid rgba(239,68,68,0.15)",
-                      flexShrink: 0, height: 22
-                    }} />
-                  </Box>
-
-                  <Divider sx={{ borderColor: "rgba(0,0,0,0.05)", mb: 2 }} />
-
-                  <Box sx={{ display: "flex", gap: 1, mb: 2, flexWrap: "wrap" }}>
-                    {[
-                      { key: "tasks", label: "Tasks", icon: <AssignmentIcon sx={{ fontSize: 13 }} />, bg: "rgba(136,144,211,0.08)", color: "#8890d3", border: "rgba(136,144,211,0.15)" },
-                      { key: "projects", label: "Projects", icon: <FolderIcon sx={{ fontSize: 13 }} />, bg: "rgba(27,94,85,0.06)", color: THEME.colors.sidebarBg, border: "rgba(27,94,85,0.12)" },
-                      ...(isAdmin || isManager ? [{ key: "comments", label: "Comments", icon: <CommentIcon sx={{ fontSize: 13 }} />, bg: "rgba(235,94,67,0.06)", color: "#eb5e43", border: "rgba(235,94,67,0.12)" }] : [])
-                    ].map(badge => (
-                      <Tooltip key={badge.key} title={(isAdmin || isManager) ? `View ${badge.label.toLowerCase()}` : badge.label}>
-                        <Box onClick={(e) => (isAdmin || isManager) ? openStatsDialog(e, user, badge.key) : null}
-                          sx={{
-                            display: "flex", alignItems: "center", gap: 0.6,
-                            px: 1.5, py: 0.7, backgroundColor: badge.bg, borderRadius: 2,
-                            cursor: (isAdmin || isManager) ? "pointer" : "default",
-                            border: `1px solid ${badge.border}`, transition: "all 0.15s",
-                            "&:hover": (isAdmin || isManager) ? { filter: "brightness(0.95)", transform: "translateY(-1px)" } : {}
-                          }}>
-                          <Box sx={{ color: badge.color }}>{badge.icon}</Box>
-                          <Typography variant="caption" sx={{ color: badge.color, fontWeight: 700, fontSize: 11 }}>{badge.label}</Typography>
-                        </Box>
-                      </Tooltip>
-                    ))}
-                  </Box>
-
-                  <Box sx={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 0.5 }}>
-                    {canManageUser(user) && (
-                      <Tooltip title={isActive ? "Deactivate user" : "Activate user"}>
-                        <IconButton size="small" onClick={(e) => handleToggleStatus(e, user)}
-                          sx={{ transition: "all 0.2s", "&:hover": { backgroundColor: isActive ? "rgba(239,68,68,0.1)" : "rgba(34,197,94,0.1)" } }}>
-                          {isActive
-                            ? <ToggleOnIcon sx={{ fontSize: 28, color: "#ef4444" }} />
-                            : <ToggleOffIcon sx={{ fontSize: 28, color: "#22c55e" }} />}
-                        </IconButton>
-                      </Tooltip>
-                    )}
-                    {canDeleteUser(user) && (
-                      <Tooltip title="Delete user">
-                        <IconButton size="small" onClick={(e) => openDeleteDialog(e, user)}
-                          sx={{ color: "#ef4444", opacity: 0.55, "&:hover": { opacity: 1, backgroundColor: "rgba(239,68,68,0.08)" }, transition: "opacity 0.2s" }}>
-                          <DeleteOutlineIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    )}
-                  </Box>
-                </Paper>
-              )
-            })}
+          <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
+            <CircularProgress sx={{ color: THEME.colors.sidebarBg }} />
           </Box>
+        ) : (
+          <TableContainer component={Paper} elevation={0} sx={{
+            borderRadius: 3.5,
+            border: "1px solid rgba(27,94,85,0.08)",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.02)",
+            overflow: "hidden",
+            backgroundColor: "#ffffff"
+          }}>
+            <Table sx={{ minWidth: 650 }}>
+              <TableHead sx={{ backgroundColor: "rgba(27,94,85,0.03)" }}>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: "bold", color: THEME.colors.textMain }}>User Details</TableCell>
+                  <TableCell sx={{ fontWeight: "bold", color: THEME.colors.textMain }}>Role</TableCell>
+                  <TableCell sx={{ fontWeight: "bold", color: THEME.colors.textMain }}>Status</TableCell>
+                  <TableCell sx={{ fontWeight: "bold", color: THEME.colors.textMain, textAlign: "center" }}>Assigned Projects</TableCell>
+                  <TableCell sx={{ fontWeight: "bold", color: THEME.colors.textMain, textAlign: "center" }}>Assigned Tasks</TableCell>
+                  <TableCell sx={{ fontWeight: "bold", color: THEME.colors.textMain }}>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {users.map((user) => {
+                  const isActive = user.is_active !== false
+                  const roleColor = roleColors[user.role] || THEME.colors.sidebarBg
+
+                  return (
+                    <TableRow key={user.id} hover sx={{
+                      opacity: isActive ? 1 : 0.78,
+                      backgroundColor: isActive ? "inherit" : "rgba(0,0,0,0.015)",
+                      "&:hover": { backgroundColor: "rgba(27,94,85,0.02) !important" }
+                    }}>
+                      {/* User details */}
+                      <TableCell>
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                          <Avatar sx={{
+                            width: 38,
+                            height: 38,
+                            fontSize: 15,
+                            fontWeight: "bold",
+                            background: isActive ? roleColor : "#bbb",
+                            color: "white"
+                          }}>
+                            {user.name ? user.name[0].toUpperCase() : "U"}
+                          </Avatar>
+                          <Box sx={{ minWidth: 0 }}>
+                            <Typography variant="body2" fontWeight="bold" sx={{ color: THEME.colors.textMain }} noWrap>
+                              {user.name}
+                            </Typography>
+                            <Typography variant="caption" sx={{ color: THEME.colors.textMuted }} noWrap>
+                              {user.email}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </TableCell>
+
+                      {/* Role */}
+                      <TableCell>
+                        {renderRoleCell(user)}
+                      </TableCell>
+
+                      {/* Status */}
+                      <TableCell>
+                        <Chip
+                          label={isActive ? "Active" : "Inactive"}
+                          size="small"
+                          sx={{
+                            backgroundColor: isActive ? "rgba(46,125,50,0.08)" : "rgba(211,47,47,0.08)",
+                            color: isActive ? "#2e7d32" : "#d32f2f",
+                            fontWeight: 700,
+                            fontSize: 11,
+                            border: isActive ? "1px solid rgba(46,125,50,0.15)" : "1px solid rgba(211,47,47,0.15)"
+                          }}
+                        />
+                      </TableCell>
+
+                      {/* Assigned Projects count */}
+                      <TableCell align="center">
+                        <Tooltip title="Click to view assigned projects">
+                          <Chip
+                            label={`${user._count?.project_memberships || 0} Projects`}
+                            onClick={(e) => openStatsDialog(e, user, "projects")}
+                            size="small"
+                            icon={<FolderIcon sx={{ fontSize: 13, color: `${THEME.colors.sidebarBg} !important` }} />}
+                            sx={{
+                              cursor: "pointer",
+                              backgroundColor: "rgba(27,94,85,0.05)",
+                              color: THEME.colors.sidebarBg,
+                              fontWeight: 700,
+                              fontSize: 11,
+                              border: "1px solid rgba(27,94,85,0.15)",
+                              transition: "all 0.2s",
+                              "&:hover": {
+                                backgroundColor: "rgba(27,94,85,0.12)",
+                                transform: "translateY(-1px)"
+                              }
+                            }}
+                          />
+                        </Tooltip>
+                      </TableCell>
+
+                      {/* Assigned Tasks count */}
+                      <TableCell align="center">
+                        <Tooltip title="Click to view assigned tasks">
+                          <Chip
+                            label={`${user._count?.tasks_assigned || 0} Tasks`}
+                            onClick={(e) => openStatsDialog(e, user, "tasks")}
+                            size="small"
+                            icon={<AssignmentIcon sx={{ fontSize: 13, color: "#8890d3 !important" }} />}
+                            sx={{
+                              cursor: "pointer",
+                              backgroundColor: "rgba(136,144,211,0.08)",
+                              color: "#8890d3",
+                              fontWeight: 700,
+                              fontSize: 11,
+                              border: "1px solid rgba(136,144,211,0.2)",
+                              transition: "all 0.2s",
+                              "&:hover": {
+                                backgroundColor: "rgba(136,144,211,0.15)",
+                                transform: "translateY(-1px)"
+                              }
+                            }}
+                          />
+                        </Tooltip>
+                      </TableCell>
+
+                      {/* Actions */}
+                      <TableCell>
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                          {canManageUser(user) && (
+                            <Button
+                              variant="contained"
+                              size="small"
+                              onClick={(e) => handleToggleStatus(e, user)}
+                              sx={{
+                                textTransform: "none",
+                                fontWeight: "bold",
+                                borderRadius: 1.5,
+                                px: 2,
+                                py: 0.6,
+                                fontSize: "0.75rem",
+                                backgroundColor: isActive ? "#ef4444" : "#22c55e", // red for active (deactivate option), green for inactive (activate option)
+                                color: "#ffffff",
+                                "&:hover": {
+                                  backgroundColor: isActive ? "#dc2626" : "#16a34a"
+                                }
+                              }}
+                            >
+                              {isActive ? "Deactivate" : "Activate"}
+                            </Button>
+                          )}
+                          {canDeleteUser(user) && (
+                            <Tooltip title="Delete user">
+                              <IconButton
+                                size="small"
+                                onClick={(e) => openDeleteDialog(e, user)}
+                                sx={{
+                                  color: "#ef4444",
+                                  backgroundColor: "rgba(239,68,68,0.06)",
+                                  "&:hover": { backgroundColor: "rgba(239,68,68,0.15)" },
+                                  borderRadius: 1.5,
+                                  p: 0.8
+                                }}
+                              >
+                                <DeleteOutlineIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          )}
+                          {!canManageUser(user) && !canDeleteUser(user) && (
+                            <Typography variant="caption" sx={{ color: THEME.colors.textMuted, fontStyle: "italic" }}>
+                              No actions
+                            </Typography>
+                          )}
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
+          </TableContainer>
         )}
       </Box>
 
