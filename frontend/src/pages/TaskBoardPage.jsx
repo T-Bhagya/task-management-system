@@ -257,7 +257,11 @@ function TaskBoardPage() {
           <Button
             startIcon={<AddIcon />}
             variant="contained"
-            onClick={() => navigate('/create-task')}
+            onClick={() => {
+              const queryParams = new URLSearchParams(window.location.search);
+              const projectId = queryParams.get('projectId');
+              navigate(projectId ? `/create-task?projectId=${projectId}` : '/create-task');
+            }}
             sx={{
               backgroundColor: THEME.colors.darkBtnBg,
               color: 'white',

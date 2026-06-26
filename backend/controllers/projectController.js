@@ -10,15 +10,14 @@ async function sendNotificationHelper(userId, title, message, type) {
   } catch (err) {
     console.error('Failed to create local Postgres notification:', err.message);
   }
-  try {
-    await fetch('http://localhost:3003/api/notifications', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: String(userId), title, message, type })
-    });
-  } catch (err) {
+  // Relay via Socket.io notification-service (fire-and-forget in background to prevent hanging)
+  fetch('http://localhost:3003/api/notifications', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId: String(userId), title, message, type })
+  }).catch(err => {
     console.error('Failed to relay notification to real-time service:', err.message);
-  }
+  });
 }
 
 // Get all projects with role-based filtering
@@ -26,7 +25,7 @@ exports.getAllProjects = async (req, res, next) => {
     try {
         const userId = req.user.id;
         const role = req.user.role;
-        const currentWorkspaceId = role === 'ADMIN' ? userId : req.user.admin_id;
+        const currentWorkspaceId = role === 'ADMIN' ? userId : (req.user.admin_id || userId);
         let where = {};
 
         if (role === 'PROJECT_MANAGER' || role === 'ADMIN') {
@@ -97,7 +96,7 @@ exports.getProjectById = async (req, res, next) => {
         }
 
         // Workspace authorization check
-        const currentWorkspaceId = role === 'ADMIN' ? userId : req.user.admin_id;
+        const currentWorkspaceId = role === 'ADMIN' ? userId : (req.user.admin_id || userId);
         if (project.created_by !== currentWorkspaceId) {
             return res.status(403).json({ message: 'Access denied. Project belongs to another workspace.' });
         }
@@ -138,7 +137,7 @@ exports.createProject = async (req, res, next) => {
             return res.status(400).json({ message: 'Assigned user must be a Project Manager' });
         }
 
-        const creatorId = req.user.role === 'ADMIN' ? req.user.id : req.user.admin_id;
+        const creatorId = req.user.role === 'ADMIN' ? req.user.id : (req.user.admin_id || req.user.id);
 
         // Create the project
         const project = await prisma.project.create({
@@ -178,25 +177,39 @@ exports.createProject = async (req, res, next) => {
             }
         });
 
-        // Notify the assigned Project Manager via email + in-app notification
-        try {
-            const adminUser = await prisma.user.findUnique({ where: { id: creatorId } });
-            const adminName = adminUser ? adminUser.name : 'An administrator';
-            await sendProjectAssignedEmail(
-                managerUser.email,
-                managerUser.name,
-                name,
-                description || '',
-                adminName
-            );
-            await sendNotificationHelper(
-                managerUser.id,
-                'New Project Assigned',
-                `You have been assigned as Project Manager for "${name}" by ${adminName}.`,
-                'project_assigned'
-            );
-        } catch (notifErr) {
-            console.error('Failed to notify PM about project assignment:', notifErr.message);
+        // Notify the assigned Project Manager via email + in-app notification (only if the manager is someone else)
+        if (managerUser.id !== req.user.id) {
+            try {
+                const adminUser = await prisma.user.findUnique({ where: { id: creatorId } });
+                const adminName = adminUser ? adminUser.name : 'An administrator';
+                await sendProjectAssignedEmail(
+                    managerUser.email,
+                    managerUser.name,
+                    name,
+                    description || '',
+                    adminName
+                );
+                await sendNotificationHelper(
+                    managerUser.id,
+                    'New Project Assigned',
+                    `You have been assigned as Project Manager for "${name}" by ${adminName}.`,
+                    'project_assigned'
+                );
+            } catch (notifErr) {
+                console.error('Failed to notify PM about project assignment:', notifErr.message);
+            }
+        } else {
+            // Project Manager created the project themselves
+            try {
+                await sendNotificationHelper(
+                    managerUser.id,
+                    'Project Created',
+                    `You have created project "${name}".`,
+                    'project_created'
+                );
+            } catch (notifErr) {
+                console.error('Failed to notify PM about project creation:', notifErr.message);
+            }
         }
 
         // Email each collaborator added to the project
@@ -245,6 +258,10 @@ exports.updateProject = async (req, res, next) => {
 
         if (!existingProject) {
             return res.status(404).json({ message: 'Project not found' });
+        }
+
+        if (req.user.role !== 'ADMIN' && existingProject.manager_id !== req.user.id) {
+            return res.status(403).json({ message: 'Access denied. You do not manage this project.' });
         }
 
         const data = {};
@@ -384,6 +401,10 @@ exports.deleteProject = async (req, res, next) => {
 
         if (!existingProject) {
             return res.status(404).json({ message: 'Project not found' });
+        }
+
+        if (req.user.role !== 'ADMIN' && existingProject.manager_id !== req.user.id) {
+            return res.status(403).json({ message: 'Access denied. You do not manage this project.' });
         }
 
         await prisma.project.delete({

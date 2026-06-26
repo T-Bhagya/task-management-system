@@ -134,6 +134,10 @@ function TeamAvailabilityPanel({ users }) {
 
 
 function CreateTaskPage() {
+  const userStr = localStorage.getItem('user')
+  const currentUser = userStr ? JSON.parse(userStr) : null
+  const isProjectManager = currentUser?.role === 'PROJECT_MANAGER'
+
   const [form, setForm] = useState({
     title: '', description: '', priority: '',
     assignee: '', dueDate: '', status: '', projectId: '',
@@ -152,6 +156,12 @@ function CreateTaskPage() {
         setUsers(fetchedUsers)
         const fetchedProjects = await api.getProjects()
         setProjects(fetchedProjects)
+
+        const queryParams = new URLSearchParams(window.location.search);
+        const queryProjectId = queryParams.get('projectId');
+        if (queryProjectId) {
+          setForm(prev => ({ ...prev, projectId: queryProjectId }));
+        }
         const tasks = await api.getTasks()
         const countMap = {}
         tasks.forEach(t => {
@@ -260,14 +270,24 @@ function CreateTaskPage() {
                 value={form.description} onChange={handleChange}
                 multiline rows={3} sx={fieldStyle} />
 
-              <TextField fullWidth select label="Project *" name="projectId"
-                value={form.projectId} onChange={handleChange}
-                sx={fieldStyle} SelectProps={{ MenuProps: menuProps }}>
-                <MenuItem value="" disabled>Select a Project</MenuItem>
-                {projects.map((p) => (
-                  <MenuItem key={p.id} value={p.id}>{p.name}</MenuItem>
-                ))}
-              </TextField>
+              {isProjectManager && new URLSearchParams(window.location.search).get('projectId') ? (
+                <TextField
+                  fullWidth
+                  label="Project"
+                  value={projects.find(p => String(p.id) === String(new URLSearchParams(window.location.search).get('projectId')))?.name || ''}
+                  InputProps={{ readOnly: true }}
+                  sx={{ ...fieldStyle, '& .MuiOutlinedInput-root': { backgroundColor: 'rgba(0,0,0,0.02)' } }}
+                />
+              ) : (
+                <TextField fullWidth select label="Project *" name="projectId"
+                  value={form.projectId} onChange={handleChange}
+                  sx={fieldStyle} SelectProps={{ MenuProps: menuProps }}>
+                  <MenuItem value="" disabled>Select a Project</MenuItem>
+                  {projects.map((p) => (
+                    <MenuItem key={p.id} value={p.id}>{p.name}</MenuItem>
+                  ))}
+                </TextField>
+              )}
 
               {/* Priority dropdown with color-coded items */}
               <TextField fullWidth select label="Priority *" name="priority"
@@ -308,9 +328,11 @@ function CreateTaskPage() {
                 value={form.assignee} onChange={handleChange}
                 sx={fieldStyle} SelectProps={{ MenuProps: menuProps }}>
                 <MenuItem value="">Unassigned</MenuItem>
-                {users.map((u) => (
-                  <MenuItem key={u.id} value={u.id}>{u.name} ({u.email})</MenuItem>
-                ))}
+                {users
+                  .filter((u) => !(isProjectManager && u.role === 'ADMIN'))
+                  .map((u) => (
+                    <MenuItem key={u.id} value={u.id}>{u.name} ({u.email})</MenuItem>
+                  ))}
               </TextField>
 
               <TextField fullWidth label="Due Date" name="dueDate"
@@ -336,7 +358,7 @@ function CreateTaskPage() {
 
           {/* RIGHT — Team Availability only */}
           <Box sx={{ flex: { xs: '1 1 100%', md: '0 0 42%' }, minWidth: 0, width: { xs: '100%', md: 'auto' } }}>
-            <TeamAvailabilityPanel users={usersWithTasks} />
+            <TeamAvailabilityPanel users={usersWithTasks.filter(u => !(isProjectManager && u.role === 'ADMIN'))} />
           </Box>
 
         </Box>
