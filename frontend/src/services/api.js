@@ -129,6 +129,12 @@ export const api = {
   updateProfile: (profileData) =>
     request('/users/profile', { method: 'PUT', body: profileData }),
 
+  changePassword: (currentPassword, newPassword) =>
+    request('/users/profile/password', { method: 'PUT', body: { currentPassword, newPassword } }),
+
+  getUserStats: (id) =>
+    request(`/users/${id}/stats`, { method: 'GET' }),
+
   // Notifications API
   getNotifications: () => 
     request('/users/notifications', { method: 'GET' }),

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import {
   Box, Button, TextField, Typography,
   Alert, InputAdornment, IconButton,
@@ -739,17 +739,6 @@ function LoginPage() {
                 {loading ? 'Signing in...' : 'Sign in'}
               </Button>
 
-              <Box sx={{ textAlign: 'center' }}>
-                <Typography variant="body2" sx={{ color: THEME.colors.textMuted }}>
-                  Don't have an account?{' '}
-                  <Link to="/signup" style={{
-                    color: THEME.colors.sidebarBg, fontWeight: 600,
-                    textDecoration: 'none'
-                  }}>
-                    Create account
-                  </Link>
-                </Typography>
-              </Box>
             </>
           )}
 

@@ -69,12 +69,26 @@ app.use((err, req, res, next) => {
 
 // 4. Start the Server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, async () => {
-    console.log(`Server is running on port ${PORT}`);
-    try {
-        await prisma.$connect();
-        console.log('Database connected successfully via Prisma!');
-    } catch (dbError) {
-        console.error('Prisma failed to connect to the database:', dbError);
+
+async function connectWithRetry(retries = 5, delay = 3000) {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+            await prisma.$connect();
+            console.log('✅ Database connected successfully via Prisma!');
+            return;
+        } catch (err) {
+            console.warn(`⚠️  DB attempt ${attempt}/${retries} failed: ${err.message.split('\n')[0]}`);
+            if (attempt < retries) {
+                console.log(`   Retrying in ${delay / 1000}s...`);
+                await new Promise(res => setTimeout(res, delay));
+            } else {
+                console.error('❌ All DB connection attempts failed. Server running but DB calls may fail.');
+            }
+        }
     }
+}
+
+app.listen(PORT, async () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+    await connectWithRetry();
 });

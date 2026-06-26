@@ -339,7 +339,6 @@ function DashboardPage() {
                           p: 2.5, borderRadius: 3.5,
                           backgroundColor: '#ffffff',
                           border: '1px solid rgba(27,94,85,0.08)',
-                          borderTop: `5px solid ${priorityColor}`,
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'space-between',

@@ -9,9 +9,11 @@ router.post('/', verifyToken, userController.createUser);
 router.delete('/:id', verifyToken, userController.deleteUser);
 router.put('/:id/status', verifyToken, userController.toggleUserStatus);
 router.put('/:id/role', verifyToken, userController.updateUserRole);
+router.get('/:id/stats', verifyToken, userController.getUserStats);
 router.get('/profile', verifyToken, userController.getProfile);
 router.put('/profile', verifyToken, userController.updateProfile);
+router.put('/profile/password', verifyToken, userController.changePassword);
 router.get('/notifications', verifyToken, userController.getNotifications);
 router.put('/notifications/:id/read', verifyToken, userController.markNotificationAsRead);
 
-module.exports = router;
+module.exports = router;
