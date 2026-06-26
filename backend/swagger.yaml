@@ -4,8 +4,10 @@ info:
   description: API documentation for the Task Management System
   version: 1.0.0
 servers:
+  - url: https://tms-app.grayflower-a20c5b31.southeastasia.azurecontainerapps.io
+    description: Production server (Azure)
   - url: http://localhost:5000
-    description: Development server
+    description: Development server (Local)
 components:
   securitySchemes:
     bearerAuth:
