@@ -1,6 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import LoginPage from './pages/LoginPage'
-import SignupPage from './pages/SignupPage'
 import DashboardPage from './pages/DashboardPage'
 import TaskBoardPage from './pages/TaskBoardPage'
 import CreateTaskPage from './pages/CreateTaskPage'
@@ -21,7 +20,8 @@ function App() {
       <Routes>
         {/* Public routes */}
         <Route path="/" element={<LoginPage />} />
-        <Route path="/signup" element={<SignupPage />} />
+        {/* /signup route removed — admin is a built-in actor */}
+        <Route path="/signup" element={<Navigate to="/" replace />} />
 
         {/* Protected routes */}
         <Route path="/dashboard" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
