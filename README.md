@@ -66,31 +66,16 @@ For complete requirements and compliance details, see the project [SRS.md](file:
 
 Create a `.env` file inside the [backend/](file:///c:/Users/Tharu/OneDrive%20-%20apiit.lk/Documents/UOK/Web%20-%20TMS/backend) directory:
 ```env
-# Database connection (PostgreSQL)
-DATABASE_URL="postgresql://username:password@localhost:5432/taskflow_db"
 
-# JWT Secret for security
-JWT_SECRET="your_secure_jwt_secret_phrase"
+# Database connection (PostgreSQL) inside the backend folder.
+DATABASE_URL="postgresql://neondb_owner:npg_CUlVkcR1OJp6@ep-lively-moon-aoltsifv-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
 
-# Server configuration
+Create a `.env` file inside the main folder
+DATABASE_URL="postgresql://neondb_owner:npg_CUlVkcR1OJp6@ep-lively-moon-aoltsifv-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+
+JWT_SECRET=853b8021d9fbf5efc0f78b5b11212427b6178ba0cebd8c5273a51d0ad4389149005eb4075af9ce9c62ec7f5b57a70629d1cf329b6489f965c70e8455779a840a
+
 PORT=5000
-NODE_ENV=development
-
-# Azure Communication Services (for emails)
-AZURE_COMMUNICATION_CONNECTION_STRING="your_azure_comms_string"
-SENDER_EMAIL="DoNotReply@yourdomain.com"
-```
-
-Create a `.env` file inside the [notification-service/](file:///c:/Users/Tharu/OneDrive%20-%20apiit.lk/Documents/UOK/Web%20-%20TMS/notification-service) directory:
-```env
-# Database connection for notifications
-DATABASE_URL="postgresql://username:password@localhost:5432/taskflow_notif_db"
-
-# JWT Secret (must match the backend's secret for token decoding)
-JWT_SECRET="your_secure_jwt_secret_phrase"
-
-# Service Port
-PORT=3003
 ```
 
 ### 2. Install Dependencies & Build Schemas
