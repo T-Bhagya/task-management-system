@@ -358,3 +358,74 @@ exports.updateProfile = async (req, res, next) => {
         next(error);
     }
 };
+
+// Get assigned task & project counts for a specific user (Admin only)
+exports.getUserStats = async (req, res, next) => {
+    try {
+        if (req.user.role !== 'ADMIN' && req.user.role !== 'PROJECT_MANAGER') {
+            return res.status(403).json({ message: 'Access denied.' });
+        }
+        const targetId = parseInt(req.params.id);
+        if (isNaN(targetId)) return res.status(400).json({ message: 'Invalid user ID.' });
+
+        const [tasks, projectMemberships, comments] = await Promise.all([
+            prisma.task.findMany({
+                where: { assigned_to: targetId },
+                select: { id: true, title: true, status: true, priority: true, due_date: true }
+            }),
+            prisma.projectMember.findMany({
+                where: { user_id: targetId },
+                include: { project: { select: { id: true, name: true, description: true } } }
+            }),
+            prisma.comment.findMany({
+                where: { user_id: targetId },
+                select: { id: true, message: true, created_at: true, task: { select: { id: true, title: true } } },
+                orderBy: { created_at: 'desc' },
+                take: 10
+            })
+        ]);
+
+        res.status(200).json({
+            tasks,
+            projects: projectMemberships.map(pm => pm.project),
+            comments
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Change own password
+exports.changePassword = async (req, res, next) => {
+    try {
+        const bcrypt = require('bcryptjs');
+        const { currentPassword, newPassword } = req.body;
+
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ message: 'Current and new password are required.' });
+        }
+        if (newPassword.length < 6) {
+            return res.status(400).json({ message: 'New password must be at least 6 characters.' });
+        }
+
+        const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+        if (!user) return res.status(404).json({ message: 'User not found.' });
+
+        const isMatch = await bcrypt.compare(currentPassword, user.password_hash);
+        if (!isMatch) {
+            return res.status(401).json({ message: 'Current password is incorrect.' });
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        const newHash = await bcrypt.hash(newPassword, salt);
+
+        await prisma.user.update({
+            where: { id: req.user.id },
+            data: { password_hash: newHash, must_reset_password: false }
+        });
+
+        res.status(200).json({ message: 'Password changed successfully.' });
+    } catch (error) {
+        next(error);
+    }
+};
