@@ -15,7 +15,8 @@ exports.getAllUsers = async (req, res, next) => {
             _count: {
                 select: {
                     tasks_assigned: true,
-                    project_memberships: true
+                    project_memberships: true,
+                    projects_managed: true
                 }
             }
         };
@@ -489,14 +490,17 @@ exports.getUserStats = async (req, res, next) => {
         const targetId = parseInt(req.params.id);
         if (isNaN(targetId)) return res.status(400).json({ message: 'Invalid user ID.' });
 
-        const [tasks, projectMemberships, comments] = await Promise.all([
+        const user = await prisma.user.findUnique({
+            where: { id: targetId },
+            select: { role: true }
+        });
+        if (!user) return res.status(404).json({ message: 'User not found.' });
+
+        let projects = [];
+        const [tasks, comments] = await Promise.all([
             prisma.task.findMany({
                 where: { assigned_to: targetId },
                 select: { id: true, title: true, status: true, priority: true, due_date: true }
-            }),
-            prisma.projectMember.findMany({
-                where: { user_id: targetId },
-                include: { project: { select: { id: true, name: true, description: true } } }
             }),
             prisma.comment.findMany({
                 where: { user_id: targetId },
@@ -506,9 +510,22 @@ exports.getUserStats = async (req, res, next) => {
             })
         ]);
 
+        if (user.role === 'PROJECT_MANAGER') {
+            projects = await prisma.project.findMany({
+                where: { manager_id: targetId },
+                select: { id: true, name: true, description: true }
+            });
+        } else {
+            const memberships = await prisma.projectMember.findMany({
+                where: { user_id: targetId },
+                include: { project: { select: { id: true, name: true, description: true } } }
+            });
+            projects = memberships.map(pm => pm.project);
+        }
+
         res.status(200).json({
             tasks,
-            projects: projectMemberships.map(pm => pm.project),
+            projects,
             comments
         });
     } catch (error) {

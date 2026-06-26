@@ -17,21 +17,19 @@ async function sendNotificationHelper(userId, title, message, type) {
     console.error('Failed to create local Postgres notification:', err.message);
   }
 
-  // 2. Relay via Socket.io notification-service
-  try {
-    await fetch('http://localhost:3003/api/notifications', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        userId: String(userId),
-        title,
-        message,
-        type
-      })
-    });
-  } catch (err) {
+  // Relay via Socket.io notification-service (fire-and-forget in background to prevent hanging)
+  fetch('http://localhost:3003/api/notifications', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      userId: String(userId),
+      title,
+      message,
+      type
+    })
+  }).catch(err => {
     console.error('Failed to relay notification to real-time service:', err.message);
-  }
+  });
 
   return pgNotif;
 }

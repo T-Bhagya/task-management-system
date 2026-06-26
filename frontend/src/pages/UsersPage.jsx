@@ -280,7 +280,7 @@ function UsersPage() {
                       <TableCell align="center">
                         <Tooltip title="Click to view assigned projects">
                           <Chip
-                            label={`${user._count?.project_memberships || 0} Projects`}
+                            label={`${user.role === 'PROJECT_MANAGER' ? (user._count?.projects_managed || 0) : (user._count?.project_memberships || 0)} Projects`}
                             onClick={(e) => openStatsDialog(e, user, "projects")}
                             size="small"
                             icon={<FolderIcon sx={{ fontSize: 13, color: `${THEME.colors.sidebarBg} !important` }} />}

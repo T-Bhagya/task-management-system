@@ -96,7 +96,7 @@ function ProjectsPage() {
     setEditMode(false)
     setName('')
     setDescription('')
-    setManagerId('')
+    setManagerId(isProjectManager ? currentUser?.id || '' : '')
     setSelectedMembers([])
     setError('')
     setOpen(true)
@@ -243,7 +243,7 @@ function ProjectsPage() {
                       <Typography variant="h6" fontWeight="bold" sx={{ color: THEME.colors.textMain }}>
                         {project.name}
                       </Typography>
-                      {canManageProjects && (
+                      {(isAdmin || (isProjectManager && project.manager_id === currentUser?.id)) && (
                         <Box sx={{ display: 'flex', gap: 0.5 }}>
                           <IconButton size="small" onClick={() => handleOpenEdit(project)} sx={{ color: THEME.colors.textMuted }}>
                             <EditIcon fontSize="small" />
@@ -294,18 +294,20 @@ function ProjectsPage() {
                           fontWeight: 600
                         }} 
                       />
-                      <Button
-                        size="small"
-                        endIcon={<ArrowForwardIcon />}
-                        onClick={() => navigate(`/taskboard?projectId=${project.id}`)}
-                        sx={{ 
-                          textTransform: 'none', 
-                          fontWeight: 600, 
-                          color: THEME.colors.greenAccent 
-                        }}
-                      >
-                        View Tasks
-                      </Button>
+                      {(!isProjectManager || project.manager_id === currentUser?.id) && (
+                        <Button
+                          size="small"
+                          endIcon={<ArrowForwardIcon />}
+                          onClick={() => navigate(`/taskboard?projectId=${project.id}`)}
+                          sx={{ 
+                            textTransform: 'none', 
+                            fontWeight: 600, 
+                            color: THEME.colors.greenAccent 
+                          }}
+                        >
+                          View Tasks
+                        </Button>
+                      )}
                     </Box>
                   </CardActions>
                 </Card>
@@ -385,44 +387,54 @@ function ProjectsPage() {
               placeholder="Briefly describe the project goals..."
             />
 
-            <TextField
-              fullWidth
-              select
-              label="Project Manager *"
-              value={managerId}
-              onChange={(e) => setManagerId(e.target.value)}
-              sx={fieldStyle}
-              SelectProps={{ MenuProps: menuProps }}
-            >
-              <MenuItem value="" disabled>Select a Project Manager</MenuItem>
-              {projectManagers.length === 0 ? (
-                <MenuItem disabled>
-                  <Typography sx={{ color: THEME.colors.textMuted, fontSize: 13, fontStyle: 'italic' }}>
-                    No Project Managers found. Add users with PM role first.
-                  </Typography>
-                </MenuItem>
-              ) : (
-                projectManagers.map(pm => (
-                  <MenuItem key={pm.id} value={pm.id}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                      <Box sx={{
-                        width: 28, height: 28, borderRadius: '50%',
-                        backgroundColor: THEME.colors.sidebarBg,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
-                      }}>
-                        <Typography sx={{ color: '#fff', fontSize: 10, fontWeight: 700 }}>
-                          {pm.name.slice(0, 2).toUpperCase()}
-                        </Typography>
-                      </Box>
-                      <Box>
-                        <Typography sx={{ fontSize: 13, fontWeight: 600, color: THEME.colors.textMain }}>{pm.name}</Typography>
-                        <Typography sx={{ fontSize: 11, color: THEME.colors.textMuted }}>{pm.email}</Typography>
-                      </Box>
-                    </Box>
+            {isProjectManager ? (
+              <TextField
+                fullWidth
+                label="Project Manager"
+                value={currentUser?.name || ''}
+                InputProps={{ readOnly: true }}
+                sx={{ ...fieldStyle, '& .MuiOutlinedInput-root': { backgroundColor: 'rgba(0,0,0,0.02)' } }}
+              />
+            ) : (
+              <TextField
+                fullWidth
+                select
+                label="Project Manager *"
+                value={managerId}
+                onChange={(e) => setManagerId(e.target.value)}
+                sx={fieldStyle}
+                SelectProps={{ MenuProps: menuProps }}
+              >
+                <MenuItem value="" disabled>Select a Project Manager</MenuItem>
+                {projectManagers.length === 0 ? (
+                  <MenuItem disabled>
+                    <Typography sx={{ color: THEME.colors.textMuted, fontSize: 13, fontStyle: 'italic' }}>
+                      No Project Managers found. Add users with PM role first.
+                    </Typography>
                   </MenuItem>
-                ))
-              )}
-            </TextField>
+                ) : (
+                  projectManagers.map(pm => (
+                    <MenuItem key={pm.id} value={pm.id}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                        <Box sx={{
+                          width: 28, height: 28, borderRadius: '50%',
+                          backgroundColor: THEME.colors.sidebarBg,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                        }}>
+                          <Typography sx={{ color: '#fff', fontSize: 10, fontWeight: 700 }}>
+                            {pm.name.slice(0, 2).toUpperCase()}
+                          </Typography>
+                        </Box>
+                        <Box>
+                          <Typography sx={{ fontSize: 13, fontWeight: 600, color: THEME.colors.textMain }}>{pm.name}</Typography>
+                          <Typography sx={{ fontSize: 11, color: THEME.colors.textMuted }}>{pm.email}</Typography>
+                        </Box>
+                      </Box>
+                    </MenuItem>
+                  ))
+                )}
+              </TextField>
+            )}
 
             <FormControl fullWidth sx={{ mb: 3 }}>
               <InputLabel
