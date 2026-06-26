@@ -18,6 +18,26 @@ if (hasAzureConfig) {
   );
 }
 
+async function sendEmailWithRetry(emailMessage, retries = 3, delay = 1000) {
+  if (!emailClient) throw new Error('Email client not initialized');
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const poller = await emailClient.beginSend(emailMessage);
+      const response = await poller.pollUntilDone();
+      return response;
+    } catch (error) {
+      const isRateLimit = error.statusCode === 429 || (error.message && error.message.includes('TooManyRequests'));
+      if (isRateLimit && attempt < retries) {
+        console.warn(`⚠️ Azure Email rate limited (attempt ${attempt}/${retries}). Retrying in ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        delay *= 2; // exponential backoff
+      } else {
+        throw error;
+      }
+    }
+  }
+}
+
 /**
  * Sends a real welcome email with a temporary password to a collaborator.
  * Falls back gracefully to console printing if Azure Email is not configured.
@@ -74,12 +94,16 @@ async function sendTemporaryPasswordEmail(to, name, tempPassword) {
   };
 
   try {
-    const poller = await emailClient.beginSend(emailMessage);
-    const response = await poller.pollUntilDone();
+    const response = await sendEmailWithRetry(emailMessage);
     console.log(`🚀 Real email sent to ${to} (Message ID: ${response.id})`);
     return response;
   } catch (error) {
     console.error(`❌ Failed to send email to ${to}:`, error.message);
+    console.log('\n================ [FALLBACK SIMULATION] ================');
+    console.log(`✉️ Failed real email to ${to}. Content logged here:`);
+    console.log(`Subject: ${emailMessage.content.subject}`);
+    console.log(`Body: ${emailMessage.content.plainText}`);
+    console.log('==================================================\n');
     throw error;
   }
 }
@@ -136,11 +160,15 @@ async function sendTaskStatusUpdateEmail(to, recipientName, taskTitle, oldStatus
   };
 
   try {
-    const poller = await emailClient.beginSend(emailMessage);
-    await poller.pollUntilDone();
+    await sendEmailWithRetry(emailMessage);
     console.log(`📋 Task status email sent to ${to}`);
   } catch (error) {
     console.error(`❌ Failed to send task status email to ${to}:`, error.message);
+    console.log('\n================ [FALLBACK SIMULATION] ================');
+    console.log(`✉️ Failed real task status email to ${to}. Content logged here:`);
+    console.log(`Subject: ${emailMessage.content.subject}`);
+    console.log(`Body: ${emailMessage.content.plainText}`);
+    console.log('==================================================\n');
   }
 }
 
@@ -184,11 +212,15 @@ async function sendProjectAssignedEmail(to, managerName, projectName, projectDes
   };
 
   try {
-    const poller = await emailClient.beginSend(emailMessage);
-    await poller.pollUntilDone();
+    await sendEmailWithRetry(emailMessage);
     console.log(`📁 Project assignment email sent to ${to}`);
   } catch (error) {
     console.error(`❌ Failed to send project assignment email to ${to}:`, error.message);
+    console.log('\n================ [FALLBACK SIMULATION] ================');
+    console.log(`✉️ Failed real project assignment email to ${to}. Content logged here:`);
+    console.log(`Subject: ${emailMessage.content.subject}`);
+    console.log(`Body: ${emailMessage.content.plainText}`);
+    console.log('==================================================\n');
   }
 }
 
@@ -231,11 +263,15 @@ async function sendCommentMentionEmail(to, mentionedName, commenterName, taskTit
   };
 
   try {
-    const poller = await emailClient.beginSend(emailMessage);
-    await poller.pollUntilDone();
+    await sendEmailWithRetry(emailMessage);
     console.log(`💬 Mention email sent to ${to}`);
   } catch (error) {
     console.error(`❌ Failed to send mention email to ${to}:`, error.message);
+    console.log('\n================ [FALLBACK SIMULATION] ================');
+    console.log(`✉️ Failed real mention email to ${to}. Content logged here:`);
+    console.log(`Subject: ${emailMessage.content.subject}`);
+    console.log(`Body: ${emailMessage.content.plainText}`);
+    console.log('==================================================\n');
   }
 }
 
@@ -292,11 +328,15 @@ async function sendTaskAssignedEmail(to, assigneeName, taskTitle, projectName, p
   };
 
   try {
-    const poller = await emailClient.beginSend(emailMessage);
-    await poller.pollUntilDone();
+    await sendEmailWithRetry(emailMessage);
     console.log(`✅ Task assignment email sent to ${to}`);
   } catch (error) {
     console.error(`❌ Failed to send task assignment email to ${to}:`, error.message);
+    console.log('\n================ [FALLBACK SIMULATION] ================');
+    console.log(`✉️ Failed real task assignment email to ${to}. Content logged here:`);
+    console.log(`Subject: ${emailMessage.content.subject}`);
+    console.log(`Body: ${emailMessage.content.plainText}`);
+    console.log('==================================================\n');
   }
 }
 
@@ -340,11 +380,15 @@ async function sendProjectMemberWelcomeEmail(to, memberName, projectName, projec
   };
 
   try {
-    const poller = await emailClient.beginSend(emailMessage);
-    await poller.pollUntilDone();
+    await sendEmailWithRetry(emailMessage);
     console.log(`👥 Project welcome email sent to ${to}`);
   } catch (error) {
     console.error(`❌ Failed to send project welcome email to ${to}:`, error.message);
+    console.log('\n================ [FALLBACK SIMULATION] ================');
+    console.log(`✉️ Failed real project welcome email to ${to}. Content logged here:`);
+    console.log(`Subject: ${emailMessage.content.subject}`);
+    console.log(`Body: ${emailMessage.content.plainText}`);
+    console.log('==================================================\n');
   }
 }
 
@@ -401,12 +445,16 @@ async function sendVerificationCodeEmail(to, name, code) {
   };
 
   try {
-    const poller = await emailClient.beginSend(emailMessage);
-    const response = await poller.pollUntilDone();
+    const response = await sendEmailWithRetry(emailMessage);
     console.log(`🚀 Verification email sent to ${to} (Message ID: ${response.id})`);
     return response;
   } catch (error) {
     console.error(`❌ Failed to send verification email to ${to}:`, error.message);
+    console.log('\n================ [FALLBACK SIMULATION] ================');
+    console.log(`✉️ Failed real verification email to ${to}. Content logged here:`);
+    console.log(`Subject: ${emailMessage.content.subject}`);
+    console.log(`Body: ${emailMessage.content.plainText}`);
+    console.log('==================================================\n');
     throw error;
   }
 }

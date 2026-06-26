@@ -34,7 +34,7 @@ exports.getAllUsers = async (req, res, next) => {
         }
 
         if (req.user.role === 'PROJECT_MANAGER') {
-            // View admin and all collaborators in their managed projects
+            // View admin and all collaborators in their workspace
             const myManagedProjects = await prisma.project.findMany({
                 where: { manager_id: req.user.id },
                 select: { id: true }
@@ -43,11 +43,7 @@ exports.getAllUsers = async (req, res, next) => {
             const collaborators = await prisma.user.findMany({
                 where: {
                     role: 'COLLABORATOR',
-                    project_memberships: {
-                        some: {
-                            project_id: { in: projectIds }
-                        }
-                    }
+                    admin_id: currentWorkspaceId
                 },
                 select: userSelect
             });
@@ -324,11 +320,17 @@ exports.deleteUser = async (req, res, next) => {
                 data: { created_by: req.user.id }
             });
 
+            // 4.5. Reassign projects managed by this user to the deleting admin
+            await tx.project.updateMany({
+                where: { manager_id: targetId },
+                data: { manager_id: req.user.id }
+            });
+
             // 5. Now it is safe to delete the user
             await tx.user.delete({ where: { id: targetId } });
         });
 
-        res.status(200).json({ message: `Collaborator "${userToDelete.name}" has been deleted successfully.` });
+        res.status(200).json({ message: `User "${userToDelete.name}" has been deleted successfully.` });
     } catch (error) {
         next(error);
     }

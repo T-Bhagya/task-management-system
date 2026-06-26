@@ -104,7 +104,7 @@ function LoginPage() {
     setError('')
     setLoading(true)
     try {
-      await api.changePassword(newPassword, name);
+      await api.firstLoginChangePassword(newPassword, name);
       
       // Update local storage user object
       const storedUser = JSON.parse(localStorage.getItem('user'));
@@ -402,6 +402,18 @@ function LoginPage() {
               >
                 {loading ? 'Updating...' : 'Update Password'}
               </Button>
+
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography variant="body2" sx={{ color: THEME.colors.textMuted }}>
+                  Want to log in with a different account?{' '}
+                  <span onClick={() => { setMustReset(false); setError(''); }} style={{
+                    color: THEME.colors.sidebarBg, fontWeight: 600,
+                    textDecoration: 'none', cursor: 'pointer'
+                  }}>
+                    Back to Login
+                  </span>
+                </Typography>
+              </Box>
             </>
           ) : forgotMode ? (
             <>
