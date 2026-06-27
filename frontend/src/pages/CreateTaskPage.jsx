@@ -137,6 +137,14 @@ function CreateTaskPage() {
   const userStr = localStorage.getItem('user')
   const currentUser = userStr ? JSON.parse(userStr) : null
   const isProjectManager = currentUser?.role === 'PROJECT_MANAGER'
+  const isCollaborator = currentUser?.role === 'COLLABORATOR'
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    if (isCollaborator) {
+      navigate('/dashboard')
+    }
+  }, [isCollaborator, navigate])
 
   const [form, setForm] = useState({
     title: '', description: '', priority: '',
@@ -147,7 +155,6 @@ function CreateTaskPage() {
   const [usersWithTasks, setUsersWithTasks] = useState([])
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState('')
-  const navigate = useNavigate()
 
   useEffect(() => {
     async function loadUsers() {
@@ -283,9 +290,11 @@ function CreateTaskPage() {
                   value={form.projectId} onChange={handleChange}
                   sx={fieldStyle} SelectProps={{ MenuProps: menuProps }}>
                   <MenuItem value="" disabled>Select a Project</MenuItem>
-                  {projects.map((p) => (
-                    <MenuItem key={p.id} value={p.id}>{p.name}</MenuItem>
-                  ))}
+                  {projects
+                    .filter((p) => !isProjectManager || p.manager_id === currentUser?.id)
+                    .map((p) => (
+                      <MenuItem key={p.id} value={p.id}>{p.name}</MenuItem>
+                    ))}
                 </TextField>
               )}
 
@@ -329,7 +338,7 @@ function CreateTaskPage() {
                 sx={fieldStyle} SelectProps={{ MenuProps: menuProps }}>
                 <MenuItem value="">Unassigned</MenuItem>
                 {users
-                  .filter((u) => !(isProjectManager && u.role === 'ADMIN'))
+                  .filter((u) => !((isProjectManager || isCollaborator) && u.role === 'ADMIN'))
                   .map((u) => (
                     <MenuItem key={u.id} value={u.id}>{u.name} ({u.email})</MenuItem>
                   ))}
@@ -358,7 +367,7 @@ function CreateTaskPage() {
 
           {/* RIGHT — Team Availability only */}
           <Box sx={{ flex: { xs: '1 1 100%', md: '0 0 42%' }, minWidth: 0, width: { xs: '100%', md: 'auto' } }}>
-            <TeamAvailabilityPanel users={usersWithTasks.filter(u => !(isProjectManager && u.role === 'ADMIN'))} />
+            <TeamAvailabilityPanel users={usersWithTasks.filter(u => !((isProjectManager || isCollaborator) && u.role === 'ADMIN'))} />
           </Box>
 
         </Box>
